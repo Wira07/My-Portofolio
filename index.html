@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Wira Sukma Saputra — Android Developer &amp; UI/UX Designer</title>
+  <meta name="description" content="Portofolio Wira Sukma Saputra — Android Developer &amp; UI/UX Designer freelance. Kotlin, Jetpack Compose, Firebase, dan web modern. Lihat proyek &amp; hubungi saya.">
+  <meta name="author" content="Wira Sukma Saputra">
+  <meta name="theme-color" content="#0A0B10">
+  <link rel="canonical" href="https://wirasukma.dev/">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="id_ID">
+  <meta property="og:site_name" content="Wira Sukma Saputra">
+  <meta property="og:title" content="Wira Sukma Saputra — Android Developer &amp; UI/UX Designer">
+  <meta property="og:description" content="Merancang &amp; membangun aplikasi yang terasa mulus. Android, UI/UX, dan web modern.">
+  <meta property="og:url" content="https://wirasukma.dev/">
+  <meta property="og:image" content="https://wirasukma.dev/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Wira Sukma Saputra — Android Developer &amp; UI/UX Designer">
+  <meta name="twitter:description" content="Merancang &amp; membangun aplikasi yang terasa mulus. Android, UI/UX, dan web modern.">
+  <meta name="twitter:image" content="https://wirasukma.dev/og-image.jpg">
+
+  <!-- Tema, kapabilitas & preloader state (sebelum first paint, mencegah flash) -->
+  <script>
+    (function () {
+      var d = document.documentElement;
+      d.classList.add('js');
+      try {
+        var t = localStorage.getItem('theme');
+        d.setAttribute('data-theme', t === 'light' || t === 'dark' ? t : 'dark');
+      } catch (e) { d.setAttribute('data-theme', 'dark'); }
+      var rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (rm) d.classList.add('rm');
+      if (matchMedia('(hover: hover) and (pointer: fine)').matches) d.classList.add('fine');
+      if ((navigator.hardwareConcurrency || 8) <= 4) d.classList.add('lite');
+      var skip = rm;
+      try { if (sessionStorage.getItem('seen')) skip = true; } catch (e) {}
+      if (skip) d.classList.add('no-preload'); else d.classList.add('is-loading');
+      // Fail-safe: jika modul gagal dimuat, preloader tidak menahan halaman selamanya
+      setTimeout(function () { d.classList.remove('is-loading'); d.classList.add('no-preload'); }, 6000);
+    })();
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Wira Sukma Saputra",
+    "jobTitle": "Android Developer & UI/UX Designer",
+    "url": "https://wirasukma.dev/",
+    "email": "mailto:wiralodrasaputra07@gmail.com",
+    "alumniOf": { "@type": "CollegeOrUniversity", "name": "Universitas Kuningan" },
+    "knowsAbout": ["Android", "Kotlin", "Jetpack Compose", "UI/UX Design", "Firebase", "Web Development"],
+    "sameAs": [
+      "https://github.com/wira07",
+      "https://linkedin.com/in/wira-sukma-saputra"
+    ]
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&family=Space+Grotesk:wght@500;600;700&display=swap">
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/sections.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Lewati ke konten</a>
+  <div class="progress" id="progress" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <span class="sr-only" id="live" aria-live="polite"></span>
+
+  <!-- Preloader -->
+  <div class="preloader" id="preloader" aria-hidden="true">
+    <div class="preloader__word"><span>W</span><span>I</span><span>R</span><span>A</span></div>
+    <div class="preloader__meta">
+      <span class="label">Memuat portofolio</span>
+      <span class="preloader__count"><span id="preloader-count">0</span><small>%</small></span>
+    </div>
+    <div class="preloader__bar" id="preloader-bar"></div>
+  </div>
+
+  <!-- Kursor kustom (desktop) -->
+  <div class="cursor" id="cursor" aria-hidden="true">
+    <div class="cursor__ring"></div>
+    <div class="cursor__dot"></div>
+    <span class="cursor__label"></span>
+  </div>
+
+  <!-- Navigasi -->
+  <header class="nav" id="nav">
+    <div class="nav__inner container">
+      <a class="nav__logo" href="#hero" aria-label="Wira Sukma Saputra — kembali ke awal"><span>WS</span></a>
+      <nav class="nav__links" id="nav-links" aria-label="Navigasi utama">
+        <a href="#about" data-nav>Tentang</a>
+        <a href="#skills" data-nav>Skill</a>
+        <a href="#journey" data-nav>Perjalanan</a>
+        <a href="#highlights" data-nav>Sorotan</a>
+        <a href="#projects" data-nav>Proyek</a>
+        <a href="#certs" data-nav>Sertifikat</a>
+        <a href="#contact" data-nav>Kontak</a>
+        <span class="nav__indicator" aria-hidden="true"></span>
+      </nav>
+      <div class="nav__actions">
+        <button class="icon-btn" id="theme-toggle" type="button" aria-label="Ganti ke tema terang">
+          <svg class="theme-icon--sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="theme-icon--moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <a class="btn btn--outline btn--sm" id="nav-cv" href="assets/Wira-Sukma-Saputra-CV.pdf" download data-magnetic>Unduh CV</a>
+        <button class="nav__burger" id="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Buka menu"><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="menu" id="mobile-menu" inert aria-label="Menu">
+    <nav class="menu__links" aria-label="Navigasi seluler">
+      <a href="#about"><small>01</small>Tentang</a>
+      <a href="#skills"><small>02</small>Skill</a>
+      <a href="#journey"><small>03</small>Perjalanan</a>
+      <a href="#highlights"><small>04</small>Sorotan</a>
+      <a href="#projects"><small>05</small>Proyek</a>
+      <a href="#certs"><small>06</small>Sertifikat</a>
+      <a href="#contact"><small>07</small>Kontak</a>
+    </nav>
+    <div class="menu__foot">
+      <a class="btn btn--primary" id="menu-cv" href="assets/Wira-Sukma-Saputra-CV.pdf" download>Unduh CV</a>
+      <a class="btn btn--ghost" id="menu-wa" href="https://wa.me/6281219195308" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+  </div>
+
+  <!-- Latar Orbit 3D & Mesh Global (menyebar di seluruh halaman) -->
+  <div class="hero__mesh" aria-hidden="true"><i></i><i></i><i></i></div>
+  <canvas class="hero__canvas" id="hero-canvas" aria-hidden="true"></canvas>
+
+  <main id="main">
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="hero" aria-labelledby="hero-title">
+
+      <div class="hero__inner container">
+        <p class="hero__eyebrow label"><span class="dot" aria-hidden="true"></span><span id="hero-status">Open for freelance</span></p>
+        <h1 class="hero__title" id="hero-title" aria-label="Wira Sukma Saputra">
+          <span class="hero__line" aria-hidden="true"><span class="split">Wira Sukma</span></span>
+          <span class="hero__line" aria-hidden="true"><span class="split grad">Saputra</span></span>
+        </h1>
+        <p class="hero__roles">
+          <span class="hero__roles-lead">Saya</span>
+          <span class="sr-only" id="hero-roles-sr">Android Developer, UI/UX Designer, Full-Stack Web, Firebase dan REST API</span>
+          <span class="hero__role" id="hero-role" aria-hidden="true"><span class="hero__role-item">Android Developer</span></span>
+        </p>
+        <p class="hero__tagline" id="hero-tagline">Merancang &amp; membangun aplikasi yang terasa mulus.</p>
+        <p class="hero__sub" id="hero-sub">Android Developer &amp; UI/UX Designer — Kotlin, Jetpack Compose, dan web modern.</p>
+        <div class="hero__cta">
+          <a class="btn btn--primary btn--lg" href="#projects" data-magnetic>Lihat Proyek
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>
+          </a>
+          <a class="btn btn--ghost btn--lg" id="hero-wa" href="https://wa.me/6281219195308" target="_blank" rel="noopener" data-magnetic>Hubungi via WhatsApp</a>
+        </div>
+      </div>
+
+      <a class="hero__scroll label" href="#about" aria-label="Gulir ke bagian Tentang"><i aria-hidden="true"></i><span>Scroll</span></a>
+    </section>
+
+    <!-- ============ TENTANG ============ -->
+    <section class="section about" id="about" aria-labelledby="about-title">
+      <div class="container about__grid">
+        <div class="about__media">
+          <div class="about__portrait" id="about-portrait">
+            <div class="about__portrait-inner" id="about-portrait-inner">
+              <span class="about__ring" aria-hidden="true"></span><span class="about__ring" aria-hidden="true"></span>
+              <img class="about__photo" id="about-photo" src="assets/img/wira-portrait.png" alt="Wira Sukma Saputra" width="720" height="900" loading="eager" decoding="async">
+            </div>
+            <span class="chip chip--status about__tag"><span class="dot" aria-hidden="true"></span><span id="about-status">Open for freelance</span></span>
+          </div>
+          <div class="about__chips">
+            <span class="chip" id="about-location">Kuningan, Jawa Barat</span>
+            <span class="chip">BSc Teknik Informatika · Universitas Kuningan</span>
+          </div>
+        </div>
+        <div class="about__text">
+          <p class="label section__eyebrow"><b>01</b> Tentang</p>
+          <h2 class="about__title" id="about-title">Desainer yang <span class="grad">menulis kode.</span></h2>
+          <p class="about__summary" id="about-summary">Desainer &amp; pengembang full-stack yang adaptif dengan kemahiran kuat di pengembangan Android dan web. Terbiasa membangun aplikasi berpusat pada pengguna dengan Kotlin, Jetpack Compose, dan teknologi web modern — dengan UI/UX yang bersih dan back-end yang andal. Aktif di proyek tim maupun lepas, dengan pola pikir bertumbuh yang dibentuk lewat program seperti Bangkit 2023. Fokus pada solusi digital yang terukur, aman, dan mudah dipelihara di berbagai platform.</p>
+          <div class="about__story" id="about-story">
+            <h2 class="about__title about__story-title" id="about-story-title">Cerita <span class="grad">Saya</span></h2>
+            <div class="about__story-body" id="about-story-body">
+              <p class="about__summary">Perjalanan saya ke dunia pengembangan dimulai saat SMK di jurusan Teknik Komputer. Apa yang dimulai sebagai keingintahuan dengan cepat berubah menjadi passion mendalam untuk menciptakan aplikasi mobile dan website yang berdampak.</p>
+              <p class="about__summary">Selama bertahun-tahun, saya memiliki kesempatan untuk mengerjakan proyek-proyek beragam - dari platform job portal hingga aplikasi SCADA - masing-masing mengajarkan saya sesuatu yang baru tentang user experience, optimasi performa, dan arsitektur kode yang bersih.</p>
+              <p class="about__summary">Dengan pengalaman di berbagai perusahaan seperti Jobnation.id, PT Hadiscada Inovasindo, dan Bangkit Academy by Google, saya terus mengasah skill dalam Mobile Development, UI/UX Design, dan Web Development untuk menciptakan solusi digital yang inovatif.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="container"><ul class="stats" id="stats" aria-label="Angka ringkas"></ul></div>
+    </section>
+
+    <!-- ============ SKILL ============ -->
+    <section class="section skills" id="skills" aria-labelledby="skills-title">
+      <div class="container section__head">
+        <p class="label section__eyebrow"><b>02</b> Skill</p>
+        <h2 class="section__title" id="skills-title">Toolbox untuk produk yang utuh.</h2>
+      </div>
+      <div class="marquee" id="marquee" aria-hidden="true"></div>
+      <div class="container"><div class="skill-grid" id="skill-grid"></div></div>
+    </section>
+
+    <!-- ============ PERJALANAN ============ -->
+    <section class="section journey" id="journey" aria-labelledby="journey-title">
+      <div class="container">
+        <div class="section__head">
+          <p class="label section__eyebrow"><b>03</b> Perjalanan</p>
+          <h2 class="section__title" id="journey-title">Dari bangku kuliah ke produk nyata.</h2>
+        </div>
+        <div class="journey__timeline" id="journey-timeline">
+          <svg class="journey__line" id="journey-line" aria-hidden="true" focusable="false">
+            <line class="track" x1="1" y1="0" x2="1" y2="100%"/>
+            <line class="draw" id="journey-draw" x1="1" y1="0" x2="1" y2="100%"/>
+          </svg>
+          <ol id="journey-list"></ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SOROTAN & EKSPLORASI (3D SHOWCASE) ============ -->
+    <section class="section highlights" id="highlights" aria-labelledby="highlights-title">
+      <div class="hl-ambient" aria-hidden="true"><i></i><i></i></div>
+      <div class="container">
+        <div class="hl-head">
+          <div class="hl-head__copy">
+            <p class="label section__eyebrow"><b>04</b> <span id="highlights-eyebrow">Sorotan &amp; Eksplorasi</span></p>
+            <h2 class="section__title" id="highlights-title">Prestasi, Komunitas &amp; <span class="grad">Kolaborasi Riset.</span></h2>
+            <p class="hl-sub" id="highlights-sub">Momen terpilih di luar baris kode — dari panggung juara kompetisi desain UI/UX Figma tingkat Kabupaten Kuningan, eksplorasi ekosistem teknologi di Google DevFest, hingga kolaborasi pengembangan aplikasi langsung bersama dosen.</p>
+          </div>
+          <div class="hl-controls" role="group" aria-label="Mode tampilan 3D">
+            <button class="hl-mode" type="button" data-hl-mode="bento" aria-pressed="true" data-magnetic>
+              <span class="hl-mode__dot" aria-hidden="true"></span>Bento 3D
+            </button>
+            <button class="hl-mode" type="button" data-hl-mode="showcase" aria-pressed="false" data-magnetic>
+              <span class="hl-mode__dot" aria-hidden="true"></span>Orbit 3D
+            </button>
+          </div>
+        </div>
+
+        <div class="hl-stage" id="highlights-stage" data-mode="bento">
+          <div class="hl-grid" id="highlights-grid"></div>
+          <div class="hl-deck-nav" id="hl-deck-nav" aria-label="Navigasi kartu Orbit 3D" hidden>
+            <button class="hl-deck-btn" type="button" id="hl-prev" aria-label="Sorotan sebelumnya" data-magnetic>
+              <span aria-hidden="true">←</span> Sebelumnya
+            </button>
+            <div class="hl-deck-status">
+              <div class="hl-deck-dots" id="hl-dots"></div>
+              <span class="label hl-deck-counter" id="hl-counter">01 / 04</span>
+            </div>
+            <button class="hl-deck-btn" type="button" id="hl-next" aria-label="Sorotan berikutnya" data-magnetic>
+              Berikutnya <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PROYEK ============ -->
+    <section class="section projects" id="projects" aria-labelledby="projects-title">
+      <div class="container">
+        <div class="section__head">
+          <p class="label section__eyebrow"><b>05</b> Proyek</p>
+          <h2 class="section__title" id="projects-title">Karya pilihan.</h2>
+        </div>
+        <div class="filters" id="project-filters" role="group" aria-label="Filter kategori proyek"></div>
+        <ol class="project-list" id="project-list"></ol>
+      </div>
+    </section>
+
+    <!-- ============ SERTIFIKASI ============ -->
+    <section class="section certs" id="certs" aria-labelledby="certs-title">
+      <div class="certs__pin" id="certs-pin">
+        <div class="container section__head">
+          <p class="label section__eyebrow"><b>06</b> Sertifikat</p>
+          <h2 class="section__title" id="certs-title">Terus belajar, terus bertumbuh.</h2>
+        </div>
+        <div class="certs__viewport">
+          <ul class="certs__track" id="certs-track" aria-label="Daftar sertifikat dan program"></ul>
+        </div>
+        <div class="container certs__progress" aria-hidden="true">
+          <div class="certs__bar"><i id="certs-bar"></i></div>
+          <span class="label certs__count" id="certs-count">01 / 10</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ KONTAK ============ -->
+    <section class="section contact" id="contact" aria-labelledby="contact-title">
+      <div class="container">
+        <p class="label section__eyebrow"><b>07</b> Kontak</p>
+        <h2 class="contact__title" id="contact-title">Ayo bikin sesuatu yang keren.</h2>
+        <p class="contact__sub" id="contact-sub">Punya ide aplikasi atau website? Cerita aja, saya bantu dari desain sampai rilis.</p>
+        <div class="contact__actions">
+          <a class="btn btn--primary btn--lg" id="link-wa" href="https://wa.me/6281219195308" target="_blank" rel="noopener" data-magnetic>WhatsApp
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>
+          </a>
+          <a class="btn btn--ghost btn--lg" id="link-mail" href="mailto:wiralodrasaputra07@gmail.com" data-magnetic>Email</a>
+          <button class="btn btn--ghost btn--lg" id="copy-email" type="button" data-magnetic><span class="copy-fx" id="copy-label">Salin email</span></button>
+          <a class="btn btn--outline btn--lg" id="link-cv" href="assets/Wira-Sukma-Saputra-CV.pdf" download data-magnetic>Unduh CV</a>
+        </div>
+        <ul class="social" id="social" aria-label="Media sosial"></ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__bar">
+      <p class="label footer__clock">Jakarta · <b id="clock">--:--:--</b> WIB</p>
+      <button class="footer__top label" id="to-top" type="button" data-magnetic>Kembali ke atas <i aria-hidden="true">↑</i></button>
+      <p class="label">© <span id="year">2026</span> Wira Sukma Saputra</p>
+    </div>
+    <div class="footer__name" id="footer-name" aria-hidden="true">
+      <div class="footer__marquee">
+        <span>WIRA SUKMA SAPUTRA <i>✦</i></span>
+        <span>WIRA SUKMA SAPUTRA <i>✦</i></span>
+        <span>WIRA SUKMA SAPUTRA <i>✦</i></span>
+        <span>WIRA SUKMA SAPUTRA <i>✦</i></span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Preview proyek yang mengikuti kursor (desktop) -->
+  <div class="project-preview" id="project-preview" aria-hidden="true">
+    <div class="project-preview__frame" id="project-preview-frame"><img alt="" id="project-preview-img" width="640" height="400"></div>
+  </div>
+
+  <!-- Modal detail proyek -->
+  <div class="modal" id="project-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
+    <div class="modal__backdrop" id="modal-backdrop"></div>
+    <div class="modal__panel" id="modal-panel" data-lenis-prevent>
+      <button class="modal__close" id="modal-close" type="button">Tutup <i aria-hidden="true">✕</i><span class="sr-only">(Esc)</span></button>
+      <div class="container" id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- Modal detail sorotan & prestasi 3D -->
+  <div class="modal hl-modal" id="hl-modal" role="dialog" aria-modal="true" aria-labelledby="hl-modal-title" aria-hidden="true">
+    <div class="modal__backdrop" id="hl-modal-backdrop"></div>
+    <div class="modal__panel" id="hl-modal-panel" data-lenis-prevent>
+      <button class="modal__close" id="hl-modal-close" type="button">Tutup <i aria-hidden="true">✕</i><span class="sr-only">(Esc)</span></button>
+      <div class="container" id="hl-modal-content"></div>
+    </div>
+  </div>
+
+  <noscript>
+    <p style="position:fixed;bottom:0;left:0;right:0;padding:12px;background:#12141C;color:#F2F3F5;text-align:center;z-index:5000;font:14px/1.4 sans-serif">
+      Aktifkan JavaScript untuk pengalaman penuh. Hubungi saya:
+      <a href="mailto:wiralodrasaputra07@gmail.com" style="color:#3DDC84">Email</a> ·
+      <a href="https://wa.me/6281219195308" style="color:#3DDC84">WhatsApp</a>
+    </p>
+  </noscript>
+
+  <!-- Library lokal (urutan penting) -->
+  <script src="vendor/gsap.min.js" defer></script>
+  <script src="vendor/ScrollTrigger.min.js" defer></script>
+  <script src="vendor/SplitText.min.js" defer></script>
+  <script src="vendor/Flip.min.js" defer></script>
+  <script src="vendor/lenis.min.js" defer></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

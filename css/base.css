@@ -1,0 +1,153 @@
+/* ==========================================================================
+   Base — reset, tipografi, utilitas
+   ========================================================================== */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--bg);
+}
+
+/* Lenis */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+
+html.is-loading, html.modal-open, html.menu-open { overflow: hidden; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--f-body);
+  font-size: var(--fs-body);
+  line-height: 1.65;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+h1, h2, h3, h4, p, ul, ol, figure { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+img, svg, canvas { display: block; max-width: 100%; }
+img { height: auto; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+
+h1, h2, h3 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -.03em;
+}
+
+::selection { background: var(--accent); color: var(--on-btn); }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Layout */
+.container {
+  width: 100%;
+  max-width: calc(var(--container) + var(--gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.section {
+  position: relative;
+  padding-block: clamp(80px, 12vw, 160px);
+}
+
+.section__head { margin-bottom: clamp(40px, 6vw, 80px); }
+
+.section__title {
+  font-size: var(--fs-h2);
+  max-width: 14ch;
+}
+
+/* Utilitas */
+.label {
+  font-family: var(--f-mono);
+  font-size: var(--fs-label);
+  font-weight: 400;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.section__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: var(--sp-6);
+}
+.section__eyebrow::before {
+  content: "";
+  width: 32px;
+  height: 1px;
+  background: var(--grad);
+}
+.section__eyebrow b { color: var(--accent-text); font-weight: 400; }
+
+.grad {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed;
+  top: 12px; left: 12px;
+  z-index: 2000;
+  padding: 12px 20px;
+  border-radius: var(--r-pill);
+  background: var(--btn-bg);
+  color: var(--on-btn);
+  font-weight: 600;
+  transform: translateY(-200%);
+  transition: transform .3s var(--ease-out);
+}
+.skip-link:focus { transform: translateY(0); }
+
+.line-mask {
+  overflow: hidden;
+  padding-bottom: .16em;
+  margin-bottom: -.16em;
+}
+
+/* Transisi tema (fallback tanpa View Transitions) */
+html.theme-fade *, html.theme-fade *::before, html.theme-fade *::after {
+  transition: background-color .5s ease, color .5s ease, border-color .5s ease, fill .5s ease !important;
+}
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .5s; }
+
+/* Reduced motion — konten statis, transisi hanya fade 0.2s */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .2s !important;
+  }
+}
