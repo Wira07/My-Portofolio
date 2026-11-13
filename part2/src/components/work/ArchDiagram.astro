@@ -1,0 +1,144 @@
+---
+import type { WorkEntry } from "@/lib/content";
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+
+interface Props {
+  architecture: WorkEntry["data"]["architecture"];
+  locale: Locale;
+}
+
+const { architecture, locale } = Astro.props;
+
+// Pure build-time coordinate engine placing nodes horizontally left -> right
+const total = Math.max(architecture.nodes.length, 1);
+const colWidth = 210;
+const boxW = 166;
+const boxH = 74;
+const svgW = total * colWidth + 32;
+const svgH = 220;
+
+const positioned = architecture.nodes.map((n, i) => ({
+  ...n,
+  x: 24 + i * colWidth,
+  y: i % 2 === 0 ? 52 : 96
+}));
+
+const nodeById = Object.fromEntries(positioned.map((n) => [n.id, n]));
+---
+
+<section class="my-8 rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface)] p-5 md:p-6" aria-label={architecture.title}>
+  <div class="mb-4 flex flex-col gap-1 border-b border-[var(--line)] pb-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <span class="mono-label text-[var(--accent)]">{t(locale, "work.archTitle")}</span>
+      <h3 class="mt-1 font-sans text-base font-semibold text-[var(--text)]">{architecture.title}</h3>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto pb-2">
+    <svg
+      viewBox={`0 0 ${svgW} ${svgH}`}
+      width={svgW}
+      height={svgH}
+      role="img"
+      aria-label={architecture.title}
+      class="h-auto min-w-[680px] w-full"
+    >
+      <defs>
+        <marker id="arch-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,1 L7,4 L0,7 z" fill="var(--accent)" />
+        </marker>
+      </defs>
+
+      {
+        architecture.edges.map((edge) => {
+          const fromNode = nodeById[edge.from];
+          const toNode = nodeById[edge.to];
+          if (!fromNode || !toNode) return null;
+          const x1 = fromNode.x + boxW;
+          const y1 = fromNode.y + boxH / 2;
+          const x2 = toNode.x - 4;
+          const y2 = toNode.y + boxH / 2;
+          const midX = (x1 + x2) / 2;
+          const pathD = `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`;
+          return (
+            <g>
+              <path
+                data-arch-edge
+                d={pathD}
+                fill="none"
+                stroke="var(--accent)"
+                stroke-width="1.5"
+                marker-end="url(#arch-arrow)"
+              />
+              {edge.label && (
+                <text
+                  x={midX}
+                  y={Math.min(y1, y2) - 8}
+                  text-anchor="middle"
+                  fill="var(--text-dim)"
+                  font-family="JetBrains Mono, monospace"
+                  font-size="10"
+                >
+                  {edge.label}
+                </text>
+              )}
+            </g>
+          );
+        })
+      }
+
+      {
+        positioned.map((node) => {
+          const stroke =
+            node.group === "core"
+              ? "var(--accent)"
+              : node.group === "output"
+                ? "var(--accent-2)"
+                : "var(--line)";
+          return (
+            <g transform={`translate(${node.x}, ${node.y})`}>
+              <rect
+                width={boxW}
+                height={boxH}
+                rx="4"
+                fill="var(--surface-2)"
+                stroke={stroke}
+                stroke-width="1.25"
+              />
+              <text
+                x="12"
+                y="28"
+                fill="var(--text)"
+                font-family="Inter Tight, sans-serif"
+                font-size="13"
+                font-weight="600"
+              >
+                {node.label}
+              </text>
+              <text
+                x="12"
+                y="49"
+                fill="var(--text-dim)"
+                font-family="JetBrains Mono, monospace"
+                font-size="10"
+              >
+                {node.sub.slice(0, 26)}
+              </text>
+            </g>
+          );
+        })
+      }
+    </svg>
+  </div>
+
+  <p class="mt-3 text-xs text-[var(--text-dim)]">{architecture.caption}</p>
+
+  <details class="mt-4 border-t border-[var(--line)] pt-3">
+    <summary class="cursor-pointer font-mono text-xs text-[var(--text-dim)] hover:text-[var(--accent)]">
+      {t(locale, "work.mermaidToggle")}
+    </summary>
+    <pre class="mt-3 overflow-x-auto rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--bg)] p-3 font-mono text-xs text-[var(--text-dim)]">{architecture.mermaid}</pre>
+  </details>
+</section>
+

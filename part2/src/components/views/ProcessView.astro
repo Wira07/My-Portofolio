@@ -1,0 +1,61 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { localePath, t, getDict } from "@/lib/i18n";
+import { getProcessSteps } from "@/lib/content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import ProcessTimeline from "@/components/work/ProcessTimeline.astro";
+import Button from "@/components/core/Button.astro";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const steps = getProcessSteps();
+const dict = getDict(locale);
+---
+
+<BaseLayout
+  title={`${t(locale, "process.title")} — ${t(locale, "meta.brand")}`}
+  description={t(locale, "process.subtitle")}
+  locale={locale}
+  path={localePath(locale, "/process")}
+  ogSlug="default"
+  activeNav="process"
+>
+  <section class="border-b border-[var(--line)] py-12 md:py-16">
+    <div class="studio-container">
+      <span class="mono-label text-[var(--accent)]">{t(locale, "home.processLabel")}</span>
+      <h1 class="page-h1 mt-3 max-w-4xl text-[var(--text)]" data-hero-line>{t(locale, "process.title")}</h1>
+      <p class="mt-4 max-w-2xl text-base text-[var(--text-dim)]" data-hero-line>{t(locale, "process.subtitle")}</p>
+    </div>
+  </section>
+
+  <section class="py-12 md:py-16">
+    <div class="studio-container">
+      <ProcessTimeline steps={steps} locale={locale} />
+
+      <div class="mt-14 rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface)] p-6 md:p-8" data-reveal>
+        <h2 class="section-h2 text-[var(--text)]">{t(locale, "process.governanceTitle")}</h2>
+        <ul class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+          {dict.process.governancePoints.map((pt, i) => (
+            <li class="rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] p-4 text-sm text-[var(--text)]">
+              <span class="block font-mono text-xs text-[var(--accent)]">STD-0{i + 1}</span>
+              <span class="mt-2 block">{pt}</span>
+            </li>
+          ))}
+        </ul>
+
+        <div class="mt-8 flex flex-wrap gap-3">
+          <Button href={localePath(locale, "/engage")} variant="primary" magnetic={true}>
+            {t(locale, "nav.engage")} →
+          </Button>
+          <Button href={localePath(locale, "/work")} variant="secondary">
+            {t(locale, "hero.ctaSecondary")}
+          </Button>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+

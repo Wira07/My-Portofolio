@@ -1,0 +1,28 @@
+---
+title: "Alur Login WhatsApp + FCM untuk Aplikasi Orang Tua"
+slug: "whatsapp-login-fcm-parent-app"
+locale: "id"
+summary: "Merancang onboarding tanpa password memakai nomor WhatsApp terdaftar sekolah dan sinkronisasi token Firebase Cloud Messaging yang tangguh."
+publishedAt: "2026-07-10"
+readingTime: "5 menit"
+tags: ["Android", "WhatsApp Auth", "Firebase FCM", "EdTech", "UX"]
+relatedWork: ["parent-notifications"]
+---
+
+## Menghapus Friksi Kata Sandi bagi Wali Murid
+
+Dalam konteks sekolah vokasi maupun menengah di Indonesia, hampir 100% wali murid memiliki WhatsApp aktif, sementara sebagian besar tidak mengingat alamat email maupun kata sandi akun portal sekolah.
+
+Mengganti form login klasik menjadi verifikasi nomor WhatsApp:
+- **Validasi Pra-OTP terhadap Buku Induk**: Backend memeriksa lebih dulu apakah nomor ponsel tercatat sebagai wali sah siswa aktif. Jika tidak terdaftar, OTP tidak dikirim sehingga menekan biaya gateway dan spam.
+- **Rate Limiting & Kedaluwarsa Ketat**: Permintaan ulang kode dibatasi berbasis cooldown (misal 60 detik) dengan jumlah percobaan maksimal per sesi.
+
+## Menjaga Token FCM Tetap Akurat Lintas Ganti Ponsel
+
+Notifikasi kehadiran gagal sampai sering kali disebabkan token FCM lawas yang masih tersimpan di server saat orang tua mengganti ponsel atau menghapus data aplikasi:
+
+1. Daftarkan `device_token` ke API segera setelah verifikasi OTP sukses.
+2. Override `onNewToken(token)` di `FirebaseMessagingService` untuk memperbarui backend jika sesi lokal masih aktif.
+3. Kirim pesan memakai **data payload** untuk pembaruan state UI sekaligus **notification payload** standar agar sistem Android menampilkannya andal bahkan ketika aplikasi ditutup paksa (*killed state*).
+4. Pisahkan status HTTP `UNREGISTERED` dari FCM response di backend untuk menonaktifkan token usang secara otomatis.
+

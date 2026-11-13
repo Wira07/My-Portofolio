@@ -1,0 +1,84 @@
+---
+title: "KepalQu"
+slug: "kepalqu"
+locale: "en"
+summary: "Native Kotlin Android delivery and logistics application built for resilient courier dispatch and offline-safe status updates."
+category: ["android"]
+role: "Android Developer"
+year: 2025
+duration: "TODO_METRIC"
+client: "Logistics Product Initiative"
+stack: ["Kotlin", "MVVM", "Jetpack", "Room DB", "REST API", "Location Services"]
+cover: "/images/work/kepalqu.png"
+coverAlt: "KepalQu Kotlin MVVM offline-first delivery app architecture"
+draft: true
+metrics:
+  - label: "Location Battery Footprint"
+    value: "TODO_METRIC"
+    note: "Full-route courier profiling pending"
+  - label: "Offline Sync Success"
+    value: "TODO_METRIC"
+    note: "Pending fleet rollout telemetry"
+links: {}
+architecture:
+  title: "Offline-First MVVM Delivery Queue in KepalQu"
+  caption: "Courier status updates persist locally in Room before background sync completes."
+  nodes:
+    - { id: "ui", label: "Courier Screen", sub: "Manifest & Proof of Delivery", group: "input" }
+    - { id: "vm", label: "ViewModel + State", sub: "Reactive UI State", group: "core" }
+    - { id: "repo", label: "Sync Repository", sub: "Ordered Mutation Queue", group: "core" }
+    - { id: "room", label: "Room SQLite", sub: "Local Outbox Cache", group: "storage" }
+    - { id: "api", label: "Logistics API", sub: "Dispatch & Tracking Server", group: "output" }
+  edges:
+    - { from: "ui", to: "vm", label: "Action" }
+    - { from: "vm", to: "repo", label: "Enqueue" }
+    - { from: "repo", to: "room", label: "Persist First" }
+    - { from: "repo", to: "api", label: "Background Sync" }
+  mermaid: |
+    flowchart TB
+      UI[Courier UI] --> VM[MVVM ViewModel]
+      VM --> Repo[Sync Repository]
+      Repo --> DB[(Room Local Cache)]
+      Repo -->|When Online| API[REST API Server]
+gallery:
+  - src: "/images/work/kepalqu.png"
+    alt: "KepalQu Android MVVM architecture diagram"
+    caption: "Separation of UI, reactive state, and Room local persistence queue."
+    width: 1280
+    height: 800
+featured: true
+order: 4
+---
+
+## Context
+
+Last-mile delivery couriers frequently move between stable urban 4G coverage and residential dead zones where network requests silently time out at the exact moment a parcel changes hands.
+
+## Problem
+
+1. **Blocked status transitions offline**: Blocking courier checkmarks on network roundtrips stalls field operations.
+2. **Cognitive overload on small screens**: Drivers need manifest lists, recipient stops, and proof-of-delivery triggers in minimal taps.
+3. **Maintainable state boundaries**: Logistics rules change fast and require decoupled UI/data layers.
+
+## Approach & Technical Trade-Offs
+
+- **Local Outbox Pattern with Room + MVVM**: Writing every delivery confirmation locally first allows instant UI progression and deterministic background retry. *Trade-off*: requires explicit sync-state indicators so couriers see queued vs confirmed statuses clearly.
+- **Native Kotlin over Cross-Platform Wrappers**: Tighter control over Android foreground location lifecycles, camera permissions, and leaner APK sizing.
+
+## Architecture
+
+Screens subscribe strictly to `ViewModel` state streams backed by a `Repository` orchestrating local `Room` persistence and remote REST synchronization.
+
+## Outcomes
+
+- Modular Kotlin MVVM logistics codebase ready for field expansion.
+- Operational fleet telemetry metrics remain unverified prior to full dispatch rollout.
+
+## Lessons Learned
+
+Reliability in field logistics means treating network loss as the default state rather than an exceptional edge case.
+
+## Gallery
+
+Architecture diagram shown above.
+

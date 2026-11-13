@@ -1,0 +1,28 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { switchLocalePath, t } from "@/lib/i18n";
+
+interface Props {
+  locale: Locale;
+  currentPath: string;
+}
+
+const { locale, currentPath } = Astro.props;
+const targetLocale: Locale = locale === "id" ? "en" : "id";
+const href = switchLocalePath(currentPath, targetLocale);
+const aria = t(locale, "meta.toggleLangLabel");
+---
+
+<a
+  href={href}
+  hreflang={targetLocale}
+  data-lang-toggle={targetLocale}
+  title={aria}
+  class="inline-flex h-9 items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface)] px-2.5 font-mono text-xs tracking-wider text-[var(--text)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+>
+  <span class={locale === "id" ? "text-[var(--accent)] font-medium" : "text-[var(--text-dim)]"}>ID</span>
+  <span class="text-[var(--line)]">/</span>
+  <span class={locale === "en" ? "text-[var(--accent)] font-medium" : "text-[var(--text-dim)]"}>EN</span>
+  <span class="sr-only"> — {aria}</span>
+</a>
+

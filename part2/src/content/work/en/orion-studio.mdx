@@ -1,0 +1,84 @@
+---
+title: "ORION Studio"
+slug: "orion-studio"
+locale: "en"
+summary: "Next.js creative studio landing page engineered with scroll-driven 3D choreography and strict reduced-motion fallbacks."
+category: ["web", "uiux"]
+role: "Frontend & Motion Engineer"
+year: 2025
+duration: "TODO_METRIC"
+client: "Studio Motion R&D"
+stack: ["Next.js", "TypeScript", "Scroll Choreography", "3D Viewport", "CSS Custom Properties"]
+cover: "/images/work/orion-studio.png"
+coverAlt: "ORION Studio Next.js progressive 3D scroll architecture diagram"
+draft: true
+metrics:
+  - label: "Desktop Target Frame Rate"
+    value: "TODO_METRIC"
+    note: "Integrated GPU benchmarks pending"
+  - label: "Initial JS Payload"
+    value: "TODO_METRIC"
+    note: "Pending final production bundle audit"
+links: {}
+architecture:
+  title: "Progressive 3D Canvas Loading Inside Next.js App Router"
+  caption: "Critical typography renders immediately via SSR while 3D stages hydrate only when capability guards pass."
+  nodes:
+    - { id: "ssr", label: "Next.js SSR Shell", sub: "Critical HTML & Type", group: "input" }
+    - { id: "guard", label: "Capability Guard", sub: "Reduced Motion & Viewport", group: "core" }
+    - { id: "scroll", label: "Scroll Timeline", sub: "Normalized 0..1 Progress", group: "core" }
+    - { id: "stage", label: "3D Canvas Stage", sub: "Lazy Dynamic Import", group: "output" }
+    - { id: "fallback", label: "Static Visual Fallback", sub: "Mobile / Low-Power Mode", group: "storage" }
+  edges:
+    - { from: "ssr", to: "guard", label: "Hydrate" }
+    - { from: "guard", to: "scroll", label: "Eligible" }
+    - { from: "scroll", to: "stage", label: "Drive Camera" }
+    - { from: "guard", to: "fallback", label: "Reduced Motion" }
+  mermaid: |
+    flowchart TD
+      A[Next.js SSR Content] --> B{Capability & Motion Guard}
+      B -->|Desktop Capable| C[Lazy Load 3D Scene]
+      C --> D[Scroll Progress Binding]
+      B -->|Reduced / Mobile| E[Static Lightweight Visual]
+gallery:
+  - src: "/images/work/orion-studio.png"
+    alt: "ORION Studio progressive 3D viewport architecture"
+    caption: "Separating critical editorial SSR content from optional 3D scene hydration."
+    width: 1280
+    height: 800
+featured: false
+order: 6
+---
+
+## Context
+
+3D showcase websites routinely sacrifice Largest Contentful Paint (LCP) and overheat mid-tier phones. **ORION Studio** explored pairing scroll-linked 3D depth with strict performance and accessibility boundaries.
+
+## Problem
+
+1. **Render-blocking WebGL bundles** delay first-contentful typography on slower networks.
+2. **Motion accessibility**: Users enabling `prefers-reduced-motion` must still read the complete narrative effortlessly.
+3. **DOM-to-camera harmony**: Motion should direct eye flow rather than obscure primary calls to action.
+
+## Approach & Technical Trade-Offs
+
+- **SSR-First Narrative + Lazy Dynamic Scene**: Copy and CTAs ship as plain server HTML before asynchronously booting the interactive canvas. *Trade-off*: brief subtle background fade-in on slow 3G/4G, traded intentionally for instant text readability.
+- **Capability Guard**: Automatically skips heavy 3D initialization when reduced motion is active or viewport constraints dictate.
+
+## Architecture
+
+Next.js outputs semantic HTML first, allowing a tiny client guard to decide between binding scroll progress to the 3D viewport or resting on an accessible static layout.
+
+## Outcomes
+
+- Clean separation between readable content and optional spatial enhancement.
+- Cross-device telemetry figures remain withheld for verification.
+
+## Lessons Learned
+
+Sophisticated web motion is defined by restraint, predictable pacing, and respect for hardware limits.
+
+## Gallery
+
+System architecture diagram shown above.
+

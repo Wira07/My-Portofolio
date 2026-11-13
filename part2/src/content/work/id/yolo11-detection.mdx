@@ -1,0 +1,83 @@
+---
+title: "Sistem Deteksi Objek YOLO11"
+slug: "yolo11-detection"
+locale: "id"
+summary: "Pipeline pelatihan dan evaluasi deteksi objek YOLO11 disertai paket dokumentasi teknis terstruktur yang siap dipakai tim klien."
+category: ["ai"]
+role: "Computer Vision Engineer & Technical Writer"
+year: 2025
+duration: "TODO_METRIC"
+client: "Klien R&D Computer Vision"
+stack: ["Python", "YOLO11", "OpenCV", "ONNX", "Dataset Curation", "Technical Docs"]
+cover: "/images/work/yolo11-detection.png"
+coverAlt: "Cetak biru pipeline pelatihan dan dokumentasi YOLO11"
+draft: true
+metrics:
+  - label: "Skor mAP@50 Validasi"
+    value: "TODO_METRIC"
+    note: "Bergantung pada kelas objek final klien"
+  - label: "Kecepatan Inference Batch"
+    value: "TODO_METRIC"
+    note: "Menunggu benchmark di server target"
+links: {}
+architecture:
+  title: "Pipeline Dataset, Pelatihan YOLO11, Evaluasi & Handover Dokumentasi"
+  caption: "Menjamin eksperimen dapat direproduksi ulang oleh tim internal klien lewat konfigurasi terversi."
+  nodes:
+    - { id: "raw", label: "Kurasi Dataset", sub: "Anotasi & Split Terkontrol", group: "input" }
+    - { id: "train", label: "YOLO11 Training", sub: "Augmentasi & Hyperparams", group: "core" }
+    - { id: "eval", label: "Evaluasi Metrik", sub: "Confusion Matrix & Error Log", group: "core" }
+    - { id: "export", label: "Ekspor Model", sub: "Weights PT / ONNX Artifact", group: "storage" }
+    - { id: "docs", label: "Playbook Klien", sub: "Panduan Inference & Retrain", group: "output" }
+  edges:
+    - { from: "raw", to: "train", label: "YAML Split" }
+    - { from: "train", to: "eval", label: "Best Checkpoint" }
+    - { from: "eval", to: "export", label: "Verified Weights" }
+    - { from: "eval", to: "docs", label: "Threshold Guide" }
+  mermaid: |
+    flowchart LR
+      D[Dataset Terkurasi] --> T[Training Pipeline YOLO11]
+      T --> E[Evaluasi & Error Analysis]
+      E --> X[Artifak Model PT / ONNX]
+      E --> DOC[Dokumentasi Reproduksi Klien]
+gallery:
+  - src: "/images/work/yolo11-detection.png"
+    alt: "Diagram alur pelatihan dan serah terima YOLO11"
+    caption: "Alur end-to-end dari validasi anotasi dataset hingga dokumen playbook klien."
+    width: 1280
+    height: 800
+featured: false
+order: 7
+---
+
+## Konteks
+
+Proyek Computer Vision sering kali berhenti pada notebook eksperimen yang sulit dijalankan ulang oleh tim klien. Pada penugasan **Sistem Deteksi Objek YOLO11**, target utamanya tidak hanya melatih model deteksi, tetapi juga membangun pipeline yang rapi dan terdokumentasi penuh.
+
+## Masalah
+
+1. **Kualitas anotasi awal bervariasi**: Kotak pembatas yang tidak konsisten dan rasio kelas tidak seimbang menurunkan presisi deteksi di kondisi nyata.
+2. **Kesenjangan antara pelatihan dan pemakaian**: Klien memerlukan skrip inference yang jelas, pengaturan *confidence threshold* yang terukur, serta langkah melatih ulang saat data baru masuk.
+
+## Pendekatan & Keputusan Teknis (Trade-Off)
+
+- **Audit Dataset Sebelum Tuning Model**: Memprioritaskan pembersihan label, pemisahan train/val/test anti-kebocoran data (*data leakage*), dan augmentasi realistis sebelum mencoba varian model lebih besar. *Trade-off*: membutuhkan waktu persiapan lebih panjang di awal, tetapi hasil validasi jauh lebih jujur.
+- **Konfigurasi Eksperimen Deklaratif + Playbook**: Memisahkan file konfigurasi dataset, skrip evaluasi, dan panduan troubleshooting menjadi satu paket serah terima klien.
+
+## Arsitektur
+
+Alur kerja dibagi menjadi empat tahap deterministik: kurasi dataset terverifikasi, pelatihan YOLO11 dengan seed terkontrol, analisis kesalahan melalui confusion matrix, dan ekspor bobot model beserta panduan penggunaan.
+
+## Hasil
+
+- Pipeline terstruktur dari pra-pemrosesan hingga skrip inference siap pakai beserta dokumentasi klien-ready telah tersusun lengkap.
+- Nilai numerik mAP final dirahasiakan/ditandai dalam verifikasi sampai evaluasi akhir klien disetujui rilisnya.
+
+## Pelajaran
+
+Di proyek AI untuk klien, dokumentasi cara melatih ulang model dan menjelaskan batasan kasus gagal bernilai sama tingginya dengan file bobot model itu sendiri.
+
+## Galeri
+
+Diagram pipeline terlampir di atas.
+

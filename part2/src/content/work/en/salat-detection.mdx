@@ -1,0 +1,88 @@
+---
+title: "Salat Posture Detection (YOLO11 → TFLite)"
+slug: "salat-detection"
+locale: "en"
+summary: "Seven-class YOLO11 posture detection model quantized to TFLite and integrated directly inside a native Kotlin Android app."
+category: ["ai", "android"]
+role: "AI Pipeline & Android TFLite Engineer"
+year: 2025
+duration: "TODO_METRIC"
+client: "Mobile Education Research App"
+stack: ["Python", "YOLO11", "TensorFlow Lite", "Kotlin", "CameraX", "NNAPI / GPU Delegate"]
+cover: "/images/work/salat-detection.png"
+coverAlt: "Blueprint of 7-class YOLO11 posture model quantized to Android TFLite"
+draft: true
+metrics:
+  - label: "Posture Classes Supported"
+    value: "7 Classes"
+    note: "Offline on-device posture inference"
+  - label: "Per-Frame Latency"
+    value: "TODO_METRIC"
+    note: "Varies across mobile SoC tiers"
+  - label: "Quantized TFLite Size"
+    value: "TODO_METRIC"
+    note: "Pending final INT8/FP16 profile"
+links: {}
+architecture:
+  title: "YOLO11 to On-Device Android TFLite Inference Flow"
+  caption: "All 7 posture detections run 100% locally on the handset without uploading camera frames."
+  nodes:
+    - { id: "yolo", label: "YOLO11 Model", sub: "7-Class Posture Weights", group: "input" }
+    - { id: "tflite", label: "TFLite Converter", sub: "FP16 / INT8 Quantization", group: "core" }
+    - { id: "camx", label: "Kotlin CameraX", sub: "ImageAnalysis Frame Buffer", group: "core" }
+    - { id: "interp", label: "TFLite Interpreter", sub: "NMS & Tensor Post-Process", group: "storage" }
+    - { id: "feedback", label: "UI Overlay", sub: "Live Posture Guidance", group: "output" }
+  edges:
+    - { from: "yolo", to: "tflite", label: "Export" }
+    - { from: "tflite", to: "interp", label: "App Asset" }
+    - { from: "camx", to: "interp", label: "RGB Tensor" }
+    - { from: "interp", to: "feedback", label: "7-Class Output" }
+  mermaid: |
+    flowchart LR
+      M[YOLO11 7-Class Weights] --> C[ONNX / TFLite Quantization]
+      C --> A[Android Assets .tflite]
+      CAM[CameraX Analyzer Kotlin] --> INT[TFLite Interpreter + NMS]
+      A --> INT
+      INT --> UI[Real-Time Posture Overlay]
+gallery:
+  - src: "/images/work/salat-detection.png"
+    alt: "YOLO11 to Android TFLite posture detection architecture"
+    caption: "Offline edge inference architecture integrated with Kotlin CameraX."
+    width: 1280
+    height: 800
+featured: false
+order: 8
+---
+
+## Context
+
+Guided prayer-learning apps must give instant posture feedback privately without requiring fast continuous internet connections or streaming bedroom camera feeds to cloud GPUs.
+
+## Problem
+
+1. **Privacy and latency constraints**: Cloud inference introduces roundtrip lag and sensitive video uploads.
+2. **Python-to-Kotlin tensor alignment**: Raw YOLO output matrices require careful coordinate rescaling, rotation handling, and Non-Maximum Suppression inside Kotlin.
+3. **APK size vs accuracy**: Full desktop weights exceed practical mobile storage budgets without quantization.
+
+## Approach & Technical Trade-Offs
+
+- **On-Device TFLite Execution over Cloud Inference**: Running the 7-class model directly on Android preserves user privacy and cuts per-user inference cost to zero. *Trade-off*: demands explicit Kotlin NMS post-processing and strict tensor stride verification.
+- **Quantized Export with Delegate Fallback**: Configured hardware delegates (NNAPI/GPU) with graceful CPU fallback across varied Android devices.
+
+## Architecture
+
+A 7-class Python YOLO11 model exports to `.tflite`, ships inside Android assets, and consumes normalized CameraX `ImageAnalysis` buffers in real time.
+
+## Outcomes
+
+- Functional offline 7-class posture inference pipeline running natively inside Kotlin.
+- Final latency and size numbers remain withheld for verification pending broad handset profiling.
+
+## Lessons Learned
+
+Verifying RGB normalization, stride alignment, and sensor rotation between Python training and Kotlin camera buffers on day one saves days of subtle coordinate debugging.
+
+## Gallery
+
+Architecture topology diagram shown above.
+

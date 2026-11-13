@@ -1,0 +1,125 @@
+{
+  "packages": [
+    {
+      "id": "landing-profile",
+      "code": "PKG-01",
+      "title": { "id": "Landing / Company Profile", "en": "Landing & Company Profile" },
+      "summary": {
+        "id": "Situs web statis performa tinggi, arsitektur SEO lengkap, dwibahasa opsional, dan standar aksesibilitas WCAG AA.",
+        "en": "High-speed static web presence with complete technical SEO, optional bilingual routing, and WCAG AA accessibility compliance."
+      },
+      "duration": { "id": "2 – 3 minggu", "en": "2 – 3 weeks" },
+      "pricing": { "id": "Mulai dari — hubungi untuk estimasi", "en": "Starting from — contact for quote" },
+      "outputs": {
+        "id": ["Desain UI kustom responsif (Mobile-first)", "Build statis cepat (Astro) + Sitemap & JSON-LD", "Skor Lighthouse target ≥ 95"],
+        "en": ["Custom mobile-first responsive UI", "Fast static build (Astro) + Sitemap & JSON-LD", "Lighthouse ≥ 95 performance budget"]
+      },
+      "clientNeeds": {
+        "id": "Profil usaha, aset logo/foto resmi, serta poin penawaran utama.",
+        "en": "Company overview, official brand assets, and core service propositions."
+      }
+    },
+    {
+      "id": "web-app-custom",
+      "code": "PKG-02",
+      "title": { "id": "Web App Custom", "en": "Custom Web Application" },
+      "summary": {
+        "id": "Sistem operasional berbasis Laravel/PHP & JavaScript lengkap dengan dashboard analitik, manajemen inventori, dan otorisasi berbasis peran.",
+        "en": "Operational Laravel/PHP & JavaScript platforms featuring role-based access control, structured data workflows, and reporting exports."
+      },
+      "duration": { "id": "4 – 8 minggu", "en": "4 – 8 weeks" },
+      "pricing": { "id": "Sesuai cakupan modul — hubungi", "en": "Scoped by module complexity — inquire" },
+      "outputs": {
+        "id": ["Skema database relasional & REST API", "Panel admin multi-peran & ekspor laporan", "Dokumentasi teknis & panduan penggunaan"],
+        "en": ["Normalized relational schema & REST API", "Multi-role admin console & report exports", "Technical setup & operations documentation"]
+      },
+      "clientNeeds": {
+        "id": "Alur SOP saat ini, daftar peran pengguna, dan contoh format laporan.",
+        "en": "Current SOP flow, user permission matrix, and sample report templates."
+      }
+    },
+    {
+      "id": "android-app",
+      "code": "PKG-03",
+      "title": { "id": "Android App Native", "en": "Native Android Application" },
+      "summary": {
+        "id": "Aplikasi Android native berbasis Kotlin dengan Jetpack Compose atau XML/MVVM, autentikasi aman, FCM notifikasi, serta sinkronisasi API.",
+        "en": "Native Kotlin Android apps using Jetpack Compose and MVVM architecture, secure login, FCM push alerts, and resilient API sync."
+      },
+      "duration": { "id": "4 – 7 minggu", "en": "4 – 7 weeks" },
+      "pricing": { "id": "Mulai dari — hubungi untuk estimasi", "en": "Starting from — contact for quote" },
+      "outputs": {
+        "id": ["Aplikasi Kotlin teroptimasi & MVVM bersih", "Integrasi API / Firebase / WhatsApp OTP", "Signed AAB/APK siap distribusi"],
+        "en": ["Optimized Kotlin MVVM codebase", "API / Firebase / WhatsApp auth integration", "Signed AAB/APK ready for release"]
+      },
+      "clientNeeds": {
+        "id": "Spesifikasi endpoint API (jika sudah ada) dan akun Google Play / Firebase proyek.",
+        "en": "Existing API contracts (if available) and project Firebase/Play Console credentials."
+      }
+    },
+    {
+      "id": "iot-dashboard",
+      "code": "PKG-04",
+      "title": { "id": "IoT + Realtime Dashboard", "en": "IoT Telemetry & Console" },
+      "summary": {
+        "id": "Arsitektur jembatan antara perangkat sensor/analyzer via broker MQTT dengan portal web multi-tenant realtime dan riwayat pengujian.",
+        "en": "End-to-end telemetry bridge connecting field hardware over MQTT to multi-tenant real-time web consoles and historical audit logs."
+      },
+      "duration": { "id": "6 – 10 minggu", "en": "6 – 10 weeks" },
+      "pricing": { "id": "Disesuaikan jumlah perangkat & protokol — hubungi", "en": "Scoped by hardware topology — inquire" },
+      "outputs": {
+        "id": ["Broker pipeline MQTT & parser payload", "Dashboard multi-tenant & pemantauan live", "Simulasi uji beban & dokumentasi protokol"],
+        "en": ["MQTT ingestion pipeline & payload parser", "Multi-tenant live dashboard & audit logs", "Protocol spec & fault recovery guide"]
+      },
+      "clientNeeds": {
+        "id": "Format payload firmware perangkat dan satu unit dummy/simulator untuk uji integrasi.",
+        "en": "Firmware payload specification and simulator/test device access for integration."
+      }
+    },
+    {
+      "id": "ai-cv-poc",
+      "code": "PKG-05",
+      "title": { "id": "AI / Computer Vision PoC", "en": "AI & Computer Vision PoC" },
+      "summary": {
+        "id": "Pengembangan purwarupa teruji untuk deteksi objek YOLO11, pengenalan wajah, atau konversi model ke TFLite di perangkat seluler.",
+        "en": "Validated Proof of Concept covering YOLO11 object detection, face/liveness pipelines, or quantized TFLite deployment on Android."
+      },
+      "duration": { "id": "3 – 5 minggu", "en": "3 – 5 weeks" },
+      "pricing": { "id": "Mulai dari — hubungi untuk ruang lingkup dataset", "en": "Starting from — contact with dataset scope" },
+      "outputs": {
+        "id": ["Pipeline pelatihan & evaluasi presisi model", "Ekspor ONNX/TFLite + integrasi aplikasi uji", "Laporan keterbatasan & rekomendasi produksi"],
+        "en": ["Training pipeline & evaluation benchmark", "ONNX/TFLite artifact + demo integration", "Model edge-case report & scaling plan"]
+      },
+      "clientNeeds": {
+        "id": "Sampel gambar/video representatif kondisi lapangan dan target perangkat inference.",
+        "en": "Representative field image/video samples and target inference hardware profile."
+      }
+    }
+  ],
+  "wizardConfig": {
+    "tracks": [
+      { "id": "landing-profile", "labelId": "Landing / Company Profile", "labelEn": "Landing / Company Profile", "baseWeeks": [2, 3] },
+      { "id": "web-app-custom", "labelId": "Web App Custom (Laravel/PHP)", "labelEn": "Custom Web App (Laravel/PHP)", "baseWeeks": [4, 8] },
+      { "id": "android-app", "labelId": "Aplikasi Android Kotlin", "labelEn": "Native Kotlin Android App", "baseWeeks": [4, 7] },
+      { "id": "iot-dashboard", "labelId": "Sistem IoT & Dashboard MQTT", "labelEn": "IoT + MQTT Dashboard", "baseWeeks": [6, 10] },
+      { "id": "ai-cv-poc", "labelId": "AI / Computer Vision (YOLO/TFLite)", "labelEn": "AI / Computer Vision PoC", "baseWeeks": [3, 5] }
+    ],
+    "scales": [
+      { "id": "mvp", "labelId": "MVP / Purwarupa Terfokus", "labelEn": "Focused MVP / Prototype", "multiplier": 1 },
+      { "id": "production", "labelId": "Produksi Penuh (Multi-Role)", "labelEn": "Full Production (Multi-Role)", "multiplier": 1.35 },
+      { "id": "enterprise", "labelId": "Skala Multi-Tenant / Hardware", "labelEn": "Multi-Tenant / Hardware Scale", "multiplier": 1.6 }
+    ],
+    "addons": [
+      { "id": "uiux-system", "labelId": "Desain UI/UX & Figma System", "labelEn": "UI/UX & Figma Design System", "extraWeeks": 1 },
+      { "id": "bilingual", "labelId": "Dukungan Dwibahasa (ID/EN)", "labelEn": "Bilingual Support (ID/EN)", "extraWeeks": 0.5 },
+      { "id": "realtime-push", "labelId": "Notifikasi FCM / WhatsApp Auth", "labelEn": "FCM Push / WhatsApp Auth", "extraWeeks": 1 },
+      { "id": "tech-docs", "labelId": "Dokumentasi Arsitektur Klien-Ready", "labelEn": "Client-Ready Architecture Docs", "extraWeeks": 0.5 }
+    ],
+    "timelines": [
+      { "id": "urgent", "labelId": "Cepat (1 bulan)", "labelEn": "Priority (Within 1 month)" },
+      { "id": "standard", "labelId": "Terstruktur (1 – 2 bulan)", "labelEn": "Structured (1 – 2 months)" },
+      { "id": "quarterly", "labelId": "Bertahap (2 – 3+ bulan)", "labelEn": "Phased (2 – 3+ months)" }
+    ]
+  }
+}
+

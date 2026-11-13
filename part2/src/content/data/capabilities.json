@@ -1,0 +1,89 @@
+{
+  "items": [
+    {
+      "id": "web-engineering",
+      "code": "CAP-01",
+      "title": {
+        "id": "Web Engineering",
+        "en": "Web Engineering"
+      },
+      "summary": {
+        "id": "Membangun aplikasi web multi-tenant, portal manajemen operasional, dan landing page berkecepatan tinggi dengan kontrol akses berbasis peran.",
+        "en": "Engineering multi-tenant web applications, operational dashboards, and high-speed static/SSR sites with strict role-based boundaries."
+      },
+      "stack": ["PHP", "Laravel", "JavaScript", "TypeScript", "Astro", "Tailwind CSS", "MySQL", "REST API"],
+      "evidenceSlugs": ["ag-420-gas-analyzer", "techop-id", "orion-studio"]
+    },
+    {
+      "id": "mobile-android",
+      "code": "CAP-02",
+      "title": {
+        "id": "Mobile (Android Native)",
+        "en": "Mobile (Native Android)"
+      },
+      "summary": {
+        "id": "Rekayasa aplikasi Android native berbasis Kotlin dan Jetpack Compose dengan arsitektur MVVM, sinkronisasi offline, dan notifikasi real-time.",
+        "en": "Native Android engineering in Kotlin and Jetpack Compose utilizing clean MVVM architecture, offline caching, and push workflows."
+      },
+      "stack": ["Kotlin", "Jetpack Compose", "MVVM", "Room DB", "CameraX", "Firebase FCM", "REST API"],
+      "evidenceSlugs": ["smart-attendance-ai", "parent-notifications", "kepalqu", "salat-detection"]
+    },
+    {
+      "id": "iot-realtime",
+      "code": "CAP-03",
+      "title": {
+        "id": "IoT & Telemetri Realtime",
+        "en": "IoT & Real-Time Telemetry"
+      },
+      "summary": {
+        "id": "Menghubungkan perangkat keras pengukur dan sensor industri melalui broker MQTT ke penyimpanan deret waktu dan dashboard pemantauan langsung.",
+        "en": "Bridging field hardware sensors over MQTT brokers into reliable relational/time-series storage and live browser telemetry consoles."
+      },
+      "stack": ["MQTT", "WebSockets", "PHP Worker", "MySQL", "Device Provisioning", "Multi-tenant Isolation"],
+      "evidenceSlugs": ["ag-420-gas-analyzer"]
+    },
+    {
+      "id": "ai-computer-vision",
+      "code": "CAP-04",
+      "title": {
+        "id": "AI / Computer Vision",
+        "en": "AI & Computer Vision"
+      },
+      "summary": {
+        "id": "Melatih pipeline deteksi objek YOLO11, verifikasi wajah dengan liveness detection, hingga kuantisasi model TFLite agar ringan berjalan di perangkat Android.",
+        "en": "Training YOLO11 object detection pipelines, face recognition with liveness validation, and quantizing TFLite models for on-device Android inference."
+      },
+      "stack": ["Python", "YOLO11", "TensorFlow Lite", "OpenCV", "Face Recognition", "Liveness Check"],
+      "evidenceSlugs": ["smart-attendance-ai", "yolo11-detection", "salat-detection"]
+    },
+    {
+      "id": "product-design",
+      "code": "CAP-05",
+      "title": {
+        "id": "Product Design (UI/UX)",
+        "en": "Product Design (UI/UX)"
+      },
+      "summary": {
+        "id": "Menyusun riset alur pengguna, design system modular berbasis token, prototipe interaktif Figma, dan audit aksesibilitas WCAG 2.2 AA.",
+        "en": "Structuring user flows, token-driven design systems, interactive Figma prototypes, and WCAG 2.2 AA accessibility compliance."
+      },
+      "stack": ["Figma", "Design Tokens", "Information Architecture", "Prototyping", "WCAG 2.2 AA"],
+      "evidenceSlugs": ["techop-id", "orion-studio", "parent-notifications"]
+    },
+    {
+      "id": "delivery-docs",
+      "code": "CAP-06",
+      "title": {
+        "id": "Delivery & Documentation",
+        "en": "Delivery & Technical Documentation"
+      },
+      "summary": {
+        "id": "Menjamin setiap produk rilis disertai spesifikasi arsitektur, dokumentasi API/instalasi klien-ready, serta pipeline pengujian otomatis.",
+        "en": "Shipping every product with written architecture specifications, client-ready operational documentation, and automated verification checks."
+      },
+      "stack": ["PRD & ADR Writing", "Mermaid Diagrams", "Git Flow", "Playwright", "CI Readiness"],
+      "evidenceSlugs": ["ag-420-gas-analyzer", "yolo11-detection", "smart-attendance-ai"]
+    }
+  ]
+}
+

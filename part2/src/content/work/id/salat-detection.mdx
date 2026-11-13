@@ -1,0 +1,88 @@
+---
+title: "Deteksi Gerakan Salat (YOLO11 → TFLite)"
+slug: "salat-detection"
+locale: "id"
+summary: "Model pengenalan 7 kelas gerakan salat berbasis YOLO11 yang dikonversi ke TFLite dan diintegrasikan langsung ke aplikasi Android Kotlin."
+category: ["ai", "android"]
+role: "AI Pipeline & Android TFLite Engineer"
+year: 2025
+duration: "TODO_METRIC"
+client: "Riset & Aplikasi Edukasi Mobile"
+stack: ["Python", "YOLO11", "TensorFlow Lite", "Kotlin", "CameraX", "NNAPI / GPU Delegate"]
+cover: "/images/work/salat-detection.png"
+coverAlt: "Cetak biru integrasi model 7 kelas YOLO11 ke Android TFLite"
+draft: true
+metrics:
+  - label: "Jumlah Kelas Gerakan"
+    value: "7 Kelas"
+    note: "Klasifikasi postur utama secara lokal"
+  - label: "Waktu Inference per Frame"
+    value: "TODO_METRIC"
+    note: "Bervariasi antar chipset ponsel Android"
+  - label: "Ukuran Model TFLite"
+    value: "TODO_METRIC"
+    note: "Menunggu finalisasi profil kuantisasi INT8/FP16"
+links: {}
+architecture:
+  title: "Konversi Model YOLO11 ke TFLite On-Device Android"
+  caption: "Seluruh deteksi 7 kelas postur berjalan lokal di perangkat tanpa mengirim stream kamera ke server."
+  nodes:
+    - { id: "yolo", label: "YOLO11 Model", sub: "Pelatihan 7 Kelas Gerakan", group: "input" }
+    - { id: "tflite", label: "TFLite Converter", sub: "Kuantisasi FP16 / INT8", group: "core" }
+    - { id: "camx", label: "Kotlin CameraX", sub: "ImageAnalysis Buffer", group: "core" }
+    - { id: "interp", label: "TFLite Interpreter", sub: "NMS & Post-Processing", group: "storage" }
+    - { id: "feedback", label: "Umpan Balik UI", sub: "Label Postur & Panduan", group: "output" }
+  edges:
+    - { from: "yolo", to: "tflite", label: "Export" }
+    - { from: "tflite", to: "interp", label: "Bundle Asset" }
+    - { from: "camx", to: "interp", label: "RGB Tensor" }
+    - { from: "interp", to: "feedback", label: "7-Class Output" }
+  mermaid: |
+    flowchart LR
+      M[YOLO11 7-Class Weights] --> C[ONNX / TFLite Export + Quantization]
+      C --> A[Android Assets .tflite]
+      CAM[CameraX Analyzer Kotlin] --> INT[TFLite Interpreter + NMS]
+      A --> INT
+      INT --> UI[Overlay Status Gerakan Real-Time]
+gallery:
+  - src: "/images/work/salat-detection.png"
+    alt: "Diagram konversi YOLO11 ke TFLite di Android"
+    caption: "Arsitektur inference lokal on-device tanpa ketergantungan internet."
+    width: 1280
+    height: 800
+featured: false
+order: 8
+---
+
+## Konteks
+
+Aplikasi pembelajaran ibadah membutuhkan umpan balik langsung bagi pengguna ketika berlatih urutan gerakan salat tanpa harus selalu terhubung ke koneksi internet berkecepatan tinggi maupun mengirimkan video pribadi ke server cloud.
+
+## Masalah
+
+1. **Keterbatasan privasi & jaringan**: Mengirim frame kamera terus-menerus ke server menimbulkan latensi tinggi sekaligus isu privasi pengguna.
+2. **Perbedaan format tensor antara Python dan Android**: Output tensor YOLO harus dipetakan ulang dengan benar pada sisi Kotlin (skala koordinat, orientasi rotasi kamera, dan Non-Maximum Suppression).
+3. **Keseimbangan akurasi vs ukuran APK**: Model deteksi penuh terlalu berat untuk dijalankan langsung di ponsel Android tanpa konversi dan kuantisasi.
+
+## Pendekatan & Keputusan Teknis (Trade-Off)
+
+- **On-Device Inference dengan TensorFlow Lite dibanding Cloud API**: Memilih menjalankan model 7 kelas secara penuh di perangkat menjamin latensi rendah, nol biaya server GPU per pengguna, dan privasi video terjaga 100%. *Trade-off*: membutuhkan penyesuaian ketat pada ukuran input tensor dan *Non-Maximum Suppression* manual di Kotlin.
+- **Konversi Bertahap YOLO11 → TFLite Terkuantisasi**: Memangkas ukuran bobot dan memanfaatkan akselerator Android (NNAPI / GPU delegate dengan fallback CPU) agar tetap stabil pada perangkat target.
+
+## Arsitektur
+
+Model 7 kelas dilatih menggunakan Python YOLO11, diekspor ke berkas `.tflite`, dibundel sebagai aset di aplikasi Android, dan dijalankan oleh `CameraX ImageAnalysis` yang memperbarui overlay antarmuka secara real-time.
+
+## Hasil
+
+- Aplikasi Android mampu memuat dan menjalankan deteksi 7 kelas gerakan langsung dari kamera secara offline.
+- Benchmark latensi milidetik dan ukuran berkas kuantisasi final masih tercatat sebagai draft terverifikasi sampai pengujian lintas perangkat selesai.
+
+## Pelajaran
+
+Keberhasilan AI di Android ditentukan di titik perbatasan antara Python dan Kotlin: memverifikasi dimensi tensor, normalisasi warna (RGB vs BGR), dan rotasi sensor kamera sejak hari pertama menghemat puluhan jam debugging.
+
+## Galeri
+
+Cetak biru arsitektur konversi dan eksekusi terlampir di atas.
+

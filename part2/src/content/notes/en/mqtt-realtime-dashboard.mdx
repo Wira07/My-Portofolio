@@ -1,0 +1,37 @@
+---
+title: "MQTT Architecture for Multi-Tenant Real-Time Dashboards"
+slug: "mqtt-realtime-dashboard"
+locale: "en"
+summary: "Topic naming hierarchy, broker tenant isolation, payload validation, and snapshot separation for reliable PHP-based IoT telemetry consoles."
+publishedAt: "2026-09-14"
+readingTime: "6 min"
+tags: ["IoT", "MQTT", "PHP", "MySQL", "Multi-Tenant"]
+relatedWork: ["ag-420-gas-analyzer"]
+---
+
+## Why Polling Fails Field Analyzers
+
+When emission hardware emits frames every 500–1000 ms, repetitive HTTP requests exhaust workshop cellular links and tie up web workers. **MQTT** maintains a lean persistent TCP connection with minimal framing overhead.
+
+## Enforcing Tenant Boundaries at the Topic Layer
+
+Multi-tenant hygiene starts in the broker ACL structure:
+
+```text
+bench/{tenant_id}/{device_id}/telemetry
+bench/{tenant_id}/{device_id}/status
+```
+
+Each physical analyzer credential only receives `PUBLISH` privileges inside its own `{tenant_id}/{device_id}` prefix, blocking cross-workshop contamination before packets reach PHP.
+
+## Separating Live Snapshots from Historical Audit Tables
+
+Writing synchronous inserts followed by wide historical scans for live dashboards degrades rapidly:
+
+1. **Constant-Size Snapshot Table**: The ingestion worker updates a single snapshot row per device while pushing validated JSON events to connected WebSocket clients.
+2. **Indexed Audit Inserts**: Official certified test cycles append cleanly into `emission_tests` indexed by `(tenant_id, tested_at)`.
+
+## Using Last Will & Testament for Instant Offline Detection
+
+Setting an **LWT (Last Will and Testament)** packet on device connect lets the broker emit an explicit `offline` payload the moment cellular links drop ungracefully.
+

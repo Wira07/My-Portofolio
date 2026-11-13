@@ -1,0 +1,110 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { localePath, t } from "@/lib/i18n";
+import { getWorkEntries } from "@/lib/content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import CaseCard from "@/components/work/CaseCard.astro";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const works = await getWorkEntries(locale);
+const categories = ["web", "android", "iot", "ai", "uiux"] as const;
+---
+
+<BaseLayout
+  title={`${t(locale, "work.title")} — ${t(locale, "meta.brand")}`}
+  description={t(locale, "work.subtitle")}
+  locale={locale}
+  path={localePath(locale, "/work")}
+  ogSlug="default"
+  activeNav="work"
+>
+  <section class="border-b border-[var(--line)] py-12 md:py-16">
+    <div class="studio-container">
+      <span class="mono-label text-[var(--accent)]">{t(locale, "home.workSectionLabel")}</span>
+      <h1 class="page-h1 mt-3 max-w-4xl text-[var(--text)]" data-hero-line>{t(locale, "work.title")}</h1>
+      <p class="mt-4 max-w-2xl text-base text-[var(--text-dim)]" data-hero-line>{t(locale, "work.subtitle")}</p>
+
+      <div class="mt-8 flex flex-wrap gap-2" role="group" aria-label={t(locale, "work.title")}>
+        <button
+          type="button"
+          data-work-filter="all"
+          aria-pressed="true"
+          class="rounded-[var(--radius-md)] border border-[var(--accent)] bg-[var(--accent)] px-3.5 py-1.5 font-mono text-xs uppercase tracking-wider text-[var(--accent-ink)]"
+        >
+          {t(locale, "work.filterAll")} ({works.length})
+        </button>
+        {
+          categories.map((cat) => {
+            const count = works.filter((w) => w.data.category.includes(cat)).length;
+            return (
+              <button
+                type="button"
+                data-work-filter={cat}
+                aria-pressed="false"
+                class="rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface)] px-3.5 py-1.5 font-mono text-xs uppercase tracking-wider text-[var(--text-dim)] transition-colors hover:border-[var(--accent)] hover:text-[var(--text)]"
+              >
+                {t(locale, `work.categories.${cat}`)} ({count})
+              </button>
+            );
+          })
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="py-12 md:py-16">
+    <div class="studio-container">
+      <div id="work-grid" class="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {works.map((item, idx) => <CaseCard item={item} locale={locale} index={idx} layout="grid" />)}
+      </div>
+      <p id="work-empty" hidden class="py-12 text-center font-mono text-sm text-[var(--text-dim)]">
+        {t(locale, "work.emptyFilter")}
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  function setupWorkFilters() {
+    const btns = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-work-filter]"));
+    const cards = Array.from(document.querySelectorAll<HTMLElement>("[data-work-card]"));
+    const emptyEl = document.getElementById("work-empty");
+    if (!btns.length) return;
+
+    const applyFilter = (filter: string) => {
+      let visible = 0;
+      cards.forEach((card) => {
+        const cats = (card.dataset.categories || "").split(",");
+        const show = filter === "all" || cats.includes(filter);
+        card.hidden = !show;
+        if (show) visible++;
+      });
+      if (emptyEl) emptyEl.hidden = visible > 0;
+      btns.forEach((b) => {
+        const active = b.dataset.workFilter === filter;
+        b.setAttribute("aria-pressed", String(active));
+        if (active) {
+          b.classList.add("border-[var(--accent)]", "bg-[var(--accent)]", "text-[var(--accent-ink)]");
+          b.classList.remove("border-[var(--line)]", "bg-[var(--surface)]", "text-[var(--text-dim)]");
+        } else {
+          b.classList.remove("border-[var(--accent)]", "bg-[var(--accent)]", "text-[var(--accent-ink)]");
+          b.classList.add("border-[var(--line)]", "bg-[var(--surface)]", "text-[var(--text-dim)]");
+        }
+      });
+    };
+
+    btns.forEach((b) => {
+      if (b.dataset.bound === "true") return;
+      b.dataset.bound = "true";
+      b.addEventListener("click", () => applyFilter(b.dataset.workFilter || "all"));
+    });
+  }
+
+  setupWorkFilters();
+  document.addEventListener("astro:after-swap", setupWorkFilters);
+</script>
+

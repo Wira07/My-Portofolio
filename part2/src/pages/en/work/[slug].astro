@@ -1,0 +1,26 @@
+---
+import { render } from "astro:content";
+import { getWorkEntries } from "@/lib/content";
+import CaseLayout from "@/layouts/CaseLayout.astro";
+
+export async function getStaticPaths() {
+  const works = await getWorkEntries("en");
+  return works.map((item, idx) => ({
+    params: { slug: item.data.slug },
+    props: {
+      item,
+      indexLabel: `CASE ${String(idx + 1).padStart(2, "0")}`,
+      prevItem: idx > 0 ? works[idx - 1] : undefined,
+      nextItem: idx < works.length - 1 ? works[idx + 1] : undefined
+    }
+  }));
+}
+
+const { item, indexLabel, prevItem, nextItem } = Astro.props;
+const { Content } = await render(item);
+---
+
+<CaseLayout item={item} locale="en" indexLabel={indexLabel} prevItem={prevItem} nextItem={nextItem}>
+  <Content />
+</CaseLayout>
+

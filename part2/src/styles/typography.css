@@ -1,0 +1,186 @@
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/instrument-serif-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/instrument-serif-latin-400-italic.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter Tight";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/inter-tight-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter Tight";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/inter-tight-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter Tight";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/inter-tight-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/jetbrains-mono-latin-500-normal.woff2") format("woff2");
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.display-h1 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: clamp(2.65rem, 6.2vw, 6.25rem);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+}
+
+.display-serif {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: -0.015em;
+}
+
+.page-h1 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: clamp(2.25rem, 4.8vw, 4.5rem);
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+}
+
+.section-h2 {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: clamp(1.6rem, 2.8vw, 2.75rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.prose-studio h2 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--text);
+  margin-top: 2.5rem;
+  margin-bottom: 0.875rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+
+.prose-studio h2:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.prose-studio p,
+.prose-studio li {
+  font-size: 1.035rem;
+  line-height: 1.65;
+  color: var(--text);
+}
+
+.prose-studio p + p {
+  margin-top: 1rem;
+}
+
+.prose-studio ul,
+.prose-studio ol {
+  margin: 1rem 0 1.25rem;
+  padding-left: 1.25rem;
+}
+
+.prose-studio ul {
+  list-style-type: disc;
+}
+
+.prose-studio ol {
+  list-style-type: decimal;
+}
+
+.prose-studio li + li {
+  margin-top: 0.55rem;
+}
+
+.prose-studio strong {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.prose-studio pre {
+  margin: 1.25rem 0;
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  overflow-x: auto;
+}
+
+.prose-studio code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+
+.prose-studio pre code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+

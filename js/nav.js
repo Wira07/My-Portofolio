@@ -29,39 +29,42 @@ export function init() {
     scrollTrigger: { start: 0, end: "max", scrub: motion.scroll.scrub }
   });
 
-  /* --- Auto-hide + latar saat scroll --- */
+  /* --- Latar kapsul mengambang saat scroll --- */
   ScrollTrigger.create({
     start: 0,
     end: "max",
     onUpdate(self) {
       const y = self.scroll();
       nav.classList.toggle("is-scrolled", y > 24);
-      if (menuOpen) return;
-      if (y > 240 && self.direction === 1) nav.classList.add("is-hidden");
-      else if (self.direction === -1 || y <= 240) nav.classList.remove("is-hidden");
     }
   });
   // tampilkan nav saat fokus keyboard masuk ke dalamnya
   nav.addEventListener("focusin", () => nav.classList.remove("is-hidden"));
 
-  /* --- Link aktif + indikator (garis bawah bergeser) --- */
+  /* --- Link aktif + indikator kapsul melayang --- */
   const moveIndicator = (link, instant = false) => {
-    if (!link || !linkWrap.offsetParent) return;
+    if (!link || !linkWrap || !linkWrap.offsetParent) return;
     const wrap = linkWrap.getBoundingClientRect();
     const r = link.getBoundingClientRect();
-    const x = r.left - wrap.left + 16;
-    const w = Math.max(r.width - 32, 1);
-    gsap.to(indicator, { x, scaleX: w, opacity: 1, duration: instant ? 0 : motion.dur.sm, ease: motion.ease.out, overwrite: "auto" });
+    gsap.to(indicator, {
+      x: r.left - wrap.left,
+      yPercent: -50,
+      width: r.width,
+      opacity: 1,
+      duration: instant ? 0 : motion.dur.sm,
+      ease: motion.ease.out,
+      overwrite: "auto"
+    });
   };
   let activeLink = null;
-  const setActive = (id) => {
+  const setActive = (id, instant = false) => {
     activeLink = links.find((a) => a.getAttribute("href") === `#${id}`) || null;
     links.forEach((a) => {
       const on = a === activeLink;
       a.classList.toggle("is-active", on);
       if (on) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current");
     });
-    if (activeLink) moveIndicator(activeLink);
+    if (activeLink) moveIndicator(activeLink, instant);
     else gsap.to(indicator, { opacity: 0, duration: motion.dur.sm });
   };
   links.forEach((a) => {
@@ -72,9 +75,21 @@ export function init() {
       trigger: section,
       start: "top 55%",
       end: "bottom 55%",
-      onToggle: (self) => { if (self.isActive) setActive(id); else if (activeLink === a) setActive(""); }
+      onToggle: (self) => { if (self.isActive) setActive(id); }
+    });
+
+    a.addEventListener("pointerenter", () => {
+      moveIndicator(a);
     });
   });
+  if (linkWrap) {
+    linkWrap.addEventListener("pointerleave", () => {
+      if (activeLink) moveIndicator(activeLink);
+      else gsap.to(indicator, { opacity: 0, duration: motion.dur.sm });
+    });
+  }
+  setActive("hero", true);
+  requestAnimationFrame(() => moveIndicator(activeLink, true));
   window.addEventListener("resize", () => moveIndicator(activeLink, true));
 
   /* --- Menu mobile (clip-path circle reveal) --- */

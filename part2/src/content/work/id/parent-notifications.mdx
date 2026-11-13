@@ -1,0 +1,91 @@
+---
+title: "Parent Notifications (SMK Model Patriot IV)"
+slug: "parent-notifications"
+locale: "id"
+summary: "Aplikasi Android orang tua siswa SMK Model Patriot IV dengan login berbasis WhatsApp dan notifikasi real-time via Firebase FCM."
+category: ["android", "uiux"]
+role: "Android Developer & UI/UX Designer"
+year: 2025
+duration: "TODO_METRIC"
+client: "SMK Model Patriot IV"
+stack: ["Kotlin", "Android Jetpack", "WhatsApp Login Auth", "Firebase FCM", "REST API"]
+cover: "/images/work/parent-notifications.png"
+coverAlt: "Cetak biru alur notifikasi orang tua SMK Model Patriot IV"
+draft: true
+metrics:
+  - label: "Orang Tua Terdaftar"
+    value: "TODO_METRIC"
+    note: "Menunggu rilis data agregat pihak sekolah"
+  - label: "Kecepatan Distribusi Notifikasi"
+    value: "TODO_METRIC"
+    note: "Bergantung pada SLA jaringan seluler lokal"
+links: {}
+architecture:
+  title: "Alur Autentikasi WhatsApp & Pengiriman Push Notification FCM"
+  caption: "Menghilangkan hambatan lupa kata sandi bagi orang tua dengan nomor WhatsApp terdaftar sekolah."
+  nodes:
+    - { id: "app", label: "Aplikasi Orang Tua", sub: "Kotlin + Device Token", group: "input" }
+    - { id: "wa", label: "WhatsApp OTP Gateway", sub: "Verifikasi Nomor Wali", group: "core" }
+    - { id: "api", label: "Backend Sekolah", sub: "Data Siswa & Jadwal", group: "core" }
+    - { id: "fcm", label: "Firebase FCM", sub: "Topic & Token Dispatch", group: "output" }
+    - { id: "db", label: "Database Sekolah", sub: "Log Presensi & Pengumuman", group: "storage" }
+  edges:
+    - { from: "app", to: "api", label: "Login WA" }
+    - { from: "api", to: "wa", label: "Kirim OTP" }
+    - { from: "api", to: "db", label: "Validasi Siswa" }
+    - { from: "api", to: "fcm", label: "Trigger Event" }
+    - { from: "fcm", to: "app", label: "Push Alert" }
+  mermaid: |
+    sequenceDiagram
+      participant P as Aplikasi Orang Tua
+      participant B as Backend Sekolah
+      participant W as WhatsApp Gateway
+      participant F as Firebase FCM
+      P->>B: Request OTP (Nomor WA)
+      B->>W: Kirim Kode Verifikasi
+      P->>B: Konfirmasi OTP + FCM Token
+      B->>F: Dispatch Notifikasi Kehadiran/Info
+      F-->>P: Push Notification Real-time
+gallery:
+  - src: "/images/work/parent-notifications.png"
+    alt: "Diagram topologi Parent Notifications SMK Model Patriot IV"
+    caption: "Alur otentikasi nomor WhatsApp dan pengiriman push notification FCM."
+    width: 1280
+    height: 800
+featured: true
+order: 3
+---
+
+## Konteks
+
+Komunikasi sekolah ke wali murid sering tertunda ketika hanya mengandalkan grup chat massal yang informasinya mudah tenggelam. **SMK Model Patriot IV** membutuhkan kanal resmi di ponsel orang tua agar informasi kehadiran siswa, pengumuman sekolah, dan catatan penting diterima secara privat dan tepat waktu.
+
+## Masalah
+
+1. **Hambatan login akun tradisional**: Banyak wali murid jarang memakai email aktif dan sering lupa kombinasi username/password.
+2. **Keandalan penerimaan pesan**: Pengumuman sekolah harus tampil sebagai notifikasi prioritas tanpa mengharuskan orang tua membuka aplikasi terus-menerus.
+3. **Keterkaitan akun ganda**: Satu nomor wali murid bisa terhubung ke lebih dari satu siswa jika memiliki adik-kakak di sekolah yang sama.
+
+## Pendekatan & Keputusan Teknis (Trade-Off)
+
+- **Autentikasi Nomor WhatsApp + OTP dibanding Email/Password**: Memilih login berbasis nomor WhatsApp yang sudah tercatat di data pokok sekolah membuat proses aktivasi awal jauh lebih ramah bagi orang tua non-teknis. *Trade-off*: sistem bergantung pada keaktifan gateway pesan WhatsApp, sehingga mekanisme *rate limiting* dan cadangan verifikasi admin sekolah tetap disiapkan.
+- **Firebase Cloud Messaging (FCM) dengan Sinkronisasi Token Otomatis**: Setiap perangkat memperbarui token FCM saat sesi login maupun `onNewToken` agar pengiriman notifikasi absensi atau pengumuman sekolah tepat sasaran.
+- **Antarmuka Sederhana Kontras Tinggi**: Mengutamakan tipografi jelas, status badge eksplisit, dan hirarki informasi yang mudah dibaca di ponsel Android kelas pemula.
+
+## Arsitektur
+
+Aplikasi Android melakukan verifikasi nomor WhatsApp melalui API sekolah, mengikat token FCM perangkat ke ID wali murid, dan menerima dorongan pesan otomatis ketika operator sekolah atau sistem absensi memicu kejadian baru.
+
+## Hasil
+
+- Alur otentikasi tanpa password dan pengiriman push notification sekolah tersusun rapi dari sisi aplikasi maupun integrasi backend.
+- Data jumlah wali murid aktif dan tingkat keterbacaan notifikasi menanti konfirmasi tertulis pihak sekolah.
+
+## Pelajaran
+
+Untuk produk pendidikan di Indonesia, desain alur masuk (onboarding) sering kali lebih menentukan tingkat adopsi dibandingkan banyaknya fitur tambahan di dalam aplikasi.
+
+## Galeri
+
+Representasi cetak biru arsitektur aplikasi terlampir di atas.
+

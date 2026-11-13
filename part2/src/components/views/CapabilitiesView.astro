@@ -1,0 +1,49 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { localePath, t } from "@/lib/i18n";
+import { getCapabilities, getWorkEntries } from "@/lib/content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import CapabilityRow from "@/components/work/CapabilityRow.astro";
+import Button from "@/components/core/Button.astro";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const works = await getWorkEntries(locale);
+const caseMap = Object.fromEntries(works.map((w) => [w.data.slug, w]));
+const capabilities = getCapabilities();
+---
+
+<BaseLayout
+  title={`${t(locale, "capabilities.title")} — ${t(locale, "meta.brand")}`}
+  description={t(locale, "capabilities.subtitle")}
+  locale={locale}
+  path={localePath(locale, "/capabilities")}
+  ogSlug="default"
+  activeNav="capabilities"
+>
+  <section class="border-b border-[var(--line)] py-12 md:py-16">
+    <div class="studio-container">
+      <span class="mono-label text-[var(--accent)]">{t(locale, "home.capLabel")}</span>
+      <h1 class="page-h1 mt-3 max-w-4xl text-[var(--text)]" data-hero-line>{t(locale, "capabilities.title")}</h1>
+      <p class="mt-4 max-w-2xl text-base text-[var(--text-dim)]" data-hero-line>
+        {t(locale, "capabilities.subtitle")}
+      </p>
+    </div>
+  </section>
+
+  <section class="py-8 md:py-12">
+    <div class="border-t border-[var(--line)]">
+      {capabilities.map((cap) => <CapabilityRow capability={cap} locale={locale} caseMap={caseMap} />)}
+    </div>
+
+    <div class="studio-container mt-12 flex justify-end">
+      <Button href={localePath(locale, "/engage")} variant="primary" magnetic={true}>
+        {t(locale, "nav.engage")} →
+      </Button>
+    </div>
+  </section>
+</BaseLayout>
+

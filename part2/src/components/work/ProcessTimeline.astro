@@ -1,0 +1,64 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+
+interface ProcessStep {
+  number: string;
+  id: string;
+  title: Record<Locale, string>;
+  summary: Record<Locale, string>;
+  deliverables: Record<Locale, string[]>;
+  clientInput: Record<Locale, string>;
+}
+
+interface Props {
+  steps: ProcessStep[];
+  locale: Locale;
+}
+
+const { steps, locale } = Astro.props;
+---
+
+<div class="relative pl-8 md:pl-12" data-process-wrap>
+  <div class="absolute bottom-2 left-3 top-2 w-[1px] bg-[var(--line)]" aria-hidden="true">
+    <div data-process-fill class="h-full w-full bg-[var(--accent)] origin-top"></div>
+  </div>
+
+  <ol class="space-y-8">
+    {steps.map((step) => (
+      <li class="relative rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface)] p-6" data-reveal>
+        <span
+          aria-hidden="true"
+          class="absolute -left-[2.05rem] md:-left-[3.05rem] top-6 flex h-6 w-6 items-center justify-center rounded-full border border-[var(--accent)] bg-[var(--bg)] font-mono text-[10px] text-[var(--accent)]"
+        >
+          {step.number}
+        </span>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <div class="lg:col-span-5">
+            <span class="mono-label text-[var(--accent)]">{t(locale, "process.stagePrefix")} {step.number}</span>
+            <h3 class="mt-1 font-sans text-xl font-semibold text-[var(--text)]">{step.title[locale]}</h3>
+            <p class="mt-2 text-sm leading-relaxed text-[var(--text-dim)]">{step.summary[locale]}</p>
+          </div>
+
+          <div class="lg:col-span-4">
+            <div class="mono-label text-[var(--text-dim)]">{t(locale, "process.deliverablesLabel")}</div>
+            <ul class="mt-2.5 space-y-1.5 text-sm text-[var(--text)]">
+              {step.deliverables[locale].map((d) => (
+                <li class="flex items-start gap-2">
+                  <span class="text-[var(--accent)]" aria-hidden="true">—</span>
+                  <span>{d}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div class="lg:col-span-3 rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] p-4">
+            <div class="mono-label text-[var(--text-dim)]">{t(locale, "process.clientInputLabel")}</div>
+            <p class="mt-2 text-xs leading-relaxed text-[var(--text)]">{step.clientInput[locale]}</p>
+          </div>
+        </div>
+      </li>
+    ))}
+  </ol>
+</div>

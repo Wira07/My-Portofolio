@@ -34,25 +34,22 @@ export function init() {
 
     // A9: seluruh paragraf .about__summary (termasuk Cerita Saya) — kata per kata terisi mengikuti scroll
     $$(".about__summary").forEach((el) => {
-      SplitText.create(el, {
+      const split = SplitText.create(el, {
         type: "words",
         wordsClass: "word",
         tag: "span",
-        aria: "none",
-        autoSplit: true,
-        onSplit(self) {
-          return gsap.fromTo(
-            self.words,
-            { opacity: 0.65 },
-            {
-              opacity: 1,
-              ease: "none",
-              stagger: 0.08,
-              scrollTrigger: { trigger: el, start: "top 86%", end: "bottom 60%", scrub: true }
-            }
-          );
-        }
+        aria: "none"
       });
+      gsap.fromTo(
+        split.words,
+        { opacity: 0.65 },
+        {
+          opacity: 1,
+          ease: "none",
+          stagger: 0.08,
+          scrollTrigger: { trigger: el, start: "top 86%", end: "bottom 60%", scrub: true }
+        }
+      );
     });
 
     // A10: counter angka

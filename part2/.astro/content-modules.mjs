@@ -1,0 +1,25 @@
+
+export default new Map([
+["src/content/notes/id/yolo11-android-tflite.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fnotes%2Fid%2Fyolo11-android-tflite.mdx&astroContentModuleFlag=true")],
+["src/content/work/en/yolo11-detection.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fwork%2Fen%2Fyolo11-detection.mdx&astroContentModuleFlag=true")],
+["src/content/work/en/orion-studio.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fwork%2Fen%2Forion-studio.mdx&astroContentModuleFlag=true")],
+["src/content/notes/id/mqtt-realtime-dashboard.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fnotes%2Fid%2Fmqtt-realtime-dashboard.mdx&astroContentModuleFlag=true")],
+["src/content/work/id/kepalqu.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fwork%2Fid%2Fkepalqu.mdx&astroContentModuleFlag=true")],
+["src/content/notes/en/yolo11-android-tflite.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fnotes%2Fen%2Fyolo11-android-tflite.mdx&astroContentModuleFlag=true")],
+["src/content/work/en/parent-notifications.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fwork%2Fen%2Fparent-notifications.mdx&astroContentModuleFlag=true")],
+["src/content/notes/id/whatsapp-login-fcm-parent-app.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fnotes%2Fid%2Fwhatsapp-login-fcm-parent-app.mdx&astroContentModuleFlag=true")],
+["src/content/notes/en/whatsapp-login-fcm-parent-app.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fnotes%2Fen%2Fwhatsapp-login-fcm-parent-app.mdx&astroContentModuleFlag=true")],
+["src/content/work/en/salat-detection.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fwork%2Fen%2Fsalat-detection.mdx&astroContentModuleFlag=true")],
+["src/content/work/en/kepalqu.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fwork%2Fen%2Fkepalqu.mdx&astroContentModuleFlag=true")],
+["src/content/work/en/ag-420-gas-analyzer.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fwork%2Fen%2Fag-420-gas-analyzer.mdx&astroContentModuleFlag=true")],
+["src/content/work/en/techop-id.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fwork%2Fen%2Ftechop-id.mdx&astroContentModuleFlag=true")],
+["src/content/notes/en/mqtt-realtime-dashboard.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fnotes%2Fen%2Fmqtt-realtime-dashboard.mdx&astroContentModuleFlag=true")],
+["src/content/work/id/ag-420-gas-analyzer.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fwork%2Fid%2Fag-420-gas-analyzer.mdx&astroContentModuleFlag=true")],
+["src/content/work/en/smart-attendance-ai.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fwork%2Fen%2Fsmart-attendance-ai.mdx&astroContentModuleFlag=true")],
+["src/content/work/id/yolo11-detection.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fwork%2Fid%2Fyolo11-detection.mdx&astroContentModuleFlag=true")],
+["src/content/work/id/parent-notifications.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fwork%2Fid%2Fparent-notifications.mdx&astroContentModuleFlag=true")],
+["src/content/work/id/salat-detection.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fwork%2Fid%2Fsalat-detection.mdx&astroContentModuleFlag=true")],
+["src/content/work/id/orion-studio.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fwork%2Fid%2Forion-studio.mdx&astroContentModuleFlag=true")],
+["src/content/work/id/smart-attendance-ai.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fwork%2Fid%2Fsmart-attendance-ai.mdx&astroContentModuleFlag=true")],
+["src/content/work/id/techop-id.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fwork%2Fid%2Ftechop-id.mdx&astroContentModuleFlag=true")]]);
+		

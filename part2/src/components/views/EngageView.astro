@@ -1,0 +1,81 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { localePath, t } from "@/lib/i18n";
+import { getPackages } from "@/lib/content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import BriefWizard from "@/components/interactive/BriefWizard.astro";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const packages = getPackages();
+---
+
+<BaseLayout
+  title={`${t(locale, "engage.title")} — ${t(locale, "meta.brand")}`}
+  description={t(locale, "engage.subtitle")}
+  locale={locale}
+  path={localePath(locale, "/engage")}
+  ogSlug="default"
+  activeNav="engage"
+>
+  <section class="border-b border-[var(--line)] py-12 md:py-16">
+    <div class="studio-container">
+      <span class="mono-label text-[var(--accent)]">{t(locale, "home.engageLabel")}</span>
+      <h1 class="page-h1 mt-3 max-w-4xl text-[var(--text)]" data-hero-line>{t(locale, "engage.title")}</h1>
+      <p class="mt-4 max-w-2xl text-base text-[var(--text-dim)]" data-hero-line>{t(locale, "engage.subtitle")}</p>
+    </div>
+  </section>
+
+  <section class="border-b border-[var(--line)] py-12 md:py-16">
+    <div class="studio-container">
+      <h2 class="section-h2 mb-8 text-[var(--text)]">{t(locale, "engage.packagesTitle")}</h2>
+      <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {
+          packages.map((pkg) => (
+            <article class="flex flex-col justify-between rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface)] p-6">
+              <div>
+                <div class="flex items-center justify-between font-mono text-xs text-[var(--text-dim)]">
+                  <span class="text-[var(--accent)]">{pkg.code}</span>
+                  <span>{pkg.duration[locale]}</span>
+                </div>
+                <h3 class="mt-2 font-sans text-xl font-semibold text-[var(--text)]">{pkg.title[locale]}</h3>
+                <p class="mt-2 text-sm text-[var(--text-dim)]">{pkg.summary[locale]}</p>
+
+                <div class="mt-4 border-t border-[var(--line)] pt-4">
+                  <div class="mono-label text-[var(--text-dim)]">{t(locale, "engage.includesLabel")}</div>
+                  <ul class="mt-2 space-y-1.5 text-sm text-[var(--text)]">
+                    {pkg.outputs[locale].map((o) => (
+                      <li class="flex items-start gap-2">
+                        <span class="text-[var(--accent)]" aria-hidden="true">→</span>
+                        <span>{o}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div class="mt-4 rounded-[var(--radius-sm)] bg-[var(--surface-2)] p-3">
+                  <div class="mono-label text-[var(--text-dim)]">{t(locale, "engage.clientNeedsLabel")}</div>
+                  <p class="mt-1 text-xs text-[var(--text)]">{pkg.clientNeeds[locale]}</p>
+                </div>
+              </div>
+
+              <div class="mt-5 border-t border-[var(--line)] pt-4 font-mono text-xs text-[var(--accent)]">
+                {pkg.pricing[locale]}
+              </div>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="py-12 md:py-16">
+    <div class="studio-container max-w-4xl">
+      <BriefWizard locale={locale} />
+    </div>
+  </section>
+</BaseLayout>
+

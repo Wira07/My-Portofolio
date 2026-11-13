@@ -1,0 +1,43 @@
+---
+// Subtle desktop pointer follower, automatically disabled on touch & reduced motion
+---
+
+<div
+  id="studio-cursor"
+  aria-hidden="true"
+  class="pointer-events-none fixed left-0 top-0 z-50 hidden h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[var(--accent)] opacity-0 transition-opacity duration-200 md:block"
+></div>
+
+<script>
+  function initCursor() {
+    const cursor = document.getElementById("studio-cursor");
+    if (!cursor) return;
+    if (
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      !window.matchMedia("(hover: hover) and (pointer: fine)").matches
+    ) {
+      cursor.style.display = "none";
+      return;
+    }
+
+    if (cursor.dataset.bound === "true") return;
+    cursor.dataset.bound = "true";
+
+    window.addEventListener(
+      "pointermove",
+      (e) => {
+        cursor.style.opacity = "0.75";
+        cursor.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%)`;
+      },
+      { passive: true }
+    );
+
+    window.addEventListener("pointerleave", () => {
+      cursor.style.opacity = "0";
+    });
+  }
+
+  initCursor();
+  document.addEventListener("astro:after-swap", initCursor);
+</script>
+

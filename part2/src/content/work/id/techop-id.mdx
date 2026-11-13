@@ -1,0 +1,94 @@
+---
+title: "techop.id"
+slug: "techop-id"
+locale: "id"
+summary: "Platform web resmi agensi digital techop.id dibangun dengan Laravel Blade dan Tailwind CSS lengkap dengan alur konsultasi layanan."
+category: ["web", "uiux"]
+role: "Lead UI/UX & Full-Stack Laravel Developer"
+year: 2026
+duration: "4 minggu"
+client: "techop.id Digital Agency"
+stack: ["Laravel", "Blade Templates", "Tailwind CSS", "JavaScript", "Figma Design System"]
+cover: "/images/projects/portfolio-techop-home.png"
+coverAlt: "Tampilan beranda platform agensi digital techop.id"
+draft: false
+metrics:
+  - label: "Modul Layanan Terstruktur"
+    value: "4 Kategori"
+    note: "Web, UI/UX Figma, Mobile App, Game Dev"
+  - label: "Tingkat Konversi Leads"
+    value: "TODO_METRIC"
+    note: "Pengukuran analytics berjalan pasca rilis"
+links: {}
+architecture:
+  title: "Arsitektur Web Agensi & Alur Simulasi Konsultasi techop.id"
+  caption: "Server-rendered Laravel Blade dipadukan komponen konsultasi interaktif ringan tanpa overhead SPA berat."
+  nodes:
+    - { id: "visitor", label: "Klien Potensial", sub: "Browser Desktop & Mobile", group: "input" }
+    - { id: "laravel", label: "Laravel Router", sub: "Blade SSR + Asset Vite", group: "core" }
+    - { id: "sim", label: "Modul Konsultasi", sub: "Simulasi FAQ & Scoping", group: "core" }
+    - { id: "content", label: "Katalog Layanan", sub: "Data Paket & Tim Inti", group: "storage" }
+    - { id: "wa", label: "WhatsApp / Leads", sub: "Hand-off ke Tim Teknis", group: "output" }
+  edges:
+    - { from: "visitor", to: "laravel", label: "HTTP Request" }
+    - { from: "content", to: "laravel", label: "Hydrate Views" }
+    - { from: "laravel", to: "sim", label: "Render Flow" }
+    - { from: "sim", to: "wa", label: "Direct Brief" }
+  mermaid: |
+    flowchart LR
+      U[Calon Klien] --> R[Laravel Blade SSR]
+      D[(Data Layanan & Tim)] --> R
+      R --> S[Simulasi Konsultasi Interaktif]
+      S --> WA[WhatsApp / Diskusi Proyek]
+gallery:
+  - src: "/images/projects/portfolio-techop-home.png"
+    alt: "Halaman utama layanan digital techop.id"
+    caption: "Beranda utama dengan struktur layanan dan navigasi kapsul bersih."
+    width: 1280
+    height: 800
+  - src: "/images/projects/portfolio-techop-team.png"
+    alt: "Halaman profil tim eksekutif dan engineer techop.id"
+    caption: "Presentasi struktur tim lintas disiplin untuk membangun kepercayaan klien."
+    width: 1280
+    height: 800
+  - src: "/images/projects/portfolio-techop-konsultasi.png"
+    alt: "Antarmuka simulasi konsultasi proyek techop.id"
+    caption: "Simulasi konsultasi proyek yang merangkum garansi teknis dan alur kerja."
+    width: 1280
+    height: 800
+featured: false
+order: 5
+---
+
+## Konteks
+
+Calon klien B2B maupun UMKM sering ragu menghubungi software house ketika situs webnya tidak menjelaskan secara konkret siapa tim di baliknya, bagaimana alur garansi pasca-rilis, dan layanan teknis apa saja yang ditangani secara in-house.
+
+## Masalah
+
+1. **Keseragaman visual dan kecepatan muat**: Website agensi wajib terasa modern sekaligus tetap ringan di jaringan seluler Indonesia.
+2. **Edukasi awal calon klien**: Pertanyaan berulang mengenai kepemilikan source code, MoU, dan skema garansi perlu terjawab sebelum sesi konsultasi dimulai.
+3. **Pemeliharaan konten layanan**: Tim internal perlu kemudahan memperbarui daftar layanan dan portofolio melalui struktur Blade yang rapi.
+
+## Pendekatan & Keputusan Teknis (Trade-Off)
+
+- **Laravel Blade + Tailwind CSS dibanding SPA Full Client-Side**: Karena sebagian besar halaman berupa profil layanan, studi kasus, dan profil tim yang menuntut pengindeksan SEO kuat, rendering di server dengan Blade memberikan Time-to-First-Byte yang stabil tanpa kompleksitas state SPA. *Trade-off*: transisi antar-halaman memakai navigasi multipage standar dengan peningkatan progresif di sisi klien.
+- **Simulasi Konsultasi Terpandu**: Menyematkan komponen dialog interaktif di halaman layanan untuk memandu calon klien menanyakan garansi, kepemilikan kode, dan estimasi waktu sebelum diteruskan ke WhatsApp.
+
+## Arsitektur
+
+Laravel melayani rute publik dengan komponen Blade modular, memisahkan konfigurasi layanan dan anggota tim, serta menyematkan modul JavaScript ringan untuk simulasi tanya jawab proyek.
+
+## Hasil
+
+- Situs resmi **techop.id** terstruktur dalam empat jalur layanan inti (Web, UI/UX, Mobile App, Game Dev), halaman tim transparan, dan alur simulasi konsultasi langsung.
+- Data konversi jangka panjang ditandai untuk evaluasi analytics berkelanjutan.
+
+## Pelajaran
+
+Menampilkan kejelasan kontrak kerja (hak milik kode, garansi pemeliharaan, dan transparansi tim) pada lapisan informasi utama meningkatkan kualitas pertanyaan masuk dari calon klien.
+
+## Galeri
+
+Tangkapan layar antarmuka beranda, halaman tim, dan simulasi konsultasi disajikan di bawah ini.
+

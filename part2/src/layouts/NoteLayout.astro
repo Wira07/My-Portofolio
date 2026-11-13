@@ -1,0 +1,74 @@
+---
+import type { NoteEntry, WorkEntry } from "@/lib/content";
+import type { Locale } from "@/lib/i18n";
+import { localePath, t } from "@/lib/i18n";
+import BaseLayout from "./BaseLayout.astro";
+
+interface Props {
+  note: NoteEntry;
+  locale: Locale;
+  relatedWorks: WorkEntry[];
+}
+
+const { note, locale, relatedWorks } = Astro.props;
+const path = localePath(locale, `/notes/${note.data.slug}`);
+---
+
+<BaseLayout
+  title={`${note.data.title} — ${t(locale, "meta.brand")}`}
+  description={note.data.summary}
+  locale={locale}
+  path={path}
+  ogSlug={note.data.slug}
+  activeNav="notes"
+>
+  <article class="py-12 md:py-16">
+    <div class="studio-container max-w-4xl">
+      <a
+        href={localePath(locale, "/notes")}
+        class="link-underline font-mono text-xs uppercase tracking-wider text-[var(--text-dim)] hover:text-[var(--accent)]"
+      >
+        ← {t(locale, "notes.backToNotes")}
+      </a>
+
+      <header class="mt-6 border-b border-[var(--line)] pb-8">
+        <div class="flex flex-wrap items-center gap-3 font-mono text-xs text-[var(--text-dim)]">
+          <span>{t(locale, "notes.publishedLabel")}: {note.data.publishedAt}</span>
+          <span>•</span>
+          <span>{t(locale, "notes.readingTimeLabel")}: {note.data.readingTime}</span>
+        </div>
+        <h1 class="page-h1 mt-4 text-[var(--text)]" data-hero-line>{note.data.title}</h1>
+        <p class="mt-4 text-lg leading-relaxed text-[var(--text-dim)]" data-hero-line>{note.data.summary}</p>
+        <div class="mt-5 flex flex-wrap gap-2">
+          {note.data.tags.map((tag) => (
+            <span class="rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface)] px-2.5 py-0.5 font-mono text-xs text-[var(--accent)]">
+              {tag}
+            </span>
+          ))}
+        </div>
+      </header>
+
+      <div class="prose-studio mt-10">
+        <slot />
+      </div>
+
+      {relatedWorks.length > 0 && (
+        <section class="mt-14 border-t border-[var(--line)] pt-8">
+          <h2 class="mono-label text-[var(--text-dim)]">{t(locale, "notes.relatedWorkLabel")}</h2>
+          <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {relatedWorks.map((w) => (
+              <a
+                href={localePath(locale, `/work/${w.data.slug}`)}
+                class="block rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface)] p-4 no-underline transition-colors hover:border-[var(--accent)]"
+              >
+                <div class="font-sans text-base font-semibold text-[var(--text)]">{w.data.title}</div>
+                <p class="mt-1 text-xs text-[var(--text-dim)]">{w.data.summary}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  </article>
+</BaseLayout>
+

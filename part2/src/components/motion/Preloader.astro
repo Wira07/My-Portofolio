@@ -1,0 +1,56 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+---
+
+<div
+  id="studio-preloader"
+  aria-hidden="true"
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-[var(--bg)] transition-opacity duration-500"
+>
+  <div class="flex flex-col items-center gap-3 px-6 text-center">
+    <div class="font-mono text-lg tracking-tight text-[var(--text)]">
+      <span>{t(locale, "meta.brand")}</span>
+    </div>
+    <div class="h-[1px] w-36 overflow-hidden bg-[var(--line)]">
+      <div id="preloader-bar" class="h-full w-full origin-left bg-[var(--accent)]"></div>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (function () {
+    var el = document.getElementById("studio-preloader");
+    if (!el) return;
+    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var visited = false;
+    try {
+      visited = sessionStorage.getItem("wira_studio_visited") === "1";
+    } catch (e) {}
+
+    if (reduced || visited) {
+      el.remove();
+      return;
+    }
+
+    try {
+      sessionStorage.setItem("wira_studio_visited", "1");
+    } catch (e) {}
+
+    el.classList.remove("hidden");
+    el.classList.add("flex");
+    setTimeout(function () {
+      el.style.opacity = "0";
+      setTimeout(function () {
+        el.remove();
+      }, 380);
+    }, 620);
+  })();
+</script>
+

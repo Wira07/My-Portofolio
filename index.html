@@ -30,6 +30,7 @@
     (function () {
       var d = document.documentElement;
       d.classList.add('js');
+      try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; window.scrollTo(0, 0); } catch (e) {}
       try {
         var t = localStorage.getItem('theme');
         d.setAttribute('data-theme', t === 'light' || t === 'dark' ? t : 'dark');
@@ -94,26 +95,53 @@
     <span class="cursor__label"></span>
   </div>
 
-  <!-- Navigasi -->
+  <!-- Navigasi Melayang (Floating Pill Capsule Navbar) -->
   <header class="nav" id="nav">
-    <div class="nav__inner container">
-      <a class="nav__logo" href="#hero" aria-label="Wira Sukma Saputra — kembali ke awal"><span>WS</span></a>
+    <div class="nav__inner">
+      <a class="nav__logo" href="#hero" aria-label="Wira Sukma Saputra — kembali ke awal" data-magnetic>
+        <span class="nav__logo-mark" aria-hidden="true">
+          <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 7h18M9 7v11a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3v-4h-5"/>
+            <circle cx="9" cy="21" r="2" fill="currentColor" stroke="none"/>
+            <circle cx="19" cy="21" r="2" fill="currentColor" stroke="none"/>
+          </svg>
+        </span>
+        <span class="nav__logo-text">wirasukma<b>.id</b></span>
+      </a>
+
       <nav class="nav__links" id="nav-links" aria-label="Navigasi utama">
-        <a href="#about" data-nav>Tentang</a>
-        <a href="#skills" data-nav>Skill</a>
-        <a href="#journey" data-nav>Perjalanan</a>
-        <a href="#highlights" data-nav>Sorotan</a>
-        <a href="#projects" data-nav>Proyek</a>
-        <a href="#certs" data-nav>Sertifikat</a>
-        <a href="#contact" data-nav>Kontak</a>
+        <a class="nav__link nav__link--hero is-active" href="#hero" data-nav aria-current="true">Beranda</a>
+        <a class="nav__link nav__link--about" href="#about" data-nav>Tentang</a>
+        <a class="nav__link nav__link--skills" href="#skills" data-nav>Skill</a>
+        <a class="nav__link nav__link--journey" href="#journey" data-nav>Perjalanan</a>
+        <a class="nav__link nav__link--highlights" href="#highlights" data-nav>Sorotan</a>
+        <a class="nav__link nav__link--projects" href="#projects" data-nav>Proyek</a>
+        <a class="nav__link nav__link--certs" href="#certs" data-nav>Sertifikat</a>
+        <a class="nav__link nav__link--contact" href="#contact" data-nav>Kontak</a>
         <span class="nav__indicator" aria-hidden="true"></span>
       </nav>
+
       <div class="nav__actions">
-        <button class="icon-btn" id="theme-toggle" type="button" aria-label="Ganti ke tema terang">
+        <button class="icon-btn" id="theme-toggle" type="button" aria-label="Ganti ke tema terang" data-magnetic>
           <svg class="theme-icon--sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
           <svg class="theme-icon--moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
-        <a class="btn btn--outline btn--sm" id="nav-cv" href="assets/Wira-Sukma-Saputra-CV.pdf" download data-magnetic>Unduh CV</a>
+
+        <a class="nav__cta-primary" href="#contact" data-magnetic>
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 3C6.48 3 2 6.92 2 11.75c0 2.17.91 4.15 2.41 5.68-.18.96-.67 2.18-1.36 3.04-.21.26.02.65.35.59 1.65-.28 3.28-.92 4.35-1.52 1.32.46 2.75.71 4.25.71 5.52 0 10-3.92 10-8.75S17.52 3 12 3zm-4 9.75a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm4 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm4 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/>
+          </svg>
+          <span>Hubungi Saya</span>
+        </a>
+
+        <a class="nav__cta-cv" id="nav-cv" href="assets/Wira-Sukma-Saputra-CV.pdf" download title="Unduh CV Wira Sukma Saputra" data-magnetic>
+          <span class="nav__cta-cv-avatar" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zm0 2.25c-3.25 0-9.75 1.63-9.75 4.88V21h19.5v-1.87c0-3.25-6.5-4.88-9.75-4.88z"/></svg>
+          </span>
+          <span class="nav__cta-cv-text">CV</span>
+          <svg class="nav__cta-cv-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </a>
+
         <button class="nav__burger" id="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Buka menu"><span></span><span></span></button>
       </div>
     </div>
@@ -135,13 +163,15 @@
     </div>
   </div>
 
-  <!-- Latar Orbit 3D & Mesh Global (menyebar di seluruh halaman) -->
+  <!-- Latar Orbit 3D & Mesh Global + Efek Kosmik Saat Scroll -->
   <div class="hero__mesh" aria-hidden="true"><i></i><i></i><i></i></div>
   <canvas class="hero__canvas" id="hero-canvas" aria-hidden="true"></canvas>
+  <canvas class="scroll-fx" id="scroll-fx" aria-hidden="true"></canvas>
 
   <main id="main">
     <!-- ============ HERO ============ -->
     <section class="hero" id="hero" aria-labelledby="hero-title">
+      <div class="hero__planets" id="hero-planets" aria-hidden="true"></div>
 
       <div class="hero__inner container">
         <p class="hero__eyebrow label"><span class="dot" aria-hidden="true"></span><span id="hero-status">Open for freelance</span></p>
@@ -213,9 +243,13 @@
     <!-- ============ PERJALANAN ============ -->
     <section class="section journey" id="journey" aria-labelledby="journey-title">
       <div class="container">
-        <div class="section__head">
-          <p class="label section__eyebrow"><b>03</b> Perjalanan</p>
-          <h2 class="section__title" id="journey-title">Dari bangku kuliah ke produk nyata.</h2>
+        <div class="section__head journey__head">
+          <div>
+            <p class="label section__eyebrow"><b>03</b> Perjalanan</p>
+            <h2 class="section__title" id="journey-title">Dari bangku kuliah ke produk nyata.</h2>
+            <p class="journey__intro">Setiap fase ditandai warna &amp; ikon berbeda — mulai dari <b>Masa Kuliah S1</b>, eksplorasi <b>Program &amp; Prestasi</b>, <b>Freelance Mandiri</b>, hingga <b>Karir Kerja Perusahaan</b>.</p>
+          </div>
+          <div class="journey__filters" id="journey-filters" role="group" aria-label="Filter fase perjalanan"></div>
         </div>
         <div class="journey__timeline" id="journey-timeline">
           <svg class="journey__line" id="journey-line" aria-hidden="true" focusable="false">

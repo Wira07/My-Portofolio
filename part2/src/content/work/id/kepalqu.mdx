@@ -1,0 +1,84 @@
+---
+title: "KepalQu"
+slug: "kepalqu"
+locale: "id"
+summary: "Aplikasi Android delivery dan logistik berbasis Kotlin dengan fokus kelancaran operasional kurir dan pelacakan status pengantaran."
+category: ["android"]
+role: "Android Developer"
+year: 2025
+duration: "TODO_METRIC"
+client: "Proyek Produk Logistik"
+stack: ["Kotlin", "MVVM", "Jetpack", "Room DB", "REST API", "Location Services"]
+cover: "/images/work/kepalqu.png"
+coverAlt: "Cetak biru arsitektur aplikasi Android delivery KepalQu"
+draft: true
+metrics:
+  - label: "Konsumsi Baterai Lokasi"
+    value: "TODO_METRIC"
+    note: "Menunggu profil uji lapangan rute penuh"
+  - label: "Tingkat Sukses Sinkronisasi Offline"
+    value: "TODO_METRIC"
+    note: "Belum diaudit pada skala armada"
+links: {}
+architecture:
+  title: "Arsitektur MVVM Offline-First untuk Operasional Kurir KepalQu"
+  caption: "Antrean status pengantaran tetap aman tersimpan di Room DB saat kurir memasuki area sinyal lemah."
+  nodes:
+    - { id: "ui", label: "Courier Screen", sub: "Daftar Paket & Bukti Kirim", group: "input" }
+    - { id: "vm", label: "ViewModel + State", sub: "Single Source of Truth", group: "core" }
+    - { id: "repo", label: "Sync Repository", sub: "Conflict Resolution Queue", group: "core" }
+    - { id: "room", label: "Room SQLite", sub: "Offline Delivery Queue", group: "storage" }
+    - { id: "api", label: "Logistics API", sub: "Order & Status Endpoint", group: "output" }
+  edges:
+    - { from: "ui", to: "vm", label: "Action" }
+    - { from: "vm", to: "repo", label: "Dispatch" }
+    - { from: "repo", to: "room", label: "Cache" }
+    - { from: "repo", to: "api", label: "Sync Worker" }
+  mermaid: |
+    flowchart TB
+      UI[Courier UI] --> VM[MVVM ViewModel]
+      VM --> Repo[Delivery Repository]
+      Repo --> DB[(Room Local Cache)]
+      Repo -->|Saat Koneksi Tersedia| API[REST API Server]
+gallery:
+  - src: "/images/work/kepalqu.png"
+    alt: "Diagram arsitektur KepalQu Android"
+    caption: "Pola MVVM dan antrean sinkronisasi lokal pada aplikasi KepalQu."
+    width: 1280
+    height: 800
+featured: true
+order: 4
+---
+
+## Konteks
+
+Operasional pengantaran barang lokal membutuhkan aplikasi Android yang ringan bagi kurir di lapangan, di mana akses internet sering berpindah antara 4G stabil dan area blank spot saat mengantar ke pemukiman padat.
+
+## Masalah
+
+1. **Ketergantungan jaringan saat update status kirim**: Aplikasi yang langsung memblokir aksi ketika sinyal hilang menghambat kecepatan kerja kurir.
+2. **Keterbacaan alur tugas harian**: Kurir butuh tampilan antrean paket, alamat tujuan, dan aksi konfirmasi kirim dengan jumlah ketukan seminimal mungkin.
+3. **Pemisahan kode UI dan logika sinkronisasi**: Agar mudah dikembangkan lebih lanjut saat fitur pembayaran atau pelacakan bertambah.
+
+## Pendekatan & Keputusan Teknis (Trade-Off)
+
+- **Arsitektur MVVM dengan Repository Terpusat + Room Cache**: Setiap perubahan status pengiriman ditulis terlebih dahulu ke penyimpanan lokal sebelum dijadwalkan sinkronisasi ke backend REST API. *Trade-off*: membutuhkan manajemen status sinkronisasi (pending/synced/failed) yang cermat agar urutan peristiwa tetap konsisten.
+- **Native Kotlin dibanding Framework Lintas Platform**: Memberikan kontrol lebih langsung terhadap siklus hidup layanan lokasi Android, izin kamera untuk bukti serah terima, dan ukuran APK yang ramping.
+
+## Arsitektur
+
+Mengikuti pola Android Jetpack modern: layar aplikasi berkomunikasi hanya dengan `ViewModel`, sementara lapisan `Repository` menengahi penyimpanan lokal `Room` dan komunikasi jaringan `REST API`.
+
+## Hasil
+
+- Struktur aplikasi pengiriman berbasis Kotlin MVVM terbangun bersih dengan pemisahan layer data dan presentasi.
+- Data efisiensi operasional skala produksi belum dicantumkan hingga uji armada selesai.
+
+## Pelajaran
+
+Merancang aplikasi lapangan bukan soal menampilkan peta dan animasi paling rumit, melainkan menjamin data kurir tidak pernah hilang ketika sinyal terputus tepat di depan rumah penerima.
+
+## Galeri
+
+Cetak biru arsitektur terlampir di atas.
+

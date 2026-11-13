@@ -1,0 +1,17 @@
+---
+interface Props {
+  items: string[];
+  label: string;
+}
+
+const { items, label } = Astro.props;
+---
+
+<div class="marquee-shell overflow-hidden border-y border-[var(--line)] bg-[var(--surface)] py-3" aria-label={label}>
+  <div class="marquee-track flex items-center gap-8 font-mono text-xs uppercase tracking-widest text-[var(--text-dim)]">
+    {items.map((item) => <span class="whitespace-nowrap">{item}</span>)}
+    <span aria-hidden="true" class="text-[var(--accent)]">•</span>
+    {items.map((item) => <span aria-hidden="true" class="whitespace-nowrap">{item}</span>)}
+  </div>
+</div>
+

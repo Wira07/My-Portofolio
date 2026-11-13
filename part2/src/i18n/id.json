@@ -1,0 +1,213 @@
+{
+  "meta": {
+    "brand": "wira.studio",
+    "studioDescriptor": "Studio Rekayasa Perangkat Lunak Independen",
+    "localeName": "ID",
+    "toggleLangLabel": "Ganti bahasa ke English"
+  },
+  "nav": {
+    "home": "Beranda",
+    "work": "Karya",
+    "capabilities": "Kapabilitas",
+    "process": "Proses",
+    "notes": "Catatan",
+    "about": "Tentang",
+    "engage": "Mulai Proyek",
+    "uses": "Stack & Alat",
+    "cmdPlaceholder": "Cari (Ctrl+K)",
+    "openMenu": "Buka menu navigasi",
+    "closeMenu": "Tutup menu navigasi",
+    "skipToContent": "Langsung ke konten utama",
+    "themeLight": "Aktifkan mode terang",
+    "themeDark": "Aktifkan mode gelap"
+  },
+  "hero": {
+    "eyebrow": "STUDIO PERANGKAT LUNAK INDEPENDEN — JAWA BARAT, ID",
+    "headlineLine1": "Software yang dibangun",
+    "headlineLine2": "seperti produk,",
+    "headlineAccent": "bukan sekadar proyek.",
+    "sub": "Dari sensor sampai layar: merancang dan merekayasa web, aplikasi Android, telemetri IoT, dan Computer Vision dalam satu tangan dengan standar dokumentasi siap produksi.",
+    "ctaPrimary": "Mulai Proyek",
+    "ctaSecondary": "Lihat Case Study",
+    "scrollCue": "GULIR UNTUK MENJELAJAH",
+    "proofStripLabel": "Fokus rekayasa end-to-end"
+  },
+  "home": {
+    "statusTitle": "STATUS OPERASIONAL",
+    "workSectionLabel": "01 / KARYA PILIHAN",
+    "workSectionTitle": "Studi kasus terstruktur — masalah, keputusan arsitektur, dan hasil nyata.",
+    "workViewAll": "Semua 8 studi kasus",
+    "capLabel": "02 / MATRIKS KAPABILITAS",
+    "capTitle": "Klaim kemampuan yang selalu tertaut ke bukti produksi.",
+    "capViewAll": "Jelajahi seluruh kapabilitas",
+    "processLabel": "03 / CARA KERJA STUDIO",
+    "processTitle": "Lima fase kerja transparan dari discovery hingga serah terima klien.",
+    "processViewAll": "Detail alur proses",
+    "notesLabel": "04 / CATATAN REKAYASA",
+    "notesTitle": "Dokumentasi arsitektur dari lapangan dan keputusan trade-off teknis.",
+    "notesViewAll": "Semua catatan teknis",
+    "engageLabel": "05 / KOLABORASI",
+    "engageTitle": "Siap merancang produk digital berikutnya?",
+    "engageSub": "Pilih paket kerja atau susun brief awal terstruktur dalam empat langkah singkat."
+  },
+  "work": {
+    "title": "Studi Kasus & Arsip Rekayasa",
+    "subtitle": "Setiap proyek didokumentasikan sebagai studi kasus: konteks bisnis, kendala teknis, trade-off arsitektur, diagram sistem, dan pelajaran.",
+    "filterAll": "Semua",
+    "categories": {
+      "web": "Web",
+      "android": "Android",
+      "iot": "IoT",
+      "ai": "AI / Vision",
+      "uiux": "UI/UX"
+    },
+    "draftBadge": "DRAFT",
+    "draftNotice": "Studi kasus ini sedang dilengkapi data terverifikasi bersama klien. Angka yang belum dikonfirmasi ditandai dengan tanda pisah (—) tanpa estimasi karangan.",
+    "backToWork": "Kembali ke daftar karya",
+    "openCase": "Buka studi kasus",
+    "meta": {
+      "role": "Peran",
+      "duration": "Durasi",
+      "year": "Tahun",
+      "client": "Klien / Konteks",
+      "stack": "Teknologi",
+      "links": "Tautan",
+      "live": "Situs Live",
+      "repo": "Repositori",
+      "demo": "Demo",
+      "confidential": "Akses internal / non-publik"
+    },
+    "metricsTitle": "Dampak & Metrik Terukur",
+    "metricsTodoNote": "Menunggu konfirmasi angka final dari pemilik sistem",
+    "archTitle": "Diagram Arsitektur Sistem",
+    "mermaidToggle": "Lihat sumber spesifikasi Mermaid",
+    "galleryTitle": "Dokumentasi Antarmuka & Layar",
+    "nextCase": "Studi kasus berikutnya",
+    "prevCase": "Studi kasus sebelumnya",
+    "emptyFilter": "Belum ada studi kasus untuk kategori ini."
+  },
+  "capabilities": {
+    "title": "Matriks Kapabilitas Berbasis Bukti",
+    "subtitle": "Tanpa bar persentase subjektif. Setiap kompetensi di bawah ini terhubung langsung ke studi kasus produksi atau purwarupa tervalidasi.",
+    "proofLabel": "Bukti Studi Kasus",
+    "technologiesLabel": "Perangkat & Stack",
+    "expandHint": "Pilih baris untuk melihat studi kasus terkait"
+  },
+  "process": {
+    "stagePrefix": "TAHAP",
+    "title": "Proses Kerja & Tata Kelola Pengiriman",
+    "subtitle": "Satu orang bekerja dengan disiplin tim studio: spesifikasi tertulis sebelum kode, keputusan arsitektur tercatat, dan dokumentasi siap dilanjutkan siapa pun.",
+    "deliverablesLabel": "Keluaran Fase",
+    "clientInputLabel": "Kontribusi Klien",
+    "governanceTitle": "Standar Dokumentasi & Serah Terima",
+    "governancePoints": [
+      "Repository terstruktur dengan README instalasi dan environment template.",
+      "Catatan keputusan arsitektur (ADR) untuk pilihan database, protokol, dan trade-off.",
+      "Video walkthrough alur admin/pengguna saat serah terima produksi."
+    ]
+  },
+  "notes": {
+    "title": "Catatan Rekayasa",
+    "subtitle": "Tulisan teknis singkat mengenai arsitektur real-time MQTT, deployment AI ke Android TFLite, dan otentikasi terintegrasi WhatsApp + FCM.",
+    "publishedLabel": "Diterbitkan",
+    "readingTimeLabel": "Waktu baca",
+    "relatedWorkLabel": "Studi kasus terkait",
+    "backToNotes": "Kembali ke daftar catatan",
+    "readNote": "Baca catatan"
+  },
+  "about": {
+    "title": "Profil Studio & Latar Belakang",
+    "subtitle": "Independent Software & Product Studio berbasis di Kuningan, Jawa Barat — memadukan disiplin rekayasa perangkat lunak dengan kepekaan desain produk.",
+    "summaryLabel": "Ringkasan Eksekutif",
+    "pillarsTitle": "Empat Pilar Rekayasa",
+    "educationTitle": "Pendidikan Formal",
+    "experienceTitle": "Rekam Jejak & Pengalaman",
+    "certsTitle": "Program Nasional & Sertifikasi",
+    "ctaTitle": "Butuh partner teknis untuk proyek web, Android, IoT, atau AI?",
+    "portraitAlt": "Potret Wira Sukma Saputra, pendiri wira.studio"
+  },
+  "engage": {
+    "title": "Jalur Kolaborasi & Brief Wizard",
+    "subtitle": "Struktur keterlibatan yang jelas tanpa tebak-tebakan. Pilih bentuk paket yang sesuai, lalu isi brief wizard untuk mendapatkan estimasi kasar alur kerja.",
+    "packagesTitle": "Paket Kerja Studio",
+    "includesLabel": "Keluaran Utama",
+    "durationLabel": "Estimasi Durasi",
+    "clientNeedsLabel": "Kebutuhan dari Klien",
+    "pricingPrefix": "Investasi",
+    "wizardTitle": "Brief Wizard Terstruktur",
+    "wizardSub": "Susun kebutuhan produk dalam 4 langkah untuk menghasilkan ringkasan spesifikasi dan estimasi waktu pengerjaan awal.",
+    "wizardSteps": {
+      "step1": "01 / Jenis Sistem",
+      "step2": "02 / Skala & Modul",
+      "step3": "03 / Timeline & Estimasi",
+      "step4": "04 / Kontak & Kirim"
+    },
+    "stepLabels": {
+      "projectType": "Pilih fokus solusi yang ingin dibangun",
+      "scale": "Tentukan kompleksitas sistem",
+      "features": "Kebutuhan teknis tambahan",
+      "timeline": "Target waktu rilis",
+      "name": "Nama Lengkap / Organisasi",
+      "email": "Email Kerja / Pribadi",
+      "notes": "Ringkasan masalah atau tautan referensi"
+    },
+    "buttons": {
+      "next": "Lanjutkan",
+      "prev": "Kembali",
+      "submit": "Kirim Ringkasan Brief",
+      "reset": "Buat Brief Baru"
+    },
+    "estimateTitle": "Estimasi Kasar Awal (Non-Mengikat)",
+    "estimateDurationLabel": "Rentang Durasi",
+    "estimatePhaseLabel": "Saran Fase Awal",
+    "baseWeeksUnit": "minggu dasar",
+    "weeksUnit": "minggu",
+    "defaultKickoffPhase": "Discovery & Pembekuan Spesifikasi",
+    "briefReadyBadge": "RINGKASAN SIAP",
+    "validationError": "Mohon lengkapi nama dan alamat email yang valid sebelum mengirim brief.",
+    "submitSuccessTitle": "Ringkasan Brief Siap Ditindaklanjuti",
+    "submitSuccessBody": "Konfigurasi brief Anda telah divalidasi dan disiapkan. Gunakan jalur kirim cepat di bawah jika ingin langsung membuka klien email atau WhatsApp dengan ringkasan otomatis.",
+    "mailtoFallback": "Buka di Email",
+    "waFallback": "Kirim via WhatsApp"
+  },
+  "uses": {
+    "title": "Stack, Perangkat & Tooling Studio",
+    "subtitle": "Daftar perangkat keras, bahasa pemrograman, framework, dan utilitas produksi yang dipakai sehari-hari."
+  },
+  "notFound": {
+    "code": "404 // ROUTE_NOT_FOUND",
+    "title": "Halaman yang Anda cari tidak terdaftar.",
+    "subtitle": "Tautan mungkin telah berpindah atau masih dalam arsip. Gunakan Command Palette (Ctrl+K) atau kembali ke beranda studio.",
+    "backHome": "Kembali ke Beranda"
+  },
+  "palette": {
+    "triggerLabel": "Buka Command Palette",
+    "title": "Navigasi Cepat Studio",
+    "searchPlaceholder": "Ketik nama halaman, studi kasus, atau perintah...",
+    "empty": "Tidak ditemukan hasil yang cocok.",
+    "hint": "Gunakan panah atas/bawah, Enter untuk memilih, Esc untuk menutup.",
+    "groups": {
+      "pages": "Halaman",
+      "work": "Studi Kasus",
+      "notes": "Catatan Rekayasa",
+      "actions": "Aksi Cepat"
+    },
+    "actions": {
+      "toggleTheme": "Ubah Tema (Gelap / Terang)",
+      "switchLang": "Ganti Bahasa (ID / EN)",
+      "copyEmail": "Salin Alamat Email Studio",
+      "downloadCv": "Unduh CV PDF"
+    }
+  },
+  "footer": {
+    "sitemapTitle": "Peta Situs",
+    "connectTitle": "Kontak & Kanal",
+    "docsTitle": "Dokumen Studio",
+    "cvLabel": "Unduh CV (PDF)",
+    "deckLabel": "Capability Deck (PDF)",
+    "copyEmail": "Salin Email",
+    "emailCopied": "Email disalin",
+    "localTimeLabel": "Waktu Studio (WIB)",
+    "versionLabel": "Rilis"
+  }
+}

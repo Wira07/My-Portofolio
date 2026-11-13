@@ -1,0 +1,84 @@
+---
+title: "Smart Attendance AI"
+slug: "smart-attendance-ai"
+locale: "en"
+summary: "Android attendance system combining YOLO11 face detection, identity recognition, and anti-spoofing liveness validation."
+category: ["android", "ai"]
+role: "Mobile & AI Integration Engineer"
+year: 2025
+duration: "TODO_METRIC"
+client: "Applied R&D Initiative"
+stack: ["Kotlin", "CameraX", "YOLO11", "Face Recognition", "Liveness Detection", "REST API"]
+cover: "/images/work/smart-attendance-ai.png"
+coverAlt: "Blueprint of Smart Attendance AI using YOLO11 and liveness checks"
+draft: true
+metrics:
+  - label: "Verification Turnaround"
+    value: "TODO_METRIC"
+    note: "Cross-device profiling in progress"
+  - label: "Spoof Rejection Rate"
+    value: "TODO_METRIC"
+    note: "Pending multi-lighting test dataset"
+links: {}
+architecture:
+  title: "Attendance Pipeline: CameraX -> Liveness -> Embedding Match"
+  caption: "YOLO11 extracts clean face ROIs prior to liveness validation and vector matching."
+  nodes:
+    - { id: "cam", label: "Android CameraX", sub: "YUV / Bitmap Frame Stream", group: "input" }
+    - { id: "yolo", label: "YOLO11 Detector", sub: "Fast Face Localization", group: "core" }
+    - { id: "live", label: "Liveness Check", sub: "Blink & Micro-Motion", group: "core" }
+    - { id: "embed", label: "Face Matcher", sub: "Cosine Distance Scoring", group: "storage" }
+    - { id: "log", label: "Attendance API", sub: "Verified Timestamp Log", group: "output" }
+  edges:
+    - { from: "cam", to: "yolo", label: "Frame" }
+    - { from: "yolo", to: "live", label: "ROI Crop" }
+    - { from: "live", to: "embed", label: "Pass" }
+    - { from: "embed", to: "log", label: "Verified ID" }
+  mermaid: |
+    flowchart LR
+      A[CameraX Frame] --> B[YOLO11 Face ROI]
+      B --> C[Liveness Challenge]
+      C -->|Real Person| D[Face Embedding Match]
+      D --> E[Attendance Log API]
+gallery:
+  - src: "/images/work/smart-attendance-ai.png"
+    alt: "Smart Attendance AI system architecture diagram"
+    caption: "Layered camera frame pipeline from detection to verified attendance."
+    width: 1280
+    height: 800
+featured: true
+order: 2
+---
+
+## Context
+
+Static selfie or PIN-based check-ins are trivially bypassed with printed photos or second phone screens. **Smart Attendance AI** combines native Android camera capture with layered computer vision verification.
+
+## Problem
+
+1. **Inconsistent doorway lighting** degrades naive facial embedding accuracy.
+2. **Presentation attacks (spoofing)** must be rejected prior to recording any attendance log.
+3. **Mid-range Android memory limits** require bounding frame size and processing cost so the preview stays responsive.
+
+## Approach & Technical Trade-Offs
+
+- **YOLO11 ROI Extraction Before Recognition**: Cropping clean face regions via YOLO11 cuts background noise before liveness and recognition run. *Trade-off*: adds an explicit detection pass while lowering false matches in crowded entrances.
+- **Prompted Motion Liveness**: Avoids relying on hardware depth sensors absent across most budget Android handsets.
+
+## Architecture
+
+Kotlin CameraX supplies preview buffers to the YOLO11 face detector, validates genuine human motion, and compares identity vectors against registered profiles before writing to the attendance API.
+
+## Outcomes
+
+- Unified multi-stage detection, anti-spoofing, and attendance submission flow built end-to-end.
+- Formal device benchmarks remain withheld for verification pending mid-tier handset test sweeps.
+
+## Lessons Learned
+
+Biometric reliability in production depends heavily on camera UX guidance — lighting cues, distance framing, and clear retry prompts — alongside model precision.
+
+## Gallery
+
+Architecture blueprint shown above.
+

@@ -1,0 +1,90 @@
+{
+  "steps": [
+    {
+      "number": "01",
+      "id": "discovery",
+      "title": { "id": "Discovery & Framing", "en": "Discovery & Problem Framing" },
+      "summary": {
+        "id": "Memetakan tujuan bisnis, batasan pengguna nyata, profil jaringan, dan risiko teknis sebelum menyentuh desain maupun kode.",
+        "en": "Mapping business objectives, real-world user constraints, connectivity profiles, and technical risks before visual or code execution."
+      },
+      "deliverables": {
+        "id": ["Dokumen Ringkas Lingkup (Mini-PRD)", "Peta Risiko & Asumsi Teknis", "Jadwal Milestone & Estimasi Rilis"],
+        "en": ["Scoped Mini-PRD Specification", "Technical Risk & Constraint Log", "Milestone & Release Schedule"]
+      },
+      "clientInput": {
+        "id": "Akses narasumber domain, contoh data/perangkat eksisting, serta prioritas fitur utama.",
+        "en": "Domain stakeholder interview, sample payloads or hardware specs, and core feature priority."
+      }
+    },
+    {
+      "number": "02",
+      "id": "design",
+      "title": { "id": "Architecture & Product Design", "en": "Architecture & Product Design" },
+      "summary": {
+        "id": "Menetapkan topologi sistem, skema database/API, dan wireframe atau design system agar tidak ada rework di tengah pengembangan.",
+        "en": "Locking system topology, database/API contracts, wireframes, and UI tokens so engineering progresses without costly rework."
+      },
+      "deliverables": {
+        "id": ["Diagram Arsitektur & Kontrak Data", "User Flow & Prototipe Figma Interaktif", "Daftar Trade-Off Teknologi"],
+        "en": ["Architecture Topology & Data Contracts", "Interactive Figma Flow & Prototype", "Explicit Stack Trade-Off Log"]
+      },
+      "clientInput": {
+        "id": "Validasi alur kerja pengguna dan persetujuan rancangan antarmuka sebelum fase build.",
+        "en": "Sign-off on user workflows and core screen layouts prior to engineering sprint."
+      }
+    },
+    {
+      "number": "03",
+      "id": "build",
+      "title": { "id": "Iterative Engineering", "en": "Iterative Engineering" },
+      "summary": {
+        "id": "Implementasi bertahap dalam modul terukur dengan staging preview berkala, pemeriksaan tipe statis, dan pengujian integrasi.",
+        "en": "Incremental modular implementation with regular staging previews, strict static checks, and end-to-end integration validation."
+      },
+      "deliverables": {
+        "id": ["Kode Produksi di Repositori Terstruktur", "Staging Build untuk Uji Coba Berkala", "Laporan Progres Mingguan"],
+        "en": ["Structured Repository Commits", "Periodic Staging Previews", "Weekly Progress Changelog"]
+      },
+      "clientInput": {
+        "id": "Umpan balik terfokus per milestone staging (maksimal 2x24 jam agar ritme terjaga).",
+        "en": "Focused feedback per staging drop within 48 hours to keep delivery cadence tight."
+      }
+    },
+    {
+      "number": "04",
+      "id": "ship",
+      "title": { "id": "Verification & Ship", "en": "Verification & Production Ship" },
+      "summary": {
+        "id": "Audit performa, aksesibilitas, keamanan konfigurasi, serta deployment ke server atau distribusi Android dengan checklist rilis ketat.",
+        "en": "Performance profiling, accessibility verification, environment hardening, and controlled production deployment or APK/AAB release."
+      },
+      "deliverables": {
+        "id": ["Rilis Produksi Live / APK Signed", "Dokumentasi Instalasi & Environment", "Video Walkthrough Operasional"],
+        "en": ["Live Production Deploy / Signed APK", "Deployment & Environment Playbook", "Operational Walkthrough Video"]
+      },
+      "clientInput": {
+        "id": "Kredensial hosting/domain/Play Console dan pengujian UAT akhir.",
+        "en": "Production server/domain/Play Console access and final User Acceptance Testing."
+      }
+    },
+    {
+      "number": "05",
+      "id": "support",
+      "title": { "id": "Handover & Continuity", "en": "Handover & Long-Term Support" },
+      "summary": {
+        "id": "Serah terima penuh aset desain dan kode sumber agar klien independen, disertai jendela stabilisasi pasca-rilis.",
+        "en": "Clean ownership handover of source code and design files so client teams stay independent, backed by a post-launch stabilization window."
+      },
+      "deliverables": {
+        "id": ["Arsip Lengkap Sumber Kode & Desain", "Garansi Stabilisasi Bug Pasca-Rilis", "Opsi Retainer Pengembangan lanjutan"],
+        "en": ["Full Source & Figma Ownership Transfer", "Post-Launch Stabilization Coverage", "Optional Evolution Retainer"]
+      },
+      "clientInput": {
+        "id": "Konfirmasi penerima akun repositori dan penjadwalan sesi pelatihan admin.",
+        "en": "Confirmation of repository owner accounts and scheduling for admin handover session."
+      }
+    }
+  ]
+}
+

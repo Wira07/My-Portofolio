@@ -23,7 +23,6 @@ export function init() {
       charsClass: "char",
       wordsClass: "word",
       aria: "none",
-      autoSplit: true,
       onSplit(self) {
         const gradChars = $$(".hero__title .grad .char");
         gradChars.forEach((ch, idx) => {
@@ -119,6 +118,7 @@ export function init() {
 export function intro() {
   introPlayed = true;
   if (introTl) introTl.play(0);
+  if (gl && gl.replayPlanets) gl.replayPlanets(); // planet logo muncul bergantian bersama intro
 }
 
 /** Sambungkan Three.js hero setelah modul lazy termuat */
@@ -144,6 +144,14 @@ export function attachWebGL(mod) {
   html.classList.add("has-webgl");
   window.addEventListener("themechange", (e) => gl && gl.setTheme(e.detail.theme));
   return gl;
+}
+
+export function setSwarmMode(active) {
+  if (gl && gl.setSwarmMode) gl.setSwarmMode(active);
+}
+
+export function captureGalaxySnapshot() {
+  return gl && gl.captureSnapshot ? gl.captureSnapshot() : "";
 }
 
 export function destroy() {

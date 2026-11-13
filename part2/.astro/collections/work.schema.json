@@ -1,0 +1,249 @@
+{
+  "$ref": "#/definitions/work",
+  "definitions": {
+    "work": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "id",
+            "en"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "category": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "web",
+              "android",
+              "iot",
+              "ai",
+              "uiux"
+            ]
+          },
+          "minItems": 1
+        },
+        "role": {
+          "type": "string"
+        },
+        "year": {
+          "type": "number"
+        },
+        "duration": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string"
+        },
+        "stack": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "cover": {
+          "type": "string"
+        },
+        "coverAlt": {
+          "type": "string"
+        },
+        "draft": {
+          "type": "boolean",
+          "default": false
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "label",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        },
+        "links": {
+          "type": "object",
+          "properties": {
+            "live": {
+              "type": "string",
+              "format": "uri"
+            },
+            "repo": {
+              "type": "string",
+              "format": "uri"
+            },
+            "demo": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "architecture": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "caption": {
+              "type": "string"
+            },
+            "nodes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "sub": {
+                    "type": "string"
+                  },
+                  "group": {
+                    "type": "string",
+                    "enum": [
+                      "input",
+                      "core",
+                      "storage",
+                      "output"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "sub",
+                  "group"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "edges": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "from",
+                  "to"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "mermaid": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "title",
+            "caption",
+            "nodes",
+            "edges",
+            "mermaid"
+          ],
+          "additionalProperties": false
+        },
+        "gallery": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "src": {
+                "type": "string"
+              },
+              "alt": {
+                "type": "string"
+              },
+              "caption": {
+                "type": "string"
+              },
+              "width": {
+                "type": "number",
+                "default": 1280
+              },
+              "height": {
+                "type": "number",
+                "default": 800
+              }
+            },
+            "required": [
+              "src",
+              "alt",
+              "caption"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        },
+        "featured": {
+          "type": "boolean",
+          "default": false
+        },
+        "order": {
+          "type": "number"
+        },
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "slug",
+        "locale",
+        "summary",
+        "category",
+        "role",
+        "year",
+        "duration",
+        "client",
+        "stack",
+        "cover",
+        "coverAlt",
+        "architecture",
+        "order"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

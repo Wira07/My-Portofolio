@@ -52,10 +52,152 @@ html.rm .hero__mesh i { animation: none; }
 .hero__canvas.is-ready { opacity: 1; }
 html.has-webgl .hero__mesh, .hero.has-webgl .hero__mesh { opacity: .28; }
 
+/* Planet Logo Teknologi 3D (mengorbit di sekitar cincin galaksi Hero) */
+.hero__planets {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  transition: opacity .35s ease;
+}
+.hero-planet {
+  --planet-color: var(--accent);
+  --d: 0s;
+  --lab: 1;
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  will-change: transform, opacity;
+  user-select: none;
+}
+.hero-planet__halo {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  width: 64px;
+  height: 64px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--planet-color) 46%, transparent) 0%, transparent 72%);
+  filter: blur(7px);
+  pointer-events: none;
+  animation: planetPulse 3.8s ease-in-out var(--d) infinite;
+}
+@keyframes planetPulse {
+  0%, 100% { opacity: .55; transform: translate(-50%, -50%) scale(.88); }
+  50%      { opacity: 1;   transform: translate(-50%, -50%) scale(1.18); }
+}
+@property --spin {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.hero-planet__core {
+  --rx: 0deg;
+  --ry: 0deg;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background:
+    radial-gradient(120% 120% at 30% 25%, rgba(255, 255, 255, .18), rgba(10, 12, 20, .86) 68%),
+    #0B0E17;
+  border: 1.5px solid color-mix(in srgb, var(--planet-color) 55%, rgba(255, 255, 255, .2));
+  box-shadow:
+    0 8px 22px -6px rgba(0, 0, 0, .75),
+    0 0 18px -3px color-mix(in srgb, var(--planet-color) 55%, transparent),
+    inset 0 1px 2px rgba(255, 255, 255, .28);
+  backdrop-filter: blur(8px);
+  transform: perspective(170px) rotateX(var(--rx)) rotateY(var(--ry));
+}
+/* cincin cahaya berputar mengelilingi logo */
+.hero-planet__core::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: conic-gradient(from var(--spin), transparent 0deg, var(--planet-color) 70deg, transparent 150deg, transparent 360deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
+  opacity: .9;
+  animation: planetSpin 5.5s linear var(--d) infinite;
+  pointer-events: none;
+}
+/* kilau kaca di sisi atas */
+.hero-planet__core::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  width: 20px;
+  height: 11px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .34), rgba(255, 255, 255, 0));
+  transform: rotate(-24deg);
+  pointer-events: none;
+}
+@keyframes planetSpin { to { --spin: 360deg; } }
+.hero-planet__core img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .45));
+  animation: planetBob 4.6s ease-in-out var(--d) infinite alternate;
+}
+@keyframes planetBob {
+  from { transform: translateY(-1.2px) scale(1); }
+  to   { transform: translateY(1.2px) scale(1.07); }
+}
+.hero-planet__label {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(10, 12, 18, .78);
+  border: 1px solid color-mix(in srgb, var(--planet-color) 40%, rgba(255, 255, 255, .14));
+  font-family: var(--f-mono);
+  font-size: .62rem;
+  font-weight: 500;
+  letter-spacing: .06em;
+  color: #F2F3F5;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .45);
+  opacity: var(--lab);
+  transition: opacity .25s ease;
+}
+html.rm .hero-planet__halo,
+html.rm .hero-planet__core::before,
+html.rm .hero-planet__core img { animation: none; }
+[data-theme="light"] .hero-planet__core {
+  background:
+    radial-gradient(120% 120% at 30% 25%, rgba(255, 255, 255, .98), rgba(241, 245, 249, .92) 70%),
+    #FFFFFF;
+  border-color: color-mix(in srgb, var(--planet-color) 55%, rgba(15, 23, 42, .16));
+  box-shadow:
+    0 8px 20px -6px rgba(15, 23, 42, .18),
+    0 0 16px -4px color-mix(in srgb, var(--planet-color) 40%, transparent);
+}
+[data-theme="light"] .hero-planet[data-tech="github"] .hero-planet__core img {
+  filter: invert(1) brightness(.2);
+}
+[data-theme="light"] .hero-planet__label {
+  background: rgba(255, 255, 255, .88);
+  color: #0F172A;
+  border-color: color-mix(in srgb, var(--planet-color) 45%, rgba(15, 23, 42, .15));
+}
+
 /* Sebelum intro (JS aktif, motion normal) konten hero disembunyikan */
 html.js:not(.rm):not(.hero-ready) .hero__inner { visibility: hidden; }
 
-.hero__inner { position: relative; padding-block: var(--sp-16); }
+.hero__inner { position: relative; z-index: 2; padding-block: var(--sp-16); }
 
 .hero__eyebrow {
   display: inline-flex;
@@ -85,10 +227,11 @@ html.js:not(.rm):not(.hero-ready) .hero__inner { visibility: hidden; }
 .hero__line .split, .hero__line .word { display: inline-block; }
 .hero__line .char { display: inline-block; will-change: transform; }
 /* background-clip:text tidak bekerja pada anak ber-transform → warna gradien dihitung per karakter */
+html.js:not(.rm) .hero__title .grad,
 .hero__title .grad:has(.char) {
-  background: none;
-  -webkit-background-clip: border-box;
-  background-clip: border-box;
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
   -webkit-text-fill-color: currentColor;
   color: var(--accent);
 }
@@ -365,12 +508,102 @@ html.rm .about__ring { animation: none; }
   .skill-card:nth-child(n+4), .skill-card:last-child:nth-child(odd) { grid-column: span 3; }
 }
 
-/* ---------- JOURNEY ---------- */
+/* ---------- AMBIENT SCROLL FX (MULTI-VARIANT COSMIC MOTION) ---------- */
+.scroll-fx {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  will-change: opacity;
+}
+html.rm .scroll-fx { display: none !important; }
+
+/* ---------- JOURNEY (FASE KULIAH, FREELANCE, KERJA & PRESTASI) ---------- */
+.journey__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-6) var(--sp-8);
+}
+.journey__intro {
+  margin-top: var(--sp-4);
+  max-width: 62ch;
+  color: var(--text-dim);
+  font-size: clamp(.95rem, 1.15vw, 1.08rem);
+  line-height: 1.62;
+}
+.journey__intro b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.journey__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.journey__filter {
+  --jf-color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg-elev) 88%, transparent);
+  backdrop-filter: blur(10px);
+  font-family: var(--f-mono);
+  font-size: .74rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  transition: border-color .3s ease, color .3s ease, background-color .3s ease, transform .3s ease;
+}
+.journey__filter--work { --jf-color: #3DDC84; }
+.journey__filter--freelance { --jf-color: #38BDF8; }
+.journey__filter--education { --jf-color: #A855F7; }
+.journey__filter--award { --jf-color: #F59E0B; }
+
+.journey__filter-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--jf-color);
+  box-shadow: 0 0 8px var(--jf-color);
+}
+.journey__filter small {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding-inline: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .07);
+  font-size: .68rem;
+  color: var(--text);
+}
+.journey__filter:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--jf-color) 55%, var(--line));
+  transform: translateY(-2px);
+}
+.journey__filter[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--jf-color) 16%, var(--bg-elev));
+  border-color: var(--jf-color);
+  color: var(--text);
+  box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--jf-color) 45%, transparent);
+}
+
 .journey__timeline { position: relative; }
 .journey__line {
   position: absolute;
   top: 0; bottom: 0;
-  left: 15px;
+  left: 17px;
   width: 2px; height: 100%;
   overflow: visible;
   pointer-events: none;
@@ -379,70 +612,194 @@ html.rm .about__ring { animation: none; }
 .journey__line .track { stroke: var(--line); }
 .journey__line .draw { stroke: var(--accent); }
 
-.journey__item { position: relative; padding: 0 0 var(--sp-12) 52px; }
+/* Warna Pembeda Tiap Fase */
+.journey__item {
+  --j-color: #3DDC84;
+  position: relative;
+  padding: 0 0 var(--sp-12) 58px;
+}
+.journey__item--work      { --j-color: #3DDC84; } /* Karir Kerja: Emerald */
+.journey__item--freelance { --j-color: #38BDF8; } /* Freelance: Electric Cyan */
+.journey__item--education { --j-color: #A855F7; } /* Masa Kuliah: Royal Violet */
+.journey__item--program   { --j-color: #F59E0B; } /* Program Nasional: Amber */
+.journey__item--award     { --j-color: #FACC15; } /* Prestasi: Gold */
+
+.journey__item.is-filtered-out {
+  display: none;
+}
 .journey__item:last-child { padding-bottom: 0; }
+
 .journey__node {
   position: absolute;
-  left: 8px; top: 30px;
-  width: 16px; height: 16px;
+  left: 0;
+  top: 24px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: var(--bg);
-  border: 2px solid var(--line);
-  transition: background-color .5s ease, border-color .5s ease, box-shadow .5s ease, transform .5s var(--ease-out);
-  z-index: 1;
+  background: var(--bg-elev);
+  border: 2px solid color-mix(in srgb, var(--j-color) 55%, var(--line));
+  color: var(--j-color);
+  transition: background-color .5s ease, border-color .5s ease, box-shadow .5s ease, transform .5s var(--ease-out), color .5s ease;
+  z-index: 2;
+}
+.journey__node svg {
+  width: 16px;
+  height: 16px;
 }
 .journey__item.is-active .journey__node {
-  background: var(--accent);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 22%, transparent), 0 0 24px var(--accent);
+  background: var(--j-color);
+  border-color: var(--j-color);
+  color: #05080F;
+  box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--j-color) 22%, transparent),
+    0 0 26px var(--j-color);
   transform: scale(1.1);
 }
+
 .journey__card {
   position: relative;
   padding: var(--sp-6) var(--sp-6) var(--sp-8);
   border-radius: var(--r-card);
-  border: 1px solid var(--line);
-  background: var(--bg-elev);
-  transition: border-color .4s ease;
+  border: 1px solid color-mix(in srgb, var(--j-color) 24%, var(--line));
+  border-top: 3px solid var(--j-color);
+  background:
+    radial-gradient(125% 95% at 100% 0%, color-mix(in srgb, var(--j-color) 11%, transparent), transparent 58%),
+    var(--bg-elev);
+  box-shadow: 0 18px 42px -20px rgba(0, 0, 0, .55);
+  transition: border-color .4s ease, transform .4s var(--ease-out), box-shadow .4s ease;
 }
-.journey__item.is-active .journey__card { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
-.journey__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: var(--sp-3); }
-.journey__badge {
-  padding: 3px 10px;
+.journey__card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--j-color) 55%, var(--line));
+  box-shadow:
+    0 24px 50px -18px rgba(0, 0, 0, .7),
+    0 0 32px -12px color-mix(in srgb, var(--j-color) 32%, transparent);
+}
+.journey__item.is-active .journey__card {
+  border-color: color-mix(in srgb, var(--j-color) 45%, var(--line));
+}
+
+.journey__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-bottom: var(--sp-4);
+}
+.journey__date {
+  padding: 4px 10px;
   border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, .05);
   border: 1px solid var(--line);
-  color: var(--accent-text);
+  color: var(--text);
+  font-size: .72rem;
 }
-.journey__title { font-size: var(--fs-h3); letter-spacing: -.02em; }
-.journey__org { margin-top: 4px; color: var(--text-dim); font-size: .95rem; }
-.journey__points { display: grid; gap: 10px; margin-top: var(--sp-4); }
-.journey__points li { position: relative; padding-left: 20px; font-size: .95rem; line-height: 1.55; color: var(--text-dim); }
+.journey__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--r-pill);
+  border: 1px solid color-mix(in srgb, var(--j-color) 48%, var(--line));
+  background: color-mix(in srgb, var(--j-color) 14%, transparent);
+  color: var(--j-color);
+  font-weight: 600;
+  font-size: .72rem;
+}
+.journey__badge svg {
+  width: 13px;
+  height: 13px;
+}
+.journey__phase {
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  border: 1px dashed color-mix(in srgb, var(--j-color) 35%, var(--line));
+  color: var(--text-dim);
+  font-size: .68rem;
+}
+
+.journey__title {
+  font-size: var(--fs-h3);
+  letter-spacing: -.02em;
+  line-height: 1.2;
+}
+.journey__org {
+  margin-top: 4px;
+  color: var(--j-color);
+  font-family: var(--f-mono);
+  font-size: .82rem;
+  letter-spacing: .04em;
+}
+.journey__summary {
+  margin-top: var(--sp-3);
+  color: var(--text);
+  font-size: .95rem;
+  line-height: 1.6;
+  opacity: .92;
+}
+.journey__points {
+  display: grid;
+  gap: 10px;
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--line);
+}
+.journey__points li {
+  position: relative;
+  padding-left: 20px;
+  font-size: .92rem;
+  line-height: 1.58;
+  color: var(--text-dim);
+}
 .journey__points li::before {
   content: "";
   position: absolute;
-  left: 0; top: .7em;
-  width: 8px; height: 1px;
-  background: var(--accent);
+  left: 0;
+  top: .62em;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--j-color);
+  box-shadow: 0 0 8px var(--j-color);
+}
+.journey__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: var(--sp-6);
+}
+.journey__chip {
+  font-size: .73rem;
+  padding: 5px 11px;
+  border-color: color-mix(in srgb, var(--j-color) 26%, var(--line));
+}
+.journey__chip:hover {
+  border-color: var(--j-color);
 }
 .journey__item--mini .journey__card { padding-block: var(--sp-4); }
-.journey__item--award .journey__badge {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-}
-.journey__item--award .journey__card {
-  border-color: color-mix(in srgb, var(--accent) 32%, var(--line));
-  background:
-    radial-gradient(120% 100% at 100% 0%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%),
-    var(--bg-elev);
-}
 
 @media (min-width: 1024px) {
   .journey__line { left: calc(50% - 1px); }
   .journey__item { width: 50%; padding: 0 64px var(--sp-16) 0; }
   .journey__item:nth-child(even) { margin-left: 50%; padding: 0 0 var(--sp-16) 64px; }
   .journey__item:last-child { padding-bottom: 0; }
-  .journey__node { left: auto; right: -8px; }
-  .journey__item:nth-child(even) .journey__node { right: auto; left: -8px; }
+  .journey__node { left: auto; right: -18px; }
+  .journey__item:nth-child(even) .journey__node { right: auto; left: -18px; }
+  /* Saat mode filter aktif, susun rapi mengikuti urutan hasil filter */
+  .journey__timeline.is-filtered .journey__item {
+    width: calc(100% - 64px);
+    margin-left: 64px;
+    padding: 0 0 var(--sp-12) 48px;
+  }
+  .journey__timeline.is-filtered .journey__line {
+    left: 64px;
+  }
+  .journey__timeline.is-filtered .journey__node {
+    right: auto;
+    left: -18px;
+  }
 }
 
 /* ---------- HIGHLIGHTS (SOROTAN & EKSPLORASI 3D) ---------- */
@@ -1162,15 +1519,19 @@ html.rm .about__ring { animation: none; }
 .project__row {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  grid-template-areas: "thumb thumb thumb" "num title arrow" ". meta meta";
-  align-items: center;
+  grid-template-areas:
+    "thumb thumb thumb"
+    "num info arrow"
+    ". meta meta";
+  align-items: start;
   column-gap: var(--sp-4);
-  row-gap: var(--sp-3);
+  row-gap: var(--sp-4);
   width: 100%;
-  padding: var(--sp-6) 0;
+  padding: var(--sp-8) 0;
   text-align: left;
 }
 .project__thumb {
+  position: relative;
   grid-area: thumb;
   aspect-ratio: 16 / 10;
   border-radius: var(--r-card);
@@ -1179,24 +1540,138 @@ html.rm .about__ring { animation: none; }
   background:
     radial-gradient(90% 90% at 50% 50%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 75%),
     var(--bg-elev);
+  box-shadow: 0 14px 34px -14px rgba(0, 0, 0, .45);
 }
-.project__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.project__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  will-change: transform; /* diparalaks oleh js/scroll-motion.js */
+}
+.project__row:hover .project__thumb {
+  border-color: var(--accent);
+}
 .project__thumb--portrait img {
   object-fit: contain;
+  object-position: center;
   padding: 6px;
   filter: drop-shadow(0 8px 20px rgba(0, 0, 0, .45));
 }
-.project__num { grid-area: num; font-family: var(--f-mono); font-size: .85rem; color: var(--accent-text); align-self: start; padding-top: .7em; }
+.project__thumb-count {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 3px 9px;
+  border-radius: var(--r-pill);
+  background: rgba(7, 9, 14, .82);
+  border: 1px solid rgba(255, 255, 255, .16);
+  color: #F2F3F5;
+  font-family: var(--f-mono);
+  font-size: .66rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+
+.project__num {
+  grid-area: num;
+  font-family: var(--f-mono);
+  font-size: .88rem;
+  color: var(--accent-text);
+  padding-top: .35em;
+}
+.project__info {
+  grid-area: info;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
 .project__title {
-  grid-area: title;
   font-family: var(--f-display);
   font-weight: 600;
-  font-size: clamp(2rem, 6vw, 4.5rem);
-  line-height: 1.05;
-  letter-spacing: -.04em;
-  transition: transform .6s var(--ease-out);
+  font-size: clamp(1.65rem, 3.3vw, 2.75rem);
+  line-height: 1.1;
+  letter-spacing: -.035em;
+  transition: transform .5s var(--ease-out), color .3s ease;
 }
-.project__meta { grid-area: meta; display: flex; gap: var(--sp-4); }
+.project__subtitle {
+  font-family: var(--f-mono);
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--accent-text);
+}
+.project__desc {
+  color: var(--text-dim);
+  font-size: clamp(.92rem, 1.05vw, 1.02rem);
+  line-height: 1.62;
+  max-width: 68ch;
+}
+.project__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  margin-top: 6px;
+}
+.project__screens {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.project__screen-item {
+  width: 62px;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  opacity: .72;
+  transition: transform .25s ease, opacity .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+.project__screen-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+.project__screen-item:hover,
+.project__screen-item.is-active {
+  opacity: 1;
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px -6px var(--glow);
+}
+.project__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.project__tag {
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--glass);
+  font-family: var(--f-mono);
+  font-size: .68rem;
+  letter-spacing: .04em;
+  color: var(--text-dim);
+}
+
+.project__meta {
+  grid-area: meta;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.project__cat-badge {
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent-text);
+}
 .project__arrow {
   grid-area: arrow;
   display: grid; place-items: center;
@@ -1211,7 +1686,7 @@ html.rm .about__ring { animation: none; }
   position: fixed;
   left: 0; top: 0;
   z-index: 60;
-  width: min(32vw, 440px);
+  width: min(34vw, 460px);
   aspect-ratio: 16 / 10;
   pointer-events: none;
   display: none;
@@ -1224,41 +1699,47 @@ html.rm .about__ring { animation: none; }
   box-shadow: var(--shadow);
   background:
     radial-gradient(90% 90% at 50% 50%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 75%),
-    var(--bg-elev);
+  var(--bg-elev);
   border: 1px solid var(--line);
 }
-.project-preview img { width: 100%; height: 100%; object-fit: cover; }
+.project-preview img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
 .project-preview__frame.is-portrait img {
   object-fit: contain;
+  object-position: center;
   padding: 10px;
   filter: drop-shadow(0 12px 28px rgba(0, 0, 0, .55));
 }
 
-@media (min-width: 768px) {
+@media (min-width: 900px) {
   .project__row {
-    grid-template-columns: 3.5rem 128px 1fr auto 48px;
-    grid-template-areas: "num thumb title meta arrow";
-    padding: var(--sp-6) 0;
+    grid-template-columns: 3rem 220px 1fr auto 48px;
+    grid-template-areas: "num thumb info meta arrow";
+    align-items: center;
+    column-gap: var(--sp-6);
+    padding: var(--sp-8) 0;
   }
-  .project__thumb { width: 128px; border-radius: 12px; }
+  .project__thumb { width: 220px; border-radius: 14px; }
   .project__num { padding-top: 0; align-self: center; }
-  .project__meta { gap: var(--sp-8); }
+  .project__meta { flex-direction: column; align-items: flex-end; gap: 6px; }
 }
 
 /* Desktop dengan mouse: preview mengikuti kursor + thumbnail baris tetap tampil */
 @media (hover: hover) and (pointer: fine) {
   .project-preview { display: block; }
-  .project__row:hover .project__title, .project__row:focus-visible .project__title { transform: translateX(clamp(8px, 1.4vw, 24px)); }
+  .project__row:hover .project__title, .project__row:focus-visible .project__title { transform: translateX(clamp(6px, 1vw, 14px)); color: var(--accent-text); }
   .project__row:hover .project__arrow, .project__row:focus-visible .project__arrow {
     transform: rotate(45deg);
     background: var(--btn-bg);
     color: var(--on-btn);
     border-color: transparent;
   }
-  .project-list:hover .project:not(:hover) { opacity: .35; }
+  .project-list:hover .project:not(:hover) { opacity: .45; }
 }
-@media (hover: hover) and (pointer: fine) and (max-width: 767px) {
-  .project__row { grid-template-columns: auto 1fr auto; grid-template-areas: "thumb thumb thumb" "num title arrow" ". meta meta"; }
+@media (hover: hover) and (pointer: fine) and (max-width: 899px) {
+  .project__row {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: "thumb thumb thumb" "num info arrow" ". meta meta";
+  }
 }
 
 /* ---------- CERTS ---------- */
@@ -1469,4 +1950,212 @@ html.rm .footer__marquee { animation: none; }
 }
 [data-theme="light"] .marquee__row:nth-child(even) .marquee__item {
   -webkit-text-stroke: 1.5px rgba(15, 23, 42, .35);
+}
+
+
+/* ==========================================================================
+   TEKS RATA KIRI-KANAN (JUSTIFY)
+   Paragraf deskripsi dibuat rata kiri-kanan agar tampak rapi & profesional.
+   Baris terakhir tetap rata kiri (text-align-last) supaya tidak melar.
+   ========================================================================== */
+.about__summary,
+.about__story-body p,
+.journey__summary,
+.journey__points li,
+.hl-card__summary,
+.hl-card__points li,
+.hl-modal__points li,
+.project__desc,
+.modal__summary,
+.modal__points li,
+.contact__sub {
+  text-align: justify;
+  text-justify: inter-word;
+  text-align-last: left;
+  overflow-wrap: break-word;
+}
+/* kata pada .about__summary dipecah SplitText (inline-block) -> tanpa hifenasi otomatis */
+.journey__summary,
+.journey__points li,
+.hl-card__summary,
+.hl-card__points li,
+.project__desc,
+.modal__summary,
+.modal__points li {
+  -webkit-hyphens: auto;
+          hyphens: auto;
+}
+/* layar sempit: kolom kecil membuat jarak kata melebar -> poin & deskripsi kembali rata kiri */
+@media (max-width: 479px) {
+  .journey__points li,
+  .hl-card__points li,
+  .hl-modal__points li,
+  .modal__points li,
+  .project__desc {
+    text-align: left;
+  }
+}
+
+/* ==========================================================================
+   ANIMASI SCROLL PROFESIONAL (dikendalikan js/scroll-motion.js)
+   ========================================================================== */
+@property --amb {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: rgb(61, 220, 132);
+}
+@property --amb-x {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 78%;
+}
+@property --amb-y {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 28%;
+}
+/* cahaya latar lembut yang berpindah warna/posisi mengikuti section aktif */
+.scroll-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(54vw 48vh at var(--amb-x) var(--amb-y), color-mix(in srgb, var(--amb) 16%, transparent), transparent 72%),
+    radial-gradient(40vw 36vh at calc(100% - var(--amb-x)) calc(100% - var(--amb-y)), color-mix(in srgb, var(--amb) 7%, transparent), transparent 70%);
+  transition: --amb 1.4s ease, --amb-x 1.8s ease, --amb-y 1.8s ease;
+}
+[data-theme="light"] .scroll-ambient { opacity: .55; }
+
+/* garis pembuka section yang tergambar dari tengah */
+.section-rule {
+  position: absolute;
+  top: 0;
+  left: var(--gutter);
+  right: var(--gutter);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 70%, transparent) 50%, transparent);
+  transform-origin: 50% 50%;
+  pointer-events: none;
+}
+.section-rule::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 14px 2px var(--glow);
+  transform: translateX(-50%);
+}
+html.rm .scroll-ambient { transition: none; }
+
+/* ==========================================================================
+   KOMPATIBILITAS EKSTENSI CHROME "SWARM REBUILD" (html.is-swarm)
+   - Menyembunyikan layer dekoratif fixed berukuran penuh (canvas, grain,
+     mesh, ambient) agar tidak masuk ke layer "over" pada Swarm Rebuild dan
+     menutupi layer konten utama ("world").
+   - Menyatukan kembali pecahan kata/karakter SplitText menjadi inline murni
+     agar teks direkonstruksi per paragraf/judul secara utuh & rapi.
+   ========================================================================== */
+html.is-swarm .grain,
+html.is-swarm .scroll-ambient,
+html.is-swarm .hero__mesh,
+html.is-swarm #hero-canvas,
+html.is-swarm #scroll-fx,
+html.is-swarm .preloader,
+html.is-swarm .cursor,
+html.is-swarm .project-preview,
+html.is-swarm .about__ring,
+html.is-swarm .hl-ambient,
+html.is-swarm .section-rule,
+html.is-swarm .btn::before,
+html.is-swarm .dot::after,
+html.is-swarm .hero-planet__halo,
+html.is-swarm .hero-planet__core::before,
+html.is-swarm .hero-planet__core::after,
+html.is-swarm .nav__hub-ring,
+html.is-swarm .nav__indicator {
+  display: none !important;
+}
+
+html.is-swarm .hero__planets {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+html.is-swarm .hero-planet {
+  filter: none !important;
+}
+html.is-swarm .hero-planet__core {
+  transform: none !important;
+}
+html.is-swarm .hero-planet__core img {
+  animation: none !important;
+  transform: none !important;
+}
+html.is-swarm .hero-planet__label {
+  opacity: 1 !important;
+}
+html.is-swarm .nav__logo-text {
+  background: none !important;
+  -webkit-text-fill-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+html.is-swarm .hero__inner,
+html.is-swarm .hero__eyebrow,
+html.is-swarm .hero__roles,
+html.is-swarm .hero__tagline,
+html.is-swarm .hero__sub,
+html.is-swarm .hero__cta .btn,
+html.is-swarm .hero__scroll,
+html.is-swarm .nav__inner,
+html.is-swarm #about-portrait,
+html.is-swarm #about-portrait-inner,
+html.is-swarm .about__tag,
+html.is-swarm .about__chips .chip,
+html.is-swarm .stat,
+html.is-swarm .skill-card,
+html.is-swarm .skill-card .chip,
+html.is-swarm .journey__intro,
+html.is-swarm .journey__filter,
+html.is-swarm .journey__card,
+html.is-swarm .journey__points li,
+html.is-swarm .hl-card,
+html.is-swarm .hl-card__inner,
+html.is-swarm .hl-card__pic,
+html.is-swarm .hl-card__points li,
+html.is-swarm .hl-card__tags .chip,
+html.is-swarm .filter,
+html.is-swarm .project,
+html.is-swarm .project__info,
+html.is-swarm .project__thumb-img,
+html.is-swarm .certs__track,
+html.is-swarm .cert,
+html.is-swarm #contact-sub,
+html.is-swarm .contact__actions .btn,
+html.is-swarm .social li {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  clip-path: none !important;
+}
+
+html.is-swarm .hero__line,
+html.is-swarm .line-mask {
+  overflow: visible !important;
+}
+html.is-swarm .line-mask .line {
+  transform: none !important;
+  opacity: 1 !important;
+}
+html.is-swarm .hero__line .split,
+html.is-swarm .hero__line .word,
+html.is-swarm .hero__line .char,
+html.is-swarm .about__summary .word {
+  display: inline !important;
+  transform: none !important;
+  opacity: 1 !important;
 }

@@ -1,0 +1,37 @@
+---
+title: "Arsitektur MQTT untuk Dashboard Multi-Tenant Realtime"
+slug: "mqtt-realtime-dashboard"
+locale: "id"
+summary: "Pola struktur topik, isolasi tenant, validasi payload, dan pemisahan antrean agar dashboard IoT PHP tetap responsif di jaringan bengkel."
+publishedAt: "2026-09-14"
+readingTime: "6 menit"
+tags: ["IoT", "MQTT", "PHP", "MySQL", "Multi-Tenant"]
+relatedWork: ["ag-420-gas-analyzer"]
+---
+
+## Mengapa HTTP Polling Tidak Cukup untuk Perangkat Lapangan
+
+Ketika perangkat pengukur seperti gas analyzer mengirim pembaruan setiap 500–1000 ms, membuat perangkat membuka koneksi HTTP berulang membebani jaringan seluler bengkel maupun worker web server. **MQTT** menjaga koneksi TCP tetap ringan dengan overhead header hanya beberapa byte.
+
+## Struktur Topik yang Menjaga Isolasi Tenant
+
+Aturan terpenting pada platform multi-tenant dimulai dari penamaan topik broker:
+
+```text
+bench/{tenant_id}/{device_id}/telemetry
+bench/{tenant_id}/{device_id}/status
+```
+
+Kredensial perangkat hanya diberi izin `PUBLISH` pada prefix `{tenant_id}/{device_id}` miliknya. Dengan demikian, kebocoran data antar-bengkel dicegah langsung pada level broker ACL sebelum pesan menyentuh aplikasi PHP.
+
+## Memisahkan Jalur Live UI dan Audit Historis
+
+Kesalahan umum pada dashboard IoT adalah melakukan `INSERT` sinkron diikuti query agregasi tabel besar setiap kali operator membuka layar:
+
+1. **In-memory / Snapshot Terakhir**: Worker ingestor memperbarui baris status terkini perangkat (tabel `device_snapshots` berukuran konstan) dan meneruskan payload tervalidasi ke kanal WebSocket browser.
+2. **Batch Append Audit Log**: Pembacaan resmi saat sesi uji selesai disimpan ke tabel `emission_tests` terindeks `(tenant_id, tested_at)` agar pencarian sertifikat riwayat tetap cepat.
+
+## Penanganan Status Offline (*Last Will & Testament*)
+
+Memasang pesan **LWT (Last Will and Testament)** pada koneksi MQTT perangkat membuat broker otomatis menerbitkan status `offline` ketika sambungan terputus mendadak, sehingga operator di dashboard langsung melihat tanda perangkat tidak aktif tanpa menunggu timeout manual.
+

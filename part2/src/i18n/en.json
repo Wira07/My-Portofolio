@@ -1,0 +1,213 @@
+{
+  "meta": {
+    "brand": "wira.studio",
+    "studioDescriptor": "Independent Software & Product Studio",
+    "localeName": "EN",
+    "toggleLangLabel": "Switch language to Bahasa Indonesia"
+  },
+  "nav": {
+    "home": "Home",
+    "work": "Work",
+    "capabilities": "Capabilities",
+    "process": "Process",
+    "notes": "Notes",
+    "about": "About",
+    "engage": "Start Project",
+    "uses": "Uses",
+    "cmdPlaceholder": "Quick Jump (Ctrl+K)",
+    "openMenu": "Open navigation menu",
+    "closeMenu": "Close navigation menu",
+    "skipToContent": "Skip to main content",
+    "themeLight": "Switch to light mode",
+    "themeDark": "Switch to dark mode"
+  },
+  "hero": {
+    "eyebrow": "INDEPENDENT SOFTWARE STUDIO — WEST JAVA, ID",
+    "headlineLine1": "Software engineered",
+    "headlineLine2": "like a product,",
+    "headlineAccent": "not a one-off project.",
+    "sub": "From hardware sensor to handheld screen: designing and shipping web systems, native Android apps, IoT telemetry, and Computer Vision in one cohesive practice.",
+    "ctaPrimary": "Start a Project",
+    "ctaSecondary": "Explore Case Studies",
+    "scrollCue": "SCROLL TO EXPLORE",
+    "proofStripLabel": "End-to-end engineering focus"
+  },
+  "home": {
+    "statusTitle": "STUDIO AVAILABILITY",
+    "workSectionLabel": "01 / SELECTED WORK",
+    "workSectionTitle": "Structured case studies — problem framing, architectural trade-offs, and verified outcomes.",
+    "workViewAll": "All 8 case studies",
+    "capLabel": "02 / CAPABILITY MATRIX",
+    "capTitle": "Technical claims always anchored to shipped case evidence.",
+    "capViewAll": "View full capability matrix",
+    "processLabel": "03 / DELIVERY PROCESS",
+    "processTitle": "Five transparent engineering stages from discovery brief to production handover.",
+    "processViewAll": "Inspect full workflow",
+    "notesLabel": "04 / ENGINEERING NOTES",
+    "notesTitle": "Field notes covering system topology, trade-offs, and production constraints.",
+    "notesViewAll": "Browse all notes",
+    "engageLabel": "05 / ENGAGEMENT",
+    "engageTitle": "Ready to scope your next software product?",
+    "engageSub": "Review structured engagement packages or generate a preliminary brief in four steps."
+  },
+  "work": {
+    "title": "Case Studies & Engineering Archive",
+    "subtitle": "Every engagement is documented as an engineering brief: business context, system constraints, architectural trade-offs, diagrams, and lessons learned.",
+    "filterAll": "All",
+    "categories": {
+      "web": "Web",
+      "android": "Android",
+      "iot": "IoT",
+      "ai": "AI / Vision",
+      "uiux": "UI/UX"
+    },
+    "draftBadge": "DRAFT",
+    "draftNotice": "This case study is awaiting final client metric confirmation. Unverified figures are shown as an em-dash (—) rather than fabricated estimates.",
+    "backToWork": "Back to all work",
+    "openCase": "Read case study",
+    "meta": {
+      "role": "Role",
+      "duration": "Duration",
+      "year": "Year",
+      "client": "Client / Context",
+      "stack": "Tech Stack",
+      "links": "Links",
+      "live": "Live Site",
+      "repo": "Repository",
+      "demo": "Demo",
+      "confidential": "Internal / confidential"
+    },
+    "metricsTitle": "Measured Outcomes & Metrics",
+    "metricsTodoNote": "Awaiting client verification for final production numbers",
+    "archTitle": "System Architecture Diagram",
+    "mermaidToggle": "Inspect Mermaid specification source",
+    "galleryTitle": "Interface & System Captures",
+    "nextCase": "Next case study",
+    "prevCase": "Previous case study",
+    "emptyFilter": "No case studies match this filter yet."
+  },
+  "capabilities": {
+    "title": "Evidence-Backed Capability Matrix",
+    "subtitle": "Zero subjective percentage bars. Every technical capability links directly to shipped case studies or validated prototypes.",
+    "proofLabel": "Evidence Case Studies",
+    "technologiesLabel": "Tools & Stack",
+    "expandHint": "Select a row to inspect linked projects"
+  },
+  "process": {
+    "stagePrefix": "STAGE",
+    "title": "Delivery Workflow & Engineering Governance",
+    "subtitle": "Solo studio velocity backed by team-grade rigor: written specifications before implementation, explicit trade-offs, and maintainable handover.",
+    "deliverablesLabel": "Stage Deliverables",
+    "clientInputLabel": "Client Input Required",
+    "governanceTitle": "Documentation & Handover Standards",
+    "governancePoints": [
+      "Clean repository structure with setup README and environment variable templates.",
+      "Architecture notes detailing protocol selection, schema boundaries, and trade-offs.",
+      "Recorded walkthrough covering admin flows and operational maintenance."
+    ]
+  },
+  "notes": {
+    "title": "Engineering Notes",
+    "subtitle": "Focused technical write-ups on real-time MQTT dashboards, edge YOLO11 deployment to Android TFLite, and WhatsApp + FCM parent authentication.",
+    "publishedLabel": "Published",
+    "readingTimeLabel": "Read time",
+    "relatedWorkLabel": "Related case studies",
+    "backToNotes": "Back to all notes",
+    "readNote": "Read note"
+  },
+  "about": {
+    "title": "Studio Profile & Background",
+    "subtitle": "Independent Software & Product Studio in West Java, Indonesia — uniting software architecture rigor with product design clarity.",
+    "summaryLabel": "Executive Summary",
+    "pillarsTitle": "Four Studio Pillars",
+    "educationTitle": "Academic Background",
+    "experienceTitle": "Professional Track Record",
+    "certsTitle": "Programs & Certifications",
+    "ctaTitle": "Looking for a reliable technical partner for web, Android, IoT, or AI?",
+    "portraitAlt": "Portrait of Wira Sukma Saputra, founder of wira.studio"
+  },
+  "engage": {
+    "title": "Engagement Packages & Brief Wizard",
+    "subtitle": "Structured collaboration with clear deliverables. Pick a package model or compose an initial brief to receive a non-binding timeline estimate.",
+    "packagesTitle": "Studio Engagement Models",
+    "includesLabel": "Core Deliverables",
+    "durationLabel": "Typical Timeline",
+    "clientNeedsLabel": "Required from Client",
+    "pricingPrefix": "Engagement",
+    "wizardTitle": "Structured Brief Wizard",
+    "wizardSub": "Complete four brief steps to validate project scope and get an indicative delivery window.",
+    "wizardSteps": {
+      "step1": "01 / System Track",
+      "step2": "02 / Scale & Modules",
+      "step3": "03 / Timeline & Estimate",
+      "step4": "04 / Contact & Submit"
+    },
+    "stepLabels": {
+      "projectType": "Select primary product track",
+      "scale": "Choose system complexity tier",
+      "features": "Additional technical modules",
+      "timeline": "Preferred release window",
+      "name": "Full Name / Organization",
+      "email": "Work or Personal Email",
+      "notes": "Brief context or reference links"
+    },
+    "buttons": {
+      "next": "Continue",
+      "prev": "Back",
+      "submit": "Submit Brief Summary",
+      "reset": "Start New Brief"
+    },
+    "estimateTitle": "Indicative Rough Estimate (Non-Binding)",
+    "estimateDurationLabel": "Delivery Window",
+    "estimatePhaseLabel": "Recommended Kickoff",
+    "baseWeeksUnit": "base weeks",
+    "weeksUnit": "weeks",
+    "defaultKickoffPhase": "Discovery & Spec Freeze",
+    "briefReadyBadge": "BRIEF READY",
+    "validationError": "Please enter your name and a valid email address before submitting.",
+    "submitSuccessTitle": "Project Brief Ready for Review",
+    "submitSuccessBody": "Your brief configuration has been validated and formatted. Use the quick dispatch options below to send directly via email or WhatsApp.",
+    "mailtoFallback": "Open in Email Client",
+    "waFallback": "Send via WhatsApp"
+  },
+  "uses": {
+    "title": "Studio Stack, Hardware & Tooling",
+    "subtitle": "Production hardware, programming languages, frameworks, and verification utilities used daily."
+  },
+  "notFound": {
+    "code": "404 // ROUTE_NOT_FOUND",
+    "title": "The requested route is not indexed.",
+    "subtitle": "This path may have moved or belongs to an internal archive. Press Ctrl+K for Command Palette or return to studio overview.",
+    "backHome": "Return Home"
+  },
+  "palette": {
+    "triggerLabel": "Open Command Palette",
+    "title": "Studio Command Palette",
+    "searchPlaceholder": "Search pages, case studies, engineering notes, or commands...",
+    "empty": "No matching destinations or actions.",
+    "hint": "Use Up/Down arrows, Enter to select, Esc to dismiss.",
+    "groups": {
+      "pages": "Pages",
+      "work": "Case Studies",
+      "notes": "Engineering Notes",
+      "actions": "Quick Actions"
+    },
+    "actions": {
+      "toggleTheme": "Toggle Theme (Dark / Light)",
+      "switchLang": "Switch Language (ID / EN)",
+      "copyEmail": "Copy Studio Email Address",
+      "downloadCv": "Download CV PDF"
+    }
+  },
+  "footer": {
+    "sitemapTitle": "Sitemap",
+    "connectTitle": "Direct Channels",
+    "docsTitle": "Studio Documents",
+    "cvLabel": "Download CV (PDF)",
+    "deckLabel": "Capability Deck (PDF)",
+    "copyEmail": "Copy Email",
+    "emailCopied": "Email copied",
+    "localTimeLabel": "Studio Local Time (WIB)",
+    "versionLabel": "Build"
+  }
+}

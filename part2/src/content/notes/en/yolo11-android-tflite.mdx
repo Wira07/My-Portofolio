@@ -1,0 +1,29 @@
+---
+title: "Deploying YOLO11 Models to Android via TFLite"
+slug: "yolo11-android-tflite"
+locale: "en"
+summary: "Engineering checklist for quantizing YOLO11 weights to TensorFlow Lite, aligning CameraX buffers, and running clean NMS inside Kotlin."
+publishedAt: "2026-08-22"
+readingTime: "7 min"
+tags: ["AI", "YOLO11", "TensorFlow Lite", "Android", "Kotlin"]
+relatedWork: ["salat-detection", "smart-attendance-ai", "yolo11-detection"]
+---
+
+## Bridging the Python-to-Kotlin Preprocessing Gap
+
+Most sudden accuracy drops on Android after exporting `.tflite` weights trace back to mismatches between Python evaluation transforms and live `CameraX` frames:
+
+1. **Sensor Rotation Compensation**: Apply `ImageProxy.imageInfo.rotationDegrees` prior to resizing toward the model input resolution.
+2. **Consistent Padding / Aspect Ratio**: Match letterbox gray padding if the training pipeline relied on fixed aspect scaling.
+3. **Color Channel & Float Scaling**: Verify RGB vs BGR ordering and `[0..1]` normalization before touching threshold constants.
+
+## Choosing FP16 Quantization + Graceful Delegate Fallback
+
+Exporting to `FP16` halves model weight size cleanly without severe recall loss on specialized posture datasets. On Android:
+- Attach `GpuDelegate` only when `CompatibilityList().isDelegateSupportedOnThisDevice` validates safely.
+- Fall back gracefully to 4-thread CPU inference so diverse mid-range vendor drivers never crash at startup.
+
+## Keeping Kotlin NMS Allocation-Light
+
+Filtering low-confidence raw grid predictions first before computing pairwise **IoU (Intersection over Union)** slashes object churn per frame and keeps CameraX preview smooth.
+

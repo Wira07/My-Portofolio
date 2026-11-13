@@ -1,0 +1,90 @@
+---
+title: "AG-420 ADI Gas Analyzer"
+slug: "ag-420-gas-analyzer"
+locale: "id"
+summary: "Aplikasi web multi-tenant uji emisi kendaraan berbasis PHP, MQTT, dan MySQL dengan pemantauan telemetri perangkat real-time."
+category: ["web", "iot"]
+role: "Lead Full-Stack Web & IoT Architect"
+year: 2025
+duration: "TODO_METRIC"
+client: "Mitra Industri Otomotif (Confidential)"
+stack: ["PHP 8", "MQTT", "MySQL", "JavaScript", "WebSockets", "Multi-Tenant RBAC"]
+cover: "/images/work/ag-420-gas-analyzer.png"
+coverAlt: "Ilustrasi arsitektur telemetri multi-tenant AG-420 ADI Gas Analyzer"
+draft: true
+metrics:
+  - label: "Latensi Ingestion MQTT"
+    value: "TODO_METRIC"
+    note: "Menunggu log benchmark produksi final"
+  - label: "Tenant Bengkel Aktif"
+    value: "TODO_METRIC"
+    note: "Data operasional klien bersifat konfidensial"
+  - label: "Retensi Log Pengujian"
+    value: "TODO_METRIC"
+    note: "Dalam audit kapasitas akhir"
+links: {}
+architecture:
+  title: "Alur Telemetri Perangkat AG-420 ke Dashboard Multi-Tenant"
+  caption: "Isolasi tenant diterapkan mulai dari topik MQTT per unit hingga query MySQL berbasis tenant_id."
+  nodes:
+    - { id: "device", label: "Unit AG-420", sub: "Sensor Emisi CO/HC/CO2", group: "input" }
+    - { id: "broker", label: "MQTT Broker", sub: "Topic: bench/{tenant}/{id}", group: "core" }
+    - { id: "worker", label: "PHP Ingestor", sub: "Parser & Validasi Kalibrasi", group: "core" }
+    - { id: "db", label: "MySQL Store", sub: "Multi-tenant Indexed Logs", group: "storage" }
+    - { id: "console", label: "Dashboard Web", sub: "Live Telemetry & Sertifikat", group: "output" }
+  edges:
+    - { from: "device", to: "broker", label: "QoS 1 JSON" }
+    - { from: "broker", to: "worker", label: "Subscribe" }
+    - { from: "worker", to: "db", label: "Persist" }
+    - { from: "worker", to: "console", label: "Live Push" }
+    - { from: "db", to: "console", label: "Audit Query" }
+  mermaid: |
+    flowchart LR
+      A[Unit AG-420 Sensor] -->|MQTT QoS 1| B[MQTT Broker]
+      B --> C[PHP Ingestion Worker]
+      C --> D[(MySQL Multi-Tenant)]
+      C --> E[Live Web Console]
+      D --> E
+gallery:
+  - src: "/images/work/ag-420-gas-analyzer.png"
+    alt: "Cetak biru topologi telemetri AG-420 ADI Gas Analyzer"
+    caption: "Diagram konseptual alur data sensor menuju portal multi-tenant."
+    width: 1280
+    height: 800
+featured: true
+order: 1
+---
+
+## Konteks
+
+Bengkel uji emisi kendaraan dan pengelola armada membutuhkan cara terpusat untuk memantau pembacaan alat gas analyzer **AG-420 ADI** dari banyak lokasi cabang tanpa harus memindahkan file log secara manual lewat kabel serial atau USB.
+
+## Masalah
+
+1. **Konektivitas bengkel tidak selalu stabil** — koneksi terputus di tengah sesi pengujian kendaraan tidak boleh menggagalkan pencatatan hasil ukur yang sah.
+2. **Isolasi antar-tenant wajib ketat** — satu platform web melayani banyak mitra bengkel dengan perangkat masing-masing; data hasil uji dan riwayat kalibrasi tidak boleh bocor lintas tenant.
+3. **Keterbacaan operator lapangan** — teknisi butuh umpan balik angka CO, HC, CO2, O2, serta status ambang batas lulus uji secara seketika di layar browser.
+
+## Pendekatan & Keputusan Teknis (Trade-Off)
+
+- **Protokol MQTT dibanding HTTP Polling dari Perangkat**: Memilih MQTT QoS 1 dengan struktur topik `bench/{tenant_id}/{device_id}/telemetry` membuat payload tetap ringkas dan mendukung antrean pesan saat koneksi seluler bengkel sempat putus. *Trade-off*: membutuhkan proses worker PHP persisten untuk subscribe topik, namun jauh lebih hemat bandwidth dibanding REST polling interval pendek.
+- **Shared Database, Isolated `tenant_id` Indexing**: Dibanding memelihara ratusan schema MySQL terpisah, seluruh data tersimpan dalam tabel terpartisi logis oleh `tenant_id` dan `device_id` dengan middleware otorisasi terpusat di PHP. *Trade-off*: membutuhkan disiplin tinggi pada setiap query repository agar tidak pernah melewatkan scope tenant.
+- **Buffer Status Terakhir vs Riwayat Penuh**: Pembacaan live dipisahkan dari arsip sertifikat uji resmi sehingga dashboard operator tetap ringan meski log historis terus tumbuh.
+
+## Arsitektur
+
+Struktur sistem menghubungkan perangkat sensor di jalur uji langsung ke broker MQTT, diproses oleh service ingestor untuk validasi rentang sensor, disimpan ke MySQL untuk audit, dan diproyeksikan ke antarmuka web operator.
+
+## Hasil
+
+- Portal manajemen perangkat, pemantauan pembacaan gas real-time, dan pencatatan riwayat pengujian berhasil disatukan dalam satu arsitektur web multi-tenant.
+- Parameter kuantitatif skala produksi (`Latensi Ingestion`, `Jumlah Tenant`, `Retensi`) saat ini ditandai untuk verifikasi bersama pemilik sistem sebelum dipublikasikan secara terbuka.
+
+## Pelajaran
+
+Menangani perangkat keras lapangan berarti merancang asumsi kegagalan sejak awal: validasi format payload rusak, *heartbeat* perangkat offline, dan pembatasan otorisasi topik broker sama pentingnya dengan tampilan antarmuka dashboard itu sendiri.
+
+## Galeri
+
+Dokumentasi visual antarmuka berada pada status *draft* sambil menunggu izin rilis tangkapan layar lingkungan produksi dari klien.
+

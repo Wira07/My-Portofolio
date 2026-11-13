@@ -1,0 +1,33 @@
+{
+  "categories": [
+    {
+      "code": "TOOL-01",
+      "title": { "id": "Bahasa & Ekosistem Inti", "en": "Core Languages & Runtimes" },
+      "items": [
+        { "name": "Kotlin & Java", "role": { "id": "Pengembangan Android native, Jetpack Compose, CameraX, TFLite", "en": "Native Android engineering, Jetpack Compose, CameraX, TFLite" } },
+        { "name": "PHP 8.x & Laravel", "role": { "id": "Aplikasi web bisnis, portal multi-tenant, REST API & worker", "en": "Business web applications, multi-tenant consoles, REST APIs" } },
+        { "name": "JavaScript & TypeScript", "role": { "id": "Frontend interaktif, Astro 5, Tailwind CSS, GSAP, tooling build", "en": "Interactive frontends, Astro 5, Tailwind CSS, GSAP, build tooling" } },
+        { "name": "Python", "role": { "id": "Pelatihan model YOLO11, pemrosesan OpenCV, konversi TFLite", "en": "YOLO11 training pipelines, OpenCV preprocessing, TFLite quantization" } }
+      ]
+    },
+    {
+      "code": "TOOL-02",
+      "title": { "id": "Infrastruktur, Data & IoT", "en": "Data, Messaging & IoT" },
+      "items": [
+        { "name": "MySQL & Room / SQLite", "role": { "id": "Basis data relasional server dan persistensi offline Android", "en": "Relational server persistence and offline-first Android storage" } },
+        { "name": "MQTT (Mosquitto / EMQX)", "role": { "id": "Transport telemetri ringan untuk perangkat pengukur lapangan", "en": "Lightweight pub/sub telemetry transport for field hardware" } },
+        { "name": "Firebase Auth & FCM", "role": { "id": "Distribusi notifikasi sekolah dan sinkronisasi status real-time", "en": "Push notification pipelines and real-time state updates" } }
+      ]
+    },
+    {
+      "code": "TOOL-03",
+      "title": { "id": "Desain, Verifikasi & Dokumentasi", "en": "Design, QA & Documentation" },
+      "items": [
+        { "name": "Figma & Design Tokens", "role": { "id": "Prototipe high-fidelity, audit kontras WCAG, handoff presisi", "en": "High-fidelity prototypes, WCAG contrast auditing, developer handoff" } },
+        { "name": "Playwright & axe-core", "role": { "id": "Pengujian alur antarmuka lintas-browser dan audit aksesibilitas otomatis", "en": "Cross-browser flow verification and automated accessibility checks" } },
+        { "name": "Markdown / MDX + Mermaid", "role": { "id": "Dokumentasi keputusan arsitektur dan diagram topologi berbasis teks", "en": "Versioned architecture decision records and diagram-as-code" } }
+      ]
+    }
+  ]
+}
+

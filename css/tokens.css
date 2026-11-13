@@ -51,7 +51,9 @@
   /* Layout */
   --container: 1280px;
   --gutter: 24px;
-  --nav-h: 72px;
+  --nav-h: 88px;
+  --dock-w: 0px;
+  --pad-l: var(--gutter);
   --r-card: 12px;
   --r-pill: 999px;
 
@@ -85,6 +87,6 @@
 @media (max-width: 767px) {
   :root {
     --gutter: 16px;
-    --nav-h: 64px;
+    --nav-h: 76px;
   }
 }

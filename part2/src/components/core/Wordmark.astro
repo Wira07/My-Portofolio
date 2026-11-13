@@ -1,0 +1,33 @@
+---
+interface Props {
+  href: string;
+  label: string;
+  tag?: string;
+}
+
+const { href, label, tag } = Astro.props;
+const dotIndex = label.indexOf(".");
+const head = dotIndex >= 0 ? label.slice(0, dotIndex) : label;
+const tail = dotIndex >= 0 ? label.slice(dotIndex + 1) : "";
+---
+
+<a
+  href={href}
+  class="group inline-flex items-baseline gap-2 font-sans text-lg font-semibold tracking-tight text-[var(--text)] no-underline"
+>
+  <span class="inline-flex items-baseline">
+    <span>{head}</span>
+    {tail && (
+      <>
+        <span class="mx-[1px] inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)] transition-transform duration-300 group-hover:scale-125" aria-hidden="true"></span>
+        <span>{tail}</span>
+      </>
+    )}
+  </span>
+  {tag && (
+    <span class="hidden sm:inline-block rounded-[var(--radius-sm)] border border-[var(--line)] px-1.5 py-0.5 font-mono text-[10px] tracking-widest text-[var(--text-dim)]">
+      {tag}
+    </span>
+  )}
+</a>
+

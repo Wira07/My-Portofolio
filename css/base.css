@@ -59,6 +59,7 @@ h1, h2, h3 {
   max-width: calc(var(--container) + var(--gutter) * 2);
   margin-inline: auto;
   padding-inline: var(--gutter);
+  padding-left: var(--pad-l);
 }
 
 .section {
@@ -94,6 +95,8 @@ h1, h2, h3 {
   width: 32px;
   height: 1px;
   background: var(--grad);
+  transform: scaleX(var(--eb, 1)); /* dianimasikan js/scroll-motion.js */
+  transform-origin: left center;
 }
 .section__eyebrow b { color: var(--accent-text); font-weight: 400; }
 

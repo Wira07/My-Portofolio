@@ -1,0 +1,25 @@
+---
+import { render } from "astro:content";
+import { getNoteEntries, getWorkEntries } from "@/lib/content";
+import NoteLayout from "@/layouts/NoteLayout.astro";
+
+export async function getStaticPaths() {
+  const [notes, works] = await Promise.all([getNoteEntries("en"), getWorkEntries("en")]);
+  const workBySlug = Object.fromEntries(works.map((w) => [w.data.slug, w]));
+  return notes.map((note) => ({
+    params: { slug: note.data.slug },
+    props: {
+      note,
+      relatedWorks: note.data.relatedWork.map((s) => workBySlug[s]).filter(Boolean)
+    }
+  }));
+}
+
+const { note, relatedWorks } = Astro.props;
+const { Content } = await render(note);
+---
+
+<NoteLayout note={note} locale="en" relatedWorks={relatedWorks}>
+  <Content />
+</NoteLayout>
+

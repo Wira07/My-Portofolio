@@ -1,0 +1,61 @@
+{
+  "$ref": "#/definitions/notes",
+  "definitions": {
+    "notes": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "id",
+            "en"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 180
+        },
+        "publishedAt": {
+          "type": "string"
+        },
+        "readingTime": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "relatedWork": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "slug",
+        "locale",
+        "summary",
+        "publishedAt",
+        "readingTime",
+        "tags"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

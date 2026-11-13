@@ -1,0 +1,89 @@
+---
+title: "AG-420 ADI Gas Analyzer"
+slug: "ag-420-gas-analyzer"
+locale: "en"
+summary: "Multi-tenant vehicle emission testing web platform (PHP, MQTT, MySQL) streaming live hardware readings from analyzer units."
+category: ["web", "iot"]
+role: "Lead Full-Stack Web & IoT Architect"
+year: 2025
+duration: "TODO_METRIC"
+client: "Automotive Industrial Partner (Confidential)"
+stack: ["PHP 8", "MQTT", "MySQL", "JavaScript", "WebSockets", "Multi-Tenant RBAC"]
+cover: "/images/work/ag-420-gas-analyzer.png"
+coverAlt: "System telemetry blueprint of AG-420 ADI Gas Analyzer multi-tenant web platform"
+draft: true
+metrics:
+  - label: "MQTT Ingestion Latency"
+    value: "TODO_METRIC"
+    note: "Awaiting final production benchmark logs"
+  - label: "Active Workshop Tenants"
+    value: "TODO_METRIC"
+    note: "Client deployment figures remain confidential"
+  - label: "Emission Log Retention"
+    value: "TODO_METRIC"
+    note: "Pending final capacity sign-off"
+links: {}
+architecture:
+  title: "AG-420 Telemetry Pipeline into Multi-Tenant Console"
+  caption: "Tenant isolation enforced from MQTT topic hierarchy down to scoped MySQL repository queries."
+  nodes:
+    - { id: "device", label: "AG-420 Unit", sub: "CO/HC/CO2 Emission Sensors", group: "input" }
+    - { id: "broker", label: "MQTT Broker", sub: "Topic: bench/{tenant}/{id}", group: "core" }
+    - { id: "worker", label: "PHP Ingestor", sub: "Payload & Calibration Parser", group: "core" }
+    - { id: "db", label: "MySQL Store", sub: "Tenant-Scoped Audit Logs", group: "storage" }
+    - { id: "console", label: "Web Console", sub: "Live Gauges & Certificates", group: "output" }
+  edges:
+    - { from: "device", to: "broker", label: "QoS 1 JSON" }
+    - { from: "broker", to: "worker", label: "Subscribe" }
+    - { from: "worker", to: "db", label: "Persist" }
+    - { from: "worker", to: "console", label: "Live Push" }
+    - { from: "db", to: "console", label: "Audit Query" }
+  mermaid: |
+    flowchart LR
+      A[AG-420 Sensor Unit] -->|MQTT QoS 1| B[MQTT Broker]
+      B --> C[PHP Ingestion Worker]
+      C --> D[(MySQL Multi-Tenant)]
+      C --> E[Live Web Console]
+      D --> E
+gallery:
+  - src: "/images/work/ag-420-gas-analyzer.png"
+    alt: "AG-420 ADI Gas Analyzer system telemetry architecture"
+    caption: "Conceptual topology bridging field analyzer devices to multi-tenant web consoles."
+    width: 1280
+    height: 800
+featured: true
+order: 1
+---
+
+## Context
+
+Vehicle emission testing centers and fleet workshops needed a centralized web system to monitor **AG-420 ADI** hardware analyzer readings across multiple branches without manually copying logs over serial ports or USB drives.
+
+## Problem
+
+1. **Intermittent workshop connectivity**: Brief cellular drop-offs during an active vehicle test must not corrupt or drop certified readings.
+2. **Strict multi-tenant boundaries**: Multiple partner workshops share one web deployment; telemetry streams and calibration certificates must never leak across tenants.
+3. **Instant operator legibility**: Technicians need clear live readouts for CO, HC, CO2, O2, and pass/fail thresholds directly in the browser.
+
+## Approach & Technical Trade-Offs
+
+- **MQTT QoS 1 over Short-Interval HTTP Polling**: Topic structure `bench/{tenant_id}/{device_id}/telemetry` keeps payloads compact and supports reliable queuing during transient disconnects. *Trade-off*: requires a persistent PHP subscriber worker, which is offset by significantly lower bandwidth overhead.
+- **Shared Database with Indexed `tenant_id` Scope**: Rather than maintaining separate schemas per workshop, centralized repository guards enforce `tenant_id` scoping across every query.
+
+## Architecture
+
+Field units publish sensor frames to the MQTT broker, where the PHP worker validates calibration ranges, persists audit records to MySQL, and pushes live telemetry updates to the browser console.
+
+## Outcomes
+
+- Device provisioning, real-time gas analyzer monitoring, and test history auditing unified into a single multi-tenant platform.
+- Quantitative production metrics remain withheld until client verification concludes.
+
+## Lessons Learned
+
+Hardware-connected web software requires designing failure states first: malformed payload rejection, device offline heartbeats, and broker ACLs matter as much as UI charts.
+
+## Gallery
+
+Blueprint topology is included above while awaiting client approval for production UI captures.
+

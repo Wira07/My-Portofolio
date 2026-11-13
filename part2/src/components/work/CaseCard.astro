@@ -1,0 +1,97 @@
+---
+import type { WorkEntry } from "@/lib/content";
+import type { Locale } from "@/lib/i18n";
+import { localePath, t } from "@/lib/i18n";
+
+interface Props {
+  item: WorkEntry;
+  locale: Locale;
+  index: number;
+  layout?: "grid" | "stack";
+}
+
+const { item, locale, index, layout = "grid" } = Astro.props;
+const num = String(index + 1).padStart(2, "0");
+const href = localePath(locale, `/work/${item.data.slug}`);
+---
+
+<article
+  data-work-card
+  data-categories={item.data.category.join(",")}
+  class={`group relative overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface)] transition-colors duration-300 hover:border-[var(--accent)]/60 ${
+    layout === "stack" ? "p-5 md:p-7" : "flex flex-col"
+  }`}
+>
+  <a href={href} class="block no-underline focus:outline-none">
+    <div
+      class={layout === "stack"
+        ? "grid grid-cols-1 items-center gap-6 lg:grid-cols-12"
+        : "flex flex-col"}
+    >
+      <div
+        class={`overflow-hidden rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] ${
+          layout === "stack" ? "lg:col-span-6 aspect-[16/10]" : "m-4 mb-0 aspect-[16/10]"
+        }`}
+      >
+        <img
+          src={item.data.cover}
+          alt={item.data.coverAlt}
+          width="1280"
+          height="800"
+          loading={index < 2 ? "eager" : "lazy"}
+          decoding="async"
+          transition:name={`work-cover-${item.data.slug}`}
+          data-parallax-img
+          class="h-full w-full object-cover transition-transform duration-500 ease-[var(--ease-studio)] group-hover:scale-[1.03]"
+        />
+      </div>
+
+      <div class={layout === "stack" ? "lg:col-span-6 flex flex-col justify-between gap-5" : "p-5 flex flex-1 flex-col justify-between gap-4"}>
+        <div>
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2 font-mono text-xs text-[var(--text-dim)]">
+              <span class="text-[var(--accent)]">{num}</span>
+              <span>/</span>
+              <span>{item.data.year}</span>
+              {item.data.draft && (
+                <span class="rounded-[var(--radius-sm)] border border-[var(--accent-2)]/50 px-1.5 py-0.5 text-[10px] text-[var(--accent-2)]">
+                  {t(locale, "work.draftBadge")}
+                </span>
+              )}
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              {item.data.category.map((cat) => (
+                <span class="rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-2)] px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-[var(--text-dim)]">
+                  {t(locale, `work.categories.${cat}`)}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <h3 class="font-sans text-xl md:text-2xl font-semibold tracking-tight text-[var(--text)] transition-transform duration-300 group-hover:translate-x-1">
+            {item.data.title}
+          </h3>
+          <p class="mt-2.5 text-sm leading-relaxed text-[var(--text-dim)]">
+            {item.data.summary}
+          </p>
+        </div>
+
+        <div class="border-t border-[var(--line)] pt-4 flex flex-wrap items-center justify-between gap-3">
+          <ul class="flex flex-wrap gap-1.5" aria-label={t(locale, "work.meta.stack")}>
+            {item.data.stack.slice(0, 4).map((tech) => (
+              <li class="rounded-[var(--radius-sm)] bg-[var(--surface-2)] px-2 py-0.5 font-mono text-[11px] text-[var(--text-dim)]">
+                {tech}
+              </li>
+            ))}
+          </ul>
+
+          <span class="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-[var(--accent)]">
+            <span>{t(locale, "work.openCase")}</span>
+            <span aria-hidden="true" class="transition-transform duration-300 group-hover:translate-x-1">→</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </a>
+</article>
+

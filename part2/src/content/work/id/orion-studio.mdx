@@ -1,0 +1,84 @@
+---
+title: "ORION Studio"
+slug: "orion-studio"
+locale: "id"
+summary: "Landing page studio kreatif dibangun dengan Next.js dan koreografi animasi scroll 3D yang tetap terkendali di perangkat pengguna."
+category: ["web", "uiux"]
+role: "Frontend & Motion Engineer"
+year: 2025
+duration: "TODO_METRIC"
+client: "Eksplorasi & Purwarupa Studio"
+stack: ["Next.js", "TypeScript", "Scroll Choreography", "3D Viewport", "CSS Custom Properties"]
+cover: "/images/work/orion-studio.png"
+coverAlt: "Cetak biru arsitektur ORION Studio Next.js dengan viewport scroll 3D"
+draft: true
+metrics:
+  - label: "Frame Rate Target Desktop"
+    value: "TODO_METRIC"
+    note: "Pengujian lintas GPU terintegrasi belum dirangkum"
+  - label: "Ukuran Bundle Awal"
+    value: "TODO_METRIC"
+    note: "Menunggu audit build produksi akhir"
+links: {}
+architecture:
+  title: "Arsitektur Lazy-Loaded 3D Viewport pada Next.js App Router"
+  caption: "Konten tipografi kritis tampil instan dari SSR, sementara kanvas 3D dimuat progresif sesuai kapabilitas perangkat."
+  nodes:
+    - { id: "ssr", label: "Next.js SSR Shell", sub: "HTML Kritis & Tipografi", group: "input" }
+    - { id: "guard", label: "Capability Guard", sub: "Cek Reduced Motion & GPU", group: "core" }
+    - { id: "scroll", label: "Scroll Timeline", sub: "Progress Mapping 0..1", group: "core" }
+    - { id: "stage", label: "3D Canvas Stage", sub: "Lazy Dynamic Import", group: "output" }
+    - { id: "fallback", label: "Static Visual Fallback", sub: "Mobile / Low-Power Mode", group: "storage" }
+  edges:
+    - { from: "ssr", to: "guard", label: "Hydrate" }
+    - { from: "guard", to: "scroll", label: "Eligible" }
+    - { from: "scroll", to: "stage", label: "Drive Camera" }
+    - { from: "guard", to: "fallback", label: "Reduced Motion" }
+  mermaid: |
+    flowchart TD
+      A[Next.js SSR Content] --> B{Cek Reduced Motion & Viewport}
+      B -->|Desktop Full| C[Lazy Load 3D Scene]
+      C --> D[Scroll Progress Binding]
+      B -->|Reduced / Mobile| E[Render Static Fallback Ringan]
+gallery:
+  - src: "/images/work/orion-studio.png"
+    alt: "Diagram arsitektur progressive loading ORION Studio"
+    caption: "Pemisahan lapisan konten SSR dan panggung 3D berbasis capability guard."
+    width: 1280
+    height: 800
+featured: false
+order: 6
+---
+
+## Konteks
+
+Situs showcase bertema 3D sering kali mengorbankan kecepatan muat pertama (LCP) dan terasa berat pada ponsel menengah. **ORION Studio** dirancang sebagai eksplorasi arsitektur untuk memadukan visual spasial berbasis scroll dengan disiplin performa web modern.
+
+## Masalah
+
+1. **Blocking bundle WebGL**: Memuat scene dan shader secara sinkron menahan tampilan teks utama di detik pertama.
+2. **Kebutuhan aksesibilitas gerak**: Pengguna dengan preferensi `prefers-reduced-motion` tetap harus menikmati alur cerita penuh tanpa distorsi animasi atau motion sickness.
+3. **Sinkronisasi antara DOM dan kamera 3D**: Pergeseran scroll harus memandu fokus mata, bukan menutupi keterbacaan CTA.
+
+## Pendekatan & Keputusan Teknis (Trade-Off)
+
+- **SSR First + Lazy Dynamic Scene Loading**: Seluruh narasi dan tombol aksi dirender sebagai HTML murni lebih dulu; scene interaktif baru dimuat secara asinkron setelah *main thread* senggang. *Trade-off*: ada transisi *fade-in* singkat pada latar visual ketika jaringan lambat, tetapi konten inti tetap terbaca seketika.
+- **Capability Guard untuk Perangkat Lemah**: Saat `prefers-reduced-motion` aktif atau lebar layar terbatas, modul 3D dilewati dan digantikan aset statis ringan.
+
+## Arsitektur
+
+Next.js merender struktur editorial terlebih dahulu, lalu `Capability Guard` memeriksa preferensi gerak dan ukuran layar sebelum mengaktifkan *scroll timeline* yang menggerakkan kamera 3D.
+
+## Hasil
+
+- Struktur progressive enhancement berhasil menjaga keterbacaan narasi terlepas dari status inisialisasi WebGL.
+- Angka benchmark performa final antar-perangkat masih tercatat sebagai draft terverifikasi.
+
+## Pelajaran
+
+Koreografi gerak yang terasa mahal bukanlah yang paling ramai partikel, melainkan yang tepat waktu, tahu kapan berhenti, dan menghormati batasan perangkat keras pengunjung.
+
+## Galeri
+
+Cetak biru arsitektur terlampir di atas.
+

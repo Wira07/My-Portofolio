@@ -1,0 +1,159 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { localePath, t } from "@/lib/i18n";
+import Wordmark from "./Wordmark.astro";
+import Button from "./Button.astro";
+import ThemeToggle from "@/components/interactive/ThemeToggle.astro";
+import LangToggle from "@/components/interactive/LangToggle.astro";
+
+interface Props {
+  locale: Locale;
+  currentPath: string;
+  activeNav?: string;
+}
+
+const { locale, currentPath, activeNav } = Astro.props;
+
+const navLinks = [
+  { key: "work", href: localePath(locale, "/work"), label: t(locale, "nav.work") },
+  { key: "capabilities", href: localePath(locale, "/capabilities"), label: t(locale, "nav.capabilities") },
+  { key: "process", href: localePath(locale, "/process"), label: t(locale, "nav.process") },
+  { key: "notes", href: localePath(locale, "/notes"), label: t(locale, "nav.notes") },
+  { key: "about", href: localePath(locale, "/about"), label: t(locale, "nav.about") }
+];
+---
+
+<header
+  id="studio-navbar"
+  class="sticky top-0 z-40 border-b border-[var(--line)] bg-[var(--header-bg)] backdrop-blur-md transition-all duration-300"
+>
+  <div class="studio-container flex h-16 items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <Wordmark href={localePath(locale, "/")} label={t(locale, "meta.brand")} tag="v2.0" />
+    </div>
+
+    <nav aria-label={t(locale, "footer.sitemapTitle")} class="hidden lg:flex items-center gap-6">
+      {
+        navLinks.map((item) => {
+          const isCurrent = activeNav === item.key;
+          return (
+            <a
+              href={item.href}
+              aria-current={isCurrent ? "page" : undefined}
+              class={`link-underline font-mono text-xs uppercase tracking-wider transition-colors ${
+                isCurrent ? "text-[var(--accent)]" : "text-[var(--text-dim)] hover:text-[var(--text)]"
+              }`}
+            >
+              {item.label}
+            </a>
+          );
+        })
+      }
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        data-cmd-open
+        title={t(locale, "palette.triggerLabel")}
+        class="hidden md:inline-flex h-9 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface)] px-2.5 font-mono text-[11px] text-[var(--text-dim)] transition-colors hover:border-[var(--accent)] hover:text-[var(--text)]"
+      >
+        <span>{t(locale, "nav.cmdPlaceholder")}</span>
+      </button>
+
+      <LangToggle locale={locale} currentPath={currentPath} />
+      <ThemeToggle locale={locale} />
+
+      <div class="hidden sm:block">
+        <Button href={localePath(locale, "/engage")} variant="primary" magnetic={true}>
+          {t(locale, "nav.engage")}
+        </Button>
+      </div>
+
+      <button
+        type="button"
+        id="mobile-menu-toggle"
+        aria-expanded="false"
+        aria-controls="mobile-drawer"
+        aria-label={t(locale, "nav.openMenu")}
+        data-label-open={t(locale, "nav.openMenu")}
+        data-label-close={t(locale, "nav.closeMenu")}
+        class="inline-flex lg:hidden h-9 w-9 items-center justify-center rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface)] text-[var(--text)]"
+      >
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M4 7h16M4 12h16M4 17h16"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div
+    id="mobile-drawer"
+    hidden
+    class="border-t border-[var(--line)] bg-[var(--surface)] lg:hidden"
+  >
+    <div class="studio-container flex flex-col gap-3 py-5">
+      {
+        navLinks.map((item) => (
+          <a
+            href={item.href}
+            aria-current={activeNav === item.key ? "page" : undefined}
+            class={`py-1.5 font-mono text-sm uppercase tracking-wider no-underline ${
+              activeNav === item.key ? "text-[var(--accent)]" : "text-[var(--text)]"
+            }`}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+      <div class="mt-2 flex flex-wrap items-center gap-3 border-t border-[var(--line)] pt-4">
+        <button
+          type="button"
+          data-cmd-open
+          class="inline-flex h-9 items-center rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] px-3 font-mono text-xs text-[var(--text)]"
+        >
+          {t(locale, "nav.cmdPlaceholder")}
+        </button>
+        <Button href={localePath(locale, "/engage")} variant="primary">
+          {t(locale, "nav.engage")}
+        </Button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  function setupNavbar() {
+    const header = document.getElementById("studio-navbar");
+    const toggle = document.getElementById("mobile-menu-toggle");
+    const drawer = document.getElementById("mobile-drawer");
+
+    if (toggle && drawer && toggle.dataset.bound !== "true") {
+      toggle.dataset.bound = "true";
+      toggle.addEventListener("click", () => {
+        const expanded = toggle.getAttribute("aria-expanded") === "true";
+        toggle.setAttribute("aria-expanded", String(!expanded));
+        toggle.setAttribute(
+          "aria-label",
+          expanded ? toggle.dataset.labelOpen || "" : toggle.dataset.labelClose || ""
+        );
+        drawer.hidden = expanded;
+      });
+    }
+
+    if (header && header.dataset.scrollBound !== "true") {
+      header.dataset.scrollBound = "true";
+      window.addEventListener(
+        "scroll",
+        () => {
+          header.classList.toggle("border-[var(--accent)]/30", window.scrollY > 36);
+        },
+        { passive: true }
+      );
+    }
+  }
+
+  setupNavbar();
+  document.addEventListener("astro:after-swap", setupNavbar);
+</script>
+

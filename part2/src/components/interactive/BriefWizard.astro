@@ -1,0 +1,419 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+import { getProfile, getWizardConfig } from "@/lib/content";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const cfg = getWizardConfig();
+const profile = getProfile();
+const endpoint = import.meta.env.PUBLIC_FORM_ENDPOINT || "";
+
+const stepNames = [
+  t(locale, "engage.wizardSteps.step1"),
+  t(locale, "engage.wizardSteps.step2"),
+  t(locale, "engage.wizardSteps.step3"),
+  t(locale, "engage.wizardSteps.step4")
+];
+---
+
+<div
+  id="brief-wizard"
+  data-locale={locale}
+  data-endpoint={endpoint}
+  data-email={`${profile.emailUser}@${profile.emailDomain}`}
+  data-wa={profile.whatsappUrl}
+  data-validation-msg={t(locale, "engage.validationError")}
+  class="rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface)] p-6 md:p-8"
+>
+  <div class="mb-6 flex flex-col gap-2 border-b border-[var(--line)] pb-5">
+    <h2 class="section-h2 text-[var(--text)]">{t(locale, "engage.wizardTitle")}</h2>
+    <p class="text-sm text-[var(--text-dim)]">{t(locale, "engage.wizardSub")}</p>
+    <ol class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label={t(locale, "engage.wizardTitle")}>
+      {
+        stepNames.map((label, idx) => (
+          <li
+            data-step-pill={idx}
+            class={`rounded-[var(--radius-sm)] border px-3 py-2 font-mono text-[11px] transition-colors ${
+              idx === 0
+                ? "border-[var(--accent)] bg-[var(--surface-2)] text-[var(--accent)]"
+                : "border-[var(--line)] text-[var(--text-dim)]"
+            }`}
+          >
+            {label}
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+
+  <form id="brief-form" novalidate>
+    <!-- Step 1: Track -->
+    <fieldset data-wizard-panel="0" class="space-y-4 border-0 p-0">
+      <legend class="mb-3 font-mono text-xs uppercase tracking-wider text-[var(--text-dim)]">
+        {t(locale, "engage.stepLabels.projectType")}
+      </legend>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {
+          cfg.tracks.map((tr, i) => (
+            <label class="flex cursor-pointer items-start gap-3 rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] p-4 transition-colors has-[:checked]:border-[var(--accent)]">
+              <input
+                type="radio"
+                name="track"
+                value={tr.id}
+                data-min-w={tr.baseWeeks[0]}
+                data-max-w={tr.baseWeeks[1]}
+                checked={i === 0}
+                class="mt-1 accent-[var(--accent)]"
+              />
+              <span>
+                <span class="block text-sm font-medium text-[var(--text)]">
+                  {locale === "id" ? tr.labelId : tr.labelEn}
+                </span>
+                <span class="mt-1 block font-mono text-[11px] text-[var(--text-dim)]">
+                  ~{tr.baseWeeks[0]}–{tr.baseWeeks[1]} {t(locale, "engage.baseWeeksUnit")}
+                </span>
+              </span>
+            </label>
+          ))
+        }
+      </div>
+    </fieldset>
+
+    <!-- Step 2: Scale & Modules -->
+    <fieldset data-wizard-panel="1" hidden class="space-y-6 border-0 p-0">
+      <div>
+        <legend class="mb-3 font-mono text-xs uppercase tracking-wider text-[var(--text-dim)]">
+          {t(locale, "engage.stepLabels.scale")}
+        </legend>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {
+            cfg.scales.map((sc, i) => (
+              <label class="flex cursor-pointer items-start gap-2.5 rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] p-3.5 has-[:checked]:border-[var(--accent)]">
+                <input
+                  type="radio"
+                  name="scale"
+                  value={sc.id}
+                  data-mult={sc.multiplier}
+                  checked={i === 0}
+                  class="mt-1 accent-[var(--accent)]"
+                />
+                <span class="text-sm text-[var(--text)]">{locale === "id" ? sc.labelId : sc.labelEn}</span>
+              </label>
+            ))
+          }
+        </div>
+      </div>
+
+      <div>
+        <span class="mb-3 block font-mono text-xs uppercase tracking-wider text-[var(--text-dim)]">
+          {t(locale, "engage.stepLabels.features")}
+        </span>
+        <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          {
+            cfg.addons.map((ad) => (
+              <label class="flex cursor-pointer items-center gap-3 rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] p-3 has-[:checked]:border-[var(--accent)]">
+                <input
+                  type="checkbox"
+                  name="addons"
+                  value={ad.id}
+                  data-extra={ad.extraWeeks}
+                  class="accent-[var(--accent)]"
+                />
+                <span class="text-sm text-[var(--text)]">{locale === "id" ? ad.labelId : ad.labelEn}</span>
+              </label>
+            ))
+          }
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Step 3: Timeline & Rough Estimate -->
+    <fieldset data-wizard-panel="2" hidden class="space-y-6 border-0 p-0">
+      <div>
+        <legend class="mb-3 font-mono text-xs uppercase tracking-wider text-[var(--text-dim)]">
+          {t(locale, "engage.stepLabels.timeline")}
+        </legend>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {
+            cfg.timelines.map((tl, i) => (
+              <label class="flex cursor-pointer items-center gap-2.5 rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] p-3.5 has-[:checked]:border-[var(--accent)]">
+                <input type="radio" name="timeline" value={tl.id} checked={i === 1} class="accent-[var(--accent)]" />
+                <span class="text-sm text-[var(--text)]">{locale === "id" ? tl.labelId : tl.labelEn}</span>
+              </label>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="rounded-[var(--radius-md)] border border-[var(--accent)]/40 bg-[var(--surface-2)] p-5">
+        <div class="mono-label text-[var(--accent)]">{t(locale, "engage.estimateTitle")}</div>
+        <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <div class="font-mono text-xs text-[var(--text-dim)]">{t(locale, "engage.estimateDurationLabel")}</div>
+            <div id="wizard-est-weeks" class="mt-1 font-sans text-2xl font-semibold text-[var(--text)]">
+              2–4 {t(locale, "engage.weeksUnit")}
+            </div>
+          </div>
+          <div>
+            <div class="font-mono text-xs text-[var(--text-dim)]">{t(locale, "engage.estimatePhaseLabel")}</div>
+            <div id="wizard-est-phase" class="mt-1 font-mono text-sm text-[var(--text)]">
+              {t(locale, "engage.defaultKickoffPhase")}
+            </div>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Step 4: Contact & Validation -->
+    <fieldset data-wizard-panel="3" hidden class="space-y-4 border-0 p-0">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label for="brief-name" class="mb-1.5 block font-mono text-xs text-[var(--text-dim)]">
+            {t(locale, "engage.stepLabels.name")} *
+          </label>
+          <input
+            id="brief-name"
+            name="name"
+            type="text"
+            required
+            class="w-full rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] px-3.5 py-2.5 text-sm text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
+          />
+        </div>
+        <div>
+          <label for="brief-email" class="mb-1.5 block font-mono text-xs text-[var(--text-dim)]">
+            {t(locale, "engage.stepLabels.email")} *
+          </label>
+          <input
+            id="brief-email"
+            name="email"
+            type="email"
+            required
+            class="w-full rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] px-3.5 py-2.5 text-sm text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label for="brief-notes" class="mb-1.5 block font-mono text-xs text-[var(--text-dim)]">
+          {t(locale, "engage.stepLabels.notes")}
+        </label>
+        <textarea
+          id="brief-notes"
+          name="notes"
+          rows="4"
+          class="w-full rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] px-3.5 py-2.5 text-sm text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
+        ></textarea>
+      </div>
+
+      <p id="wizard-error" role="alert" hidden class="font-mono text-xs text-[var(--danger)]"></p>
+    </fieldset>
+
+    <div class="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] pt-5">
+      <button
+        type="button"
+        id="wizard-prev"
+        hidden
+        class="rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] px-4 py-2 font-mono text-xs uppercase tracking-wider text-[var(--text)] hover:border-[var(--accent)]"
+      >
+        {t(locale, "engage.buttons.prev")}
+      </button>
+
+      <div class="ml-auto flex gap-3">
+        <button
+          type="button"
+          id="wizard-next"
+          class="rounded-[var(--radius-md)] bg-[var(--accent)] px-5 py-2.5 font-mono text-xs font-medium uppercase tracking-wider text-[var(--accent-ink)] hover:opacity-90"
+        >
+          {t(locale, "engage.buttons.next")}
+        </button>
+        <button
+          type="submit"
+          id="wizard-submit"
+          hidden
+          class="rounded-[var(--radius-md)] bg-[var(--accent)] px-5 py-2.5 font-mono text-xs font-medium uppercase tracking-wider text-[var(--accent-ink)] hover:opacity-90"
+        >
+          {t(locale, "engage.buttons.submit")}
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <div id="wizard-success" hidden class="space-y-4">
+    <div class="mono-label text-[var(--accent)]">{t(locale, "engage.briefReadyBadge")}</div>
+    <h3 class="section-h2 text-[var(--text)]">{t(locale, "engage.submitSuccessTitle")}</h3>
+    <p class="text-sm text-[var(--text-dim)]">{t(locale, "engage.submitSuccessBody")}</p>
+    <pre
+      id="wizard-summary-box"
+      class="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] p-4 font-mono text-xs text-[var(--text)]"
+    ></pre>
+    <div class="flex flex-wrap gap-3">
+      <a
+        id="wizard-mailto"
+        href={`mailto:${profile.emailUser}@${profile.emailDomain}`}
+        class="inline-flex items-center rounded-[var(--radius-md)] bg-[var(--accent)] px-4 py-2 font-mono text-xs font-medium uppercase tracking-wider text-[var(--accent-ink)] no-underline"
+      >
+        {t(locale, "engage.mailtoFallback")}
+      </a>
+      <a
+        id="wizard-wa"
+        href={profile.whatsappUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] px-4 py-2 font-mono text-xs uppercase tracking-wider text-[var(--text)] no-underline hover:border-[var(--accent)]"
+      >
+        {t(locale, "engage.waFallback")}
+      </a>
+      <button
+        type="button"
+        id="wizard-reset"
+        class="rounded-[var(--radius-md)] border border-[var(--line)] px-4 py-2 font-mono text-xs uppercase tracking-wider text-[var(--text-dim)] hover:text-[var(--text)]"
+      >
+        {t(locale, "engage.buttons.reset")}
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setupBriefWizard() {
+    const root = document.getElementById("brief-wizard");
+    if (!root || root.dataset.bound === "true") return;
+    root.dataset.bound = "true";
+
+    const locale = root.dataset.locale || "id";
+    const form = document.getElementById("brief-form") as HTMLFormElement | null;
+    const panels = Array.from(root.querySelectorAll<HTMLElement>("[data-wizard-panel]"));
+    const pills = Array.from(root.querySelectorAll<HTMLElement>("[data-step-pill]"));
+    const prevBtn = document.getElementById("wizard-prev") as HTMLButtonElement | null;
+    const nextBtn = document.getElementById("wizard-next") as HTMLButtonElement | null;
+    const submitBtn = document.getElementById("wizard-submit") as HTMLButtonElement | null;
+    const errEl = document.getElementById("wizard-error");
+    const estEl = document.getElementById("wizard-est-weeks");
+    const successEl = document.getElementById("wizard-success");
+    const summaryBox = document.getElementById("wizard-summary-box");
+    const mailtoLink = document.getElementById("wizard-mailto") as HTMLAnchorElement | null;
+    const waLink = document.getElementById("wizard-wa") as HTMLAnchorElement | null;
+    const resetBtn = document.getElementById("wizard-reset");
+
+    let step = 0;
+
+    const computeEstimate = () => {
+      const trackInput = root.querySelector<HTMLInputElement>('input[name="track"]:checked');
+      const scaleInput = root.querySelector<HTMLInputElement>('input[name="scale"]:checked');
+      const addonInputs = Array.from(root.querySelectorAll<HTMLInputElement>('input[name="addons"]:checked'));
+
+      const minBase = Number(trackInput?.dataset.minW || 3);
+      const maxBase = Number(trackInput?.dataset.maxW || 5);
+      const mult = Number(scaleInput?.dataset.mult || 1);
+      const extra = addonInputs.reduce((acc, el) => acc + Number(el.dataset.extra || 0), 0);
+
+      const low = Math.round(minBase * mult + extra);
+      const high = Math.max(low + 1, Math.round(maxBase * mult + extra));
+      const unit = locale === "id" ? "minggu" : "weeks";
+      const text = `${low}–${high} ${unit}`;
+      if (estEl) estEl.textContent = text;
+      return text;
+    };
+
+    const renderStep = (nextStep: number) => {
+      step = Math.max(0, Math.min(panels.length - 1, nextStep));
+      panels.forEach((p, idx) => {
+        p.hidden = idx !== step;
+      });
+      pills.forEach((pill, idx) => {
+        if (idx === step) {
+          pill.classList.add("border-[var(--accent)]", "bg-[var(--surface-2)]", "text-[var(--accent)]");
+          pill.classList.remove("border-[var(--line)]", "text-[var(--text-dim)]");
+        } else {
+          pill.classList.remove("border-[var(--accent)]", "bg-[var(--surface-2)]", "text-[var(--accent)]");
+          pill.classList.add("border-[var(--line)]", "text-[var(--text-dim)]");
+        }
+      });
+      if (prevBtn) prevBtn.hidden = step === 0;
+      if (nextBtn) nextBtn.hidden = step === panels.length - 1;
+      if (submitBtn) submitBtn.hidden = step !== panels.length - 1;
+      if (errEl) errEl.hidden = true;
+      computeEstimate();
+    };
+
+    prevBtn?.addEventListener("click", () => renderStep(step - 1));
+    nextBtn?.addEventListener("click", () => renderStep(step + 1));
+    root.querySelectorAll("input").forEach((inp) => inp.addEventListener("change", computeEstimate));
+
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const nameInput = document.getElementById("brief-name") as HTMLInputElement | null;
+      const emailInput = document.getElementById("brief-email") as HTMLInputElement | null;
+      const notesInput = document.getElementById("brief-notes") as HTMLTextAreaElement | null;
+
+      const nameVal = (nameInput?.value || "").trim();
+      const emailVal = (emailInput?.value || "").trim();
+      const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal);
+
+      if (!nameVal || !validEmail) {
+        if (errEl) {
+          errEl.textContent = root.dataset.validationMsg || "Invalid input";
+          errEl.hidden = false;
+        }
+        return;
+      }
+
+      const track = (root.querySelector<HTMLInputElement>('input[name="track"]:checked') || {}).value || "";
+      const scale = (root.querySelector<HTMLInputElement>('input[name="scale"]:checked') || {}).value || "";
+      const timeline = (root.querySelector<HTMLInputElement>('input[name="timeline"]:checked') || {}).value || "";
+      const addons = Array.from(root.querySelectorAll<HTMLInputElement>('input[name="addons"]:checked')).map(
+        (el) => el.value
+      );
+      const estimate = computeEstimate();
+
+      const summary = [
+        `Client: ${nameVal} <${emailVal}>`,
+        `Track: ${track}`,
+        `Scale: ${scale}`,
+        `Modules: ${addons.length ? addons.join(", ") : "Standard"}`,
+        `Timeline: ${timeline} (Est. ${estimate})`,
+        notesInput?.value?.trim() ? `Notes: ${notesInput.value.trim()}` : ""
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      const endpoint = root.dataset.endpoint;
+      if (endpoint) {
+        try {
+          await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: nameVal, email: emailVal, track, scale, addons, timeline, estimate, summary })
+          });
+        } catch {}
+      }
+
+      if (summaryBox) summaryBox.textContent = summary;
+      const studioEmail = root.dataset.email || "";
+      const studioWa = root.dataset.wa || "";
+      if (mailtoLink) {
+        mailtoLink.href = `mailto:${studioEmail}?subject=${encodeURIComponent(`Project Brief: ${track} — ${nameVal}`)}&body=${encodeURIComponent(summary)}`;
+      }
+      if (waLink) {
+        waLink.href = `${studioWa}?text=${encodeURIComponent(summary)}`;
+      }
+
+      form.hidden = true;
+      if (successEl) successEl.hidden = false;
+    });
+
+    resetBtn?.addEventListener("click", () => {
+      form?.reset();
+      if (form) form.hidden = false;
+      if (successEl) successEl.hidden = true;
+      renderStep(0);
+    });
+  }
+
+  setupBriefWizard();
+  document.addEventListener("astro:after-swap", setupBriefWizard);
+</script>

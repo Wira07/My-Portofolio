@@ -1,0 +1,189 @@
+---
+import { ClientRouter } from "astro:transitions";
+import "@/styles/global.css";
+import type { Locale } from "@/lib/i18n";
+import { localePath, switchLocalePath, t } from "@/lib/i18n";
+import { getNoteEntries, getWorkEntries } from "@/lib/content";
+import { buildAlternateUrls, buildCanonicalUrl } from "@/lib/seo";
+import Preloader from "@/components/motion/Preloader.astro";
+import Cursor from "@/components/motion/Cursor.astro";
+import NavBar from "@/components/core/NavBar.astro";
+import Footer from "@/components/core/Footer.astro";
+import CommandPalette, { type CommandSearchItem } from "@/components/interactive/CommandPalette.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  locale: Locale;
+  path: string;
+  ogSlug?: string;
+  activeNav?: string;
+  jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description,
+  locale,
+  path,
+  ogSlug = "default",
+  activeNav,
+  jsonLd,
+  noindex = false
+} = Astro.props;
+
+const canonicalUrl = buildCanonicalUrl(path);
+const altUrls = buildAlternateUrls(path);
+const ogImageUrl = buildCanonicalUrl(`/og/${ogSlug}.png`);
+const switchLangHref = switchLocalePath(path, locale === "id" ? "en" : "id");
+
+const [works, notes] = await Promise.all([getWorkEntries(locale), getNoteEntries(locale)]);
+
+const searchItems: CommandSearchItem[] = [
+  { id: "pg-home", group: "pages", title: t(locale, "nav.home"), subtitle: t(locale, "meta.studioDescriptor"), href: localePath(locale, "/") },
+  { id: "pg-work", group: "pages", title: t(locale, "nav.work"), subtitle: t(locale, "work.title"), href: localePath(locale, "/work") },
+  { id: "pg-cap", group: "pages", title: t(locale, "nav.capabilities"), subtitle: t(locale, "capabilities.title"), href: localePath(locale, "/capabilities") },
+  { id: "pg-proc", group: "pages", title: t(locale, "nav.process"), subtitle: t(locale, "process.title"), href: localePath(locale, "/process") },
+  { id: "pg-notes", group: "pages", title: t(locale, "nav.notes"), subtitle: t(locale, "notes.title"), href: localePath(locale, "/notes") },
+  { id: "pg-about", group: "pages", title: t(locale, "nav.about"), subtitle: t(locale, "about.title"), href: localePath(locale, "/about") },
+  { id: "pg-engage", group: "pages", title: t(locale, "nav.engage"), subtitle: t(locale, "engage.title"), href: localePath(locale, "/engage") },
+  { id: "pg-uses", group: "pages", title: t(locale, "nav.uses"), subtitle: t(locale, "uses.title"), href: localePath(locale, "/uses") },
+  ...works.map((w) => ({
+    id: `wk-${w.data.slug}`,
+    group: "work" as const,
+    title: w.data.title,
+    subtitle: `${w.data.year} · ${w.data.stack.slice(0, 3).join(", ")}`,
+    href: localePath(locale, `/work/${w.data.slug}`)
+  })),
+  ...notes.map((n) => ({
+    id: `nt-${n.data.slug}`,
+    group: "notes" as const,
+    title: n.data.title,
+    subtitle: `${n.data.readingTime} · ${n.data.tags.slice(0, 3).join(", ")}`,
+    href: localePath(locale, `/notes/${n.data.slug}`)
+  })),
+  { id: "act-theme", group: "actions", title: t(locale, "palette.actions.toggleTheme"), action: "toggleTheme", shortcut: "THEME" },
+  { id: "act-lang", group: "actions", title: t(locale, "palette.actions.switchLang"), action: "switchLang", shortcut: locale === "id" ? "EN" : "ID" },
+  { id: "act-email", group: "actions", title: t(locale, "palette.actions.copyEmail"), action: "copyEmail", shortcut: "COPY" },
+  { id: "act-cv", group: "actions", title: t(locale, "palette.actions.downloadCv"), action: "downloadCv", shortcut: "PDF" }
+];
+---
+
+<!doctype html>
+<html lang={locale} data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="alternate" hreflang="id" href={altUrls.id} />
+    <link rel="alternate" hreflang="en" href={altUrls.en} />
+    <link rel="alternate" hreflang="x-default" href={altUrls.id} />
+    <link rel="alternate" type="application/rss+xml" title={`${t(locale, "meta.brand")} RSS`} href="/rss.xml" />
+
+    <!-- Open Graph / Twitter -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    <!-- Critical Theme & Motion Guard (Prevents FOUC) -->
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        try {
+          var saved = localStorage.getItem("wira_studio_theme");
+          if (saved === "light" || saved === "dark") {
+            root.setAttribute("data-theme", saved);
+          } else if (window.matchMedia("(prefers-color-scheme: light)").matches) {
+            root.setAttribute("data-theme", "light");
+          } else {
+            root.setAttribute("data-theme", "dark");
+          }
+        } catch (e) {
+          root.setAttribute("data-theme", "dark");
+        }
+        var rm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        root.dataset.reducedMotion = rm ? "true" : "false";
+        if (rm) root.dataset.motionDisabled = "true";
+      })();
+    </script>
+
+    {jsonLd && (
+      <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    )}
+
+    <ClientRouter />
+  </head>
+  <body class="bg-[var(--bg)] text-[var(--text)] selection:bg-[var(--accent)] selection:text-[var(--accent-ink)]">
+    <a href="#main-content" class="skip-link">{t(locale, "nav.skipToContent")}</a>
+
+    <Preloader locale={locale} />
+    <Cursor />
+    <NavBar locale={locale} currentPath={path} activeNav={activeNav} />
+
+    <main id="main-content" tabindex="-1">
+      <slot />
+    </main>
+
+    <Footer locale={locale} />
+    <CommandPalette locale={locale} searchItems={searchItems} switchLangHref={switchLangHref} />
+
+    <script>
+      import { initStudioMotion } from "@/lib/motion";
+
+      function bindThemeToggles() {
+        const root = document.documentElement;
+        const syncLabels = () => {
+          const current = root.getAttribute("data-theme") || "dark";
+          document.querySelectorAll<HTMLButtonElement>("[data-theme-toggle]").forEach((btn) => {
+            const lbl = current === "dark" ? btn.dataset.labelLight : btn.dataset.labelDark;
+            if (lbl) btn.setAttribute("aria-label", lbl);
+          });
+        };
+        syncLabels();
+
+        document.querySelectorAll<HTMLButtonElement>("[data-theme-toggle]").forEach((btn) => {
+          if (btn.dataset.themeBound === "true") return;
+          btn.dataset.themeBound = "true";
+          btn.addEventListener("click", () => {
+            const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+            root.setAttribute("data-theme", next);
+            try {
+              localStorage.setItem("wira_studio_theme", next);
+            } catch {}
+            syncLabels();
+          });
+        });
+      }
+
+      function bootPage() {
+        const saved = (() => {
+          try {
+            return localStorage.getItem("wira_studio_theme");
+          } catch {
+            return null;
+          }
+        })();
+        if (saved === "light" || saved === "dark") {
+          document.documentElement.setAttribute("data-theme", saved);
+        }
+        const rm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        document.documentElement.dataset.reducedMotion = rm ? "true" : "false";
+        bindThemeToggles();
+        initStudioMotion();
+      }
+
+      document.addEventListener("astro:page-load", bootPage);
+    </script>
+  </body>
+</html>

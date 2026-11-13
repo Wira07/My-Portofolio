@@ -1,0 +1,33 @@
+---
+title: "Mengintegrasikan Model YOLO11 ke Android via TFLite"
+slug: "yolo11-android-tflite"
+locale: "id"
+summary: "Catatan teknis mengekspor YOLO11 ke TensorFlow Lite terkuantisasi, menyamakan dimensi tensor di CameraX, dan menuliskan NMS di Kotlin."
+publishedAt: "2026-08-22"
+readingTime: "7 menit"
+tags: ["AI", "YOLO11", "TensorFlow Lite", "Android", "Kotlin"]
+relatedWork: ["salat-detection", "smart-attendance-ai", "yolo11-detection"]
+---
+
+## Jembatan Kritis antara Python dan Kotlin
+
+Sebagian besar kegagalan akurasi setelah model diekspor ke Android bukanlah karena model TFLite rusak, melainkan perbedaan urutan pemrosesan gambar antara lingkungan training Python dan buffer `CameraX` di Android.
+
+Tiga titik pemeriksaan wajib sebelum membaca skor prediksi:
+
+1. **Orientasi Sensor Kamera**: `ImageProxy.imageInfo.rotationDegrees` harus diputar sebelum melakukan crop atau resize ke resolusi input model (misalnya `640x640`).
+2. **Letterbox vs Stretch Resize**: Bila pelatihan memakai letterbox padding abu-abu (`114/255`), pastikan konversi `Bitmap` ke `ByteBuffer` di Android memakai padding serupa atau ukur ulang dampaknya secara konsisten.
+3. **Normalisasi `[0..1]` dan Kanal RGB**: Hindari tertukarnya urutan RGB dan BGR yang sering membuat kepercayaan kelas anjlok drastis tanpa pesan error.
+
+## Kuantisasi FP16 dan Fallback Akselerator
+
+Pada perangkat Android menengah, mengekspor bobot ke `FP16` biasanya memberikan kompromi terbaik antara ukuran berkas `.tflite` yang mengecil separuh dan kestabilan akurasi dibanding `INT8` penuh apabila kalibrasi dataset masih terbatas.
+
+Di sisi `Interpreter.Options`:
+- Prioritaskan `GpuDelegate` hanya bila kompatibilitas GPU chipset terverifikasi (`CompatibilityList().isDelegateSupportedOnThisDevice`).
+- Selalu siapkan fallback ke multi-thread CPU (`setNumThreads(4)`) agar aplikasi tidak crash di perangkat dengan driver vendor berbeda.
+
+## Implementasi Non-Maximum Suppression (NMS) yang Ringkas
+
+Karena output mentah YOLO11 berbentuk matriks kandidat kotak + probabilitas kelas, mengekstrak kandidat di atas ambang *confidence* lebih dulu sebelum melakukan perhitungan **IoU (Intersection over Union)** secara signifikan menurunkan alokasi objek baru per frame dan menjaga *garbage collector* Android tetap tenang.
+

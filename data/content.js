@@ -45,98 +45,136 @@ export const content = {
 
   journey: [
     {
-      date: "Sep 2025 - Sekarang",
+      date: "Sep 2025 – Sekarang",
       type: "work",
+      phase: "Karir Perusahaan · Aktif",
       title: "Web Developer",
       org: "PT. Hadiscada Inovasindo",
+      summary: "Mengembangkan sistem web korporat dan dashboard monitoring industri berbasis arsitektur modern yang cepat, aman, serta responsif.",
       points: [
-        "Mengembangkan website dan aplikasi web untuk kebutuhan perusahaan",
-        "Implementasi fitur-fitur modern dengan teknologi terkini"
-      ]
+        "Merancang dan membangun aplikasi web perusahaan serta portal monitoring operasional real-time.",
+        "Mengimplementasikan antarmuka front-end modern yang responsif serta integrasi REST API ke sistem back-end.",
+        "Mengoptimalkan performa pemuatan halaman, keamanan autentikasi, dan pemeliharaan kode lintas divisi."
+      ],
+      tags: ["JavaScript", "PHP", "Laravel", "REST API", "Industrial Web"]
     },
     {
-      date: "Agu 2025 - Sekarang",
+      date: "Agu 2025 – Sekarang",
       type: "work",
+      phase: "Karir Perusahaan · Aktif",
       title: "Android Developer",
       org: "PT. Fahrul Moneta Paressa",
+      summary: "Memimpin pengembangan aplikasi mobile Android untuk mendukung digitalisasi alur bisnis dan produktivitas operasional perusahaan.",
       points: [
-        "Mengembangkan aplikasi Android untuk kebutuhan bisnis",
-        "Implementasi fitur-fitur mobile dengan Kotlin dan Java"
-      ]
+        "Membangun dan memelihara aplikasi Android native menggunakan Kotlin dan Java sesuai kebutuhan bisnis.",
+        "Menerapkan arsitektur bersih (MVVM), manajemen state yang andal, serta sinkronisasi data lokal dan server.",
+        "Melakukan pengujian menyeluruh, debugging performa, dan rilis berkala untuk memastikan stabilitas aplikasi di lapangan."
+      ],
+      tags: ["Kotlin", "Java", "Android SDK", "MVVM", "REST API"]
     },
     {
-      date: "Okt 2024 - Sekarang",
+      date: "Okt 2024 – Sekarang",
       type: "work",
+      phase: "Karir Perusahaan · Aktif",
       title: "Android Developer & UI/UX Designer",
       org: "Jobnation.id",
+      summary: "Menjembatani riset desain produk dan rekayasa aplikasi Android untuk menghadirkan pengalaman pencarian kerja yang intuitif.",
       points: [
-        "Mengembangkan aplikasi Android dengan pengalaman yang mendalam",
-        "Merancang wireframe, prototipe, dan user flow",
-        "Melakukan riset pengguna dan usability testing"
-      ]
+        "Merancang user flow, wireframe, design system, dan prototipe interaktif di Figma berdasarkan riset perilaku pengguna.",
+        "Menerjemahkan desain UI/UX langsung ke dalam kode aplikasi Android yang presisi dan berorientasi performa.",
+        "Melaksanakan sesi usability testing dan iterasi fitur berkelanjutan bersama tim produk dan engineering."
+      ],
+      tags: ["Kotlin", "Jetpack Compose", "Figma", "UI/UX Research", "Usability Testing"]
     },
     {
       date: "Mei 2025",
       type: "education",
-      title: "Lulus S1 Teknik Informatika — predikat pujian",
-      org: "Universitas Kuningan",
+      phase: "Kelulusan Sarjana · Cum Laude",
+      title: "Lulus S1 Teknik Informatika — Predikat Pujian",
+      org: "Fakultas Ilmu Komputer · Universitas Kuningan",
+      summary: "Menyelesaikan studi Strata-1 Teknik Informatika dengan predikat Cum Laude melalui spesialisasi pengembangan aplikasi mobile dan rekayasa web.",
       points: [
-        "Fokus Android (Kotlin, Jetpack Compose) dan Web (HTML, CSS, JavaScript, PHP).",
-        "Aktif berkolaborasi dalam proyek pengembangan aplikasi & riset bersama dosen Fakultas Ilmu Komputer.",
-        "Proyek akhir: aplikasi pembelajaran mobile modern untuk belajar mandiri."
-      ]
+        "Meraih predikat kelulusan Dengan Pujian (Cum Laude) berkat konsistensi akademik dan kontribusi aktif pada riset kampus.",
+        "Menyelesaikan Skripsi / Proyek Akhir berupa aplikasi pembelajaran mobile interaktif berbasis Android modern untuk belajar mandiri.",
+        "Aktif menjadi mitra pengembangan aplikasi & riset terapan bersama dosen Fakultas Ilmu Komputer hingga tahap publikasi dan uji lapangan."
+      ],
+      highlight: "Predikat Pujian",
+      tags: ["S1 Teknik Informatika", "Cum Laude", "Skripsi Android", "Riset Dosen", "UNIKU"]
     },
     {
       date: "Jan 2024 – Apr 2025",
-      type: "work",
-      title: "Android Developer",
-      org: "Freelance",
+      type: "freelance",
+      phase: "Freelance & Proyek Klien",
+      title: "Android Developer — Freelance Mandiri",
+      org: "Klien Independen & Proyek Bisnis",
+      summary: "Menangani siklus penuh pembuatan aplikasi Android kustom untuk berbagai klien — mulai dari analisis kebutuhan, arsitektur, hingga rilis produksi.",
       points: [
-        "Mengembangkan aplikasi Android dengan Kotlin dan Jetpack Compose, fokus pada UI/UX modern dan interaksi mulus.",
-        "Integrasi Firebase: Authentication, Firestore, Cloud Messaging (notifikasi push).",
-        "Arsitektur MVVM + Jetpack (LiveData, Navigation, ViewModel) agar kode skalabel dan mudah dipelihara.",
-        "Optimasi performa & memori dengan profiling → responsivitas dan efisiensi baterai naik hingga 30%.",
-        "Kolaborasi via Git/GitHub, rutin berkontribusi di proyek open-source.",
-        "Distribusi beta via Firebase App Distribution untuk siklus perbaikan iteratif."
+        "Mengembangkan berbagai aplikasi Android dengan Kotlin dan Jetpack Compose (termasuk aplikasi edukasi, presensi QR, dan notifikasi sekolah).",
+        "Mengintegrasikan ekosistem Firebase (Authentication, Firestore, Cloud Messaging) serta REST API untuk fitur real-time.",
+        "Menerapkan arsitektur MVVM + Android Jetpack (LiveData, Navigation, ViewModel, Room DB) agar kode skalabel dan mudah dirawat.",
+        "Optimasi performa & memori melalui Android Profiler → responsivitas dan efisiensi baterai meningkat hingga 30%.",
+        "Mengelola repositori Git/GitHub dan distribusi beta via Firebase App Distribution untuk siklus umpan balik klien yang cepat."
       ],
-      highlight: "30%"
-    },
-    {
-      date: "2023",
-      type: "program",
-      title: "Bangkit Academy — Cloud Computing",
-      org: "Google, Gojek, Tokopedia, Traveloka"
+      highlight: "30%",
+      tags: ["Freelance Android", "Kotlin", "Jetpack Compose", "Firebase", "MVVM"]
     },
     {
       date: "Jan 2023 – Des 2024",
-      type: "work",
-      title: "UI/UX Designer",
-      org: "Freelance",
+      type: "freelance",
+      phase: "Freelance & Proyek Klien",
+      title: "UI/UX Designer — Freelance Mandiri",
+      org: "Klien Startup, UMKM & Digital Agency",
+      summary: "Merancang pengalaman produk digital end-to-end (aplikasi mobile & website) yang estetis, fungsional, dan siap diimplementasikan developer.",
       points: [
-        "Merancang antarmuka mobile & web berpusat pada pengguna (Figma, Adobe XD) yang konsisten lintas perangkat.",
-        "Riset pengguna, persona, wireframe, mockup, dan prototipe interaktif.",
-        "Hand-off ke developer via Zeplin dan Dev Mode Figma.",
-        "Uji kegunaan & iterasi untuk meningkatkan keberhasilan tugas dan kepuasan pengguna.",
-        "Menerapkan design system dan standar aksesibilitas WCAG.",
-        "Menyediakan UI kit fidelitas tinggi dan style guide."
-      ]
+        "Merancang antarmuka mobile & web berpusat pada pengguna menggunakan Figma dan Adobe XD yang konsisten lintas perangkat.",
+        "Menyusun riset pengguna, user persona, information architecture, wireframe, hingga prototipe interaktif high-fidelity.",
+        "Melakukan hand-off desain yang rapi dan terstruktur kepada tim developer melalui Dev Mode Figma dan Zeplin.",
+        "Membangun UI Kit modular, style guide, dan design system dengan memperhatikan standar aksesibilitas WCAG."
+      ],
+      tags: ["Freelance UI/UX", "Figma", "Adobe XD", "Design System", "Prototyping"]
+    },
+    {
+      date: "Feb 2023 – Jul 2023",
+      type: "program",
+      phase: "Studi Independen · Kampus Merdeka",
+      title: "Bangkit Academy 2023 — Cloud Computing Cohort",
+      org: "Google, Gojek, Tokopedia, Traveloka",
+      summary: "Terpilih mengikuti program inkubasi talenta digital nasional besutan Google dan mitra teknologi untuk mendalami arsitektur Cloud & Back-End.",
+      points: [
+        "Mendalami infrastruktur Google Cloud Platform (Compute Engine, Cloud Run, Cloud Storage, IAM) dan pengembangan RESTful API menggunakan Node.js.",
+        "Berkolaborasi dalam tim Capstone Project lintas disiplin (Cloud, Mobile Android, dan Machine Learning) untuk membangun solusi aplikasi berdaya guna.",
+        "Mengasah soft skills profesional kelas industri: komunikasi teknis berbahasa Inggris, manajemen proyek Agile, waktu, dan berpikir kritis."
+      ],
+      tags: ["Bangkit Academy", "Google Cloud", "Node.js", "REST API", "Capstone Project"]
     },
     {
       date: "Des 2022",
       type: "award",
+      phase: "Kejuaraan Tingkat Kabupaten",
       title: "Juara 2 Lomba UI/UX Figma Se-Kabupaten Kuningan",
       org: "IT Festival · HIMA TI FKOM Universitas Kuningan",
+      summary: "Membuktikan kompetensi desain produk digital di tingkat Kabupaten Kuningan melalui kompetisi perancangan UI/UX berbasis studi kasus nyata.",
       points: [
-        "Meraih Juara 2 tingkat Kabupaten Kuningan pada ajang IT Competition tema 'Meningkatkan Daya Pikir dan Kreativitas di Era Digitalisasi'.",
+        "Meraih Juara 2 tingkat Kabupaten Kuningan pada ajang IT Competition bertema 'Meningkatkan Daya Pikir dan Kreativitas di Era Digitalisasi'.",
         "Merancang sistem desain, user flow, dan prototipe interaktif high-fidelity di Figma yang dinilai unggul dari sisi estetika, solusi masalah, serta kemudahan penggunaan."
       ],
-      highlight: "Juara 2"
+      highlight: "Juara 2",
+      tags: ["Juara 2 Kabupaten", "Figma Competition", "UI/UX Design", "IT Festival UNIKU"]
     },
     {
-      date: "Sep 2021",
+      date: "Sep 2021 – Mei 2025",
       type: "education",
-      title: "Mulai kuliah Teknik Informatika",
-      org: "Universitas Kuningan"
+      phase: "Masa Kuliah S1 (Semester 1–8)",
+      title: "Mahasiswa S1 Teknik Informatika",
+      org: "Fakultas Ilmu Komputer · Universitas Kuningan",
+      summary: "Fase pembentukan fondasi ilmu komputer, eksplorasi organisasi kampus, kompetisi teknologi, serta penguasaan rekayasa perangkat lunak Android & Web.",
+      points: [
+        "Mendalami algoritma & struktur data, pemrograman berorientasi objek (OOP), rekayasa perangkat lunak, basis data relasional (MySQL/SQLite), dan jaringan komputer.",
+        "Fokus mengambil spesialisasi praktikum Pemrograman Mobile (Android/Kotlin) serta Pemrograman Web Full-Stack (HTML, CSS, JavaScript, PHP, Laravel).",
+        "Aktif mengikuti kegiatan akademik, workshop teknologi, dan kompetisi di lingkungan HIMA TI FKOM Universitas Kuningan.",
+        "Dipercaya oleh dosen sebagai asisten pengembang dalam berbagai proyek penelitian aplikasi Android dan sistem informasi kampus."
+      ],
+      tags: ["Masa Kuliah", "Algoritma & OOP", "Praktikum Android & Web", "HIMA TI FKOM", "Universitas Kuningan"]
     }
   ],
 
@@ -238,110 +276,205 @@ export const content = {
     {
       id: "eduapp-robot",
       title: "EduApp — Robot yang Membantu",
+      subtitle: "Aplikasi Edukasi Teknologi & Robotika Interaktif",
       category: "android",
       year: 2025,
       portrait: true,
-      summary: "Aplikasi edukasi interaktif berbasis Jetpack Compose yang menyajikan materi pembelajaran teknologi & robotika lengkap dengan tab Offer, Details, dan ulasan pengguna.",
+      summary: "Aplikasi edukasi interaktif berbasis Jetpack Compose yang menyajikan materi pembelajaran teknologi & robotika lengkap dengan navigasi tab Offer, Details, ulasan pengguna, dan katalog kelas.",
+      points: [
+        "Halaman detail materi 'Robot yang Membantu' dengan tab informasi terstruktur (Offer, Details, Reviews) serta aksi pendaftaran materi instan.",
+        "Beranda eksplorasi topik pembelajaran teknologi dengan kurasi kartu materi interaktif dan antarmuka Material Design 3 yang ramah pelajar."
+      ],
       role: "Android Developer & UI/UX Designer",
       stack: ["Kotlin", "Jetpack Compose", "Material Design 3", "Room DB", "Firebase"],
       cover: "assets/img/portfolio-eduapp-robot.png",
       gallery: ["assets/img/portfolio-eduapp-robot.png", "assets/img/portfolio-eduapp-home.jpeg"],
+      galleryCaptions: [
+        "Detail Materi & Ulasan — Robot yang Membantu",
+        "Beranda Eksplorasi Kelas & Topik EduApp"
+      ],
       links: {},
       highlight: ""
     },
     {
       id: "cerita-rakyat",
       title: "Cerita Rakyat Nusantara",
+      subtitle: "Aplikasi Literasi, Audio Narasi & Kuis Budaya Indonesia",
       category: "android",
       year: 2025,
       portrait: true,
-      summary: "Aplikasi baca dan menyimak cerita rakyat Nusantara (seperti Legenda Gunung Tangkuban Perahu) dengan fitur narasi audio interaktif, ilustrasi visual, dan navigasi halaman cerita.",
+      summary: "Aplikasi baca dan menyimak cerita rakyat Nusantara (seperti Legenda Gunung Tangkuban Perahu) dengan fitur narasi audio interaktif, ilustrasi visual, serta kuis evaluasi pemahaman cerita.",
+      points: [
+        "Pemutar cerita interaktif lengkap dengan narasi suara (audio storytelling), ilustrasi penuh warna, dan navigasi halaman cerita.",
+        "Katalog cerita rakyat dari berbagai daerah di Indonesia serta modul kuis pilihan ganda untuk menguji pemahaman pengguna."
+      ],
       role: "Android Developer & UI/UX Designer",
       stack: ["Kotlin", "Android SDK", "Material Design", "Room DB", "Firebase"],
       cover: "assets/img/portfolio-cerita-rakyat.png",
       gallery: ["assets/img/portfolio-cerita-rakyat.png", "assets/img/portfolio-cerita-home.jpeg", "assets/img/portfolio-cerita-quiz.jpeg"],
+      galleryCaptions: [
+        "Halaman Baca & Narasi Audio — Gunung Tangkuban Perahu",
+        "Beranda Koleksi Cerita Rakyat Nusantara",
+        "Modul Kuis Evaluasi Pemahaman Cerita"
+      ],
       links: {},
       highlight: ""
     },
     {
       id: "materi-pecahan",
       title: "EduMath — Materi Pembelajaran",
+      subtitle: "Media Belajar Matematika & Visualisasi Konsep Pecahan",
       category: "android",
       year: 2025,
       portrait: true,
       summary: "Aplikasi pembelajaran matematika mobile yang menyajikan materi interaktif seperti Pecahan dengan Penyebut Sama, dilengkapi diagram visual dan contoh penyelesaian langkah demi langkah.",
+      points: [
+        "Penyajian konsep matematika abstrak menjadi visualisasi diagram blok pecahan yang mudah dipahami siswa secara bertahap.",
+        "Menu kurikulum terstruktur yang mencakup materi inti, contoh soal aplikatif, serta latihan evaluasi mandiri."
+      ],
       role: "Android Developer",
       stack: ["Kotlin", "XML", "MVVM", "Firebase", "REST API"],
       cover: "assets/img/portfolio-materi-pecahan.png",
       gallery: ["assets/img/portfolio-materi-pecahan.png", "assets/img/portfolio-materi-home.jpeg"],
+      galleryCaptions: [
+        "Visualisasi Materi Pecahan dengan Penyebut Sama",
+        "Menu Utama & Kurikulum Pembelajaran EduMath"
+      ],
       links: {},
       highlight: ""
     },
     {
       id: "absensi-qr",
       title: "Presensi & Scan QR Check-In",
+      subtitle: "Sistem Kehadiran Karyawan Real-Time & Generator Kode QR",
       category: "android",
       year: 2026,
       portrait: true,
-      summary: "Aplikasi presensi karyawan modern dengan fitur Scan QR Check-In/Check-Out, pantauan status absensi harian real-time, rekap statistik bulanan (Hadir, Terlambat, Izin/Cuti), dan riwayat kehadiran.",
+      summary: "Aplikasi presensi karyawan modern dengan fitur Scan QR Check-In/Check-Out, pantauan status absensi harian real-time, rekap statistik bulanan (Hadir, Terlambat, Izin/Cuti), dan generator kode QR.",
+      points: [
+        "Dashboard kehadiran real-time yang merangkum jam masuk/pulang, statistik kehadiran bulanan, serta riwayat aktivitas presensi.",
+        "Pemindai kamera QR Code berkecepatan tinggi dan modul pembuatan (generate) QR Code unik untuk validasi kehadiran."
+      ],
       role: "Mobile Developer",
       stack: ["Kotlin", "Flutter", "QR Code Scanner", "SQLite", "REST API"],
       cover: "assets/img/portfolio-absensi-qr.png",
       gallery: ["assets/img/portfolio-absensi-qr.png", "assets/img/portfolio-absensi-generate.jpeg"],
+      galleryCaptions: [
+        "Dashboard Presensi, Statistik Bulanan & Scan QR Check-In",
+        "Modul Generator Kode QR Kehadiran"
+      ],
       links: {},
       highlight: ""
     },
     {
-      id: "kepalqu",
-      title: "KepalQu",
-      category: "android",
-      year: 2025,
-      summary: "Aplikasi Android untuk delivery/logistik.",
-      role: "Android Developer",
-      stack: ["Kotlin"],
-      cover: "assets/img/kepalqu.webp",
-      gallery: [],
-      links: {},
-      highlight: ""
-    },
-    {
-      id: "parent-notifications",
-      title: "Parent Notifications",
-      category: "android",
-      year: 2025,
-      summary: "Aplikasi untuk orang tua siswa SMK Model Patriot IV dengan notifikasi dan login berbasis WhatsApp.",
-      role: "Android Developer",
-      stack: ["Kotlin", "Firebase FCM"],
-      cover: "assets/img/parent-notifications.webp",
-      gallery: [],
-      links: {},
-      highlight: ""
-    },
-    {
-      id: "orion-studio",
-      title: "ORION Studio",
+      id: "sipen-pos",
+      title: "SIPEN — Kasir (POS) & Inventori Stok",
+      subtitle: "Sistem Informasi Penjualan, Manajemen Produk & Valuasi Persediaan Toko",
       category: "web",
       year: 2026,
-      summary: "Landing page 3D dengan animasi scroll.",
-      role: "Designer & Developer",
-      stack: ["Next.js", "Three.js"],
-      cover: "assets/img/orion.webp",
-      gallery: [],
+      portrait: false,
+      summary: "Aplikasi web Point of Sale (POS) dan manajemen inventori terpadu untuk operasional toko & kuliner — mencakup dashboard analitik omzet harian, pengelolaan data master produk & SKU, deteksi otomatis stok menipis, hingga laporan valuasi nilai aset modal dan potensi nilai jual.",
+      points: [
+        "Dashboard Analitik Real-Time: Memantau omzet harian, total transaksi berhasil, grafik tren penjualan 7 hari terakhir, daftar produk terlaris, serta peringatan produk dengan stok di bawah batas minimum lengkap dengan tombol aksi Restok cepat.",
+        "Manajemen Data Master & Daftar Produk: Pengelolaan katalog berbasis kode SKU (Kopi & Minuman, Makanan Utama, Camilan & Snack, Paket Hemat), pencarian instan, filter stok menipis, serta pengaturan harga beli, harga jual, dan status aktif.",
+        "Laporan Nilai Stok & Persediaan: Perhitungan otomatis Total Nilai Aset Modal (Rp 2.977.000), Potensi Nilai Jual (Rp 6.716.000), dan Total Unit Inventori (344 unit dari 15 produk aktif) yang dilengkapi fitur Ekspor CSV serta Cetak laporan."
+      ],
+      role: "Full-Stack Web Developer & UI/UX Designer",
+      stack: ["Laravel", "PHP", "MySQL", "Tailwind CSS", "JavaScript", "POS & Inventory", "CSV/Print Report"],
+      cover: "assets/img/portfolio-sipen-dashboard.png",
+      gallery: [
+        "assets/img/portfolio-sipen-dashboard.png",
+        "assets/img/portfolio-sipen-produk.png",
+        "assets/img/portfolio-sipen-laporan.png"
+      ],
+      galleryCaptions: [
+        "Dashboard SIPEN — Analitik Omzet, Produk Terlaris & Peringatan Stok Menipis",
+        "Data Master Produk — Pencarian SKU, Filter Kategori & Status Sisa Stok",
+        "Laporan Nilai Stok & Persediaan — Valuasi Aset Modal, Potensi Jual & Ekspor CSV"
+      ],
+      links: {},
+      highlight: "344 Unit · Valuasi Rp 6,71 Juta"
+    },
+    {
+      id: "mobilex-romlah",
+      title: "MobileX Romlah — E-Commerce & Order Panel",
+      subtitle: "Sistem Manajemen Katalog Toko Online, Inventori & Transaksi Pelanggan",
+      category: "web",
+      year: 2026,
+      portrait: false,
+      summary: "Platform admin e-commerce dan pengelolaan etalase toko online (MobileX Romlah) untuk mengatur katalog produk lintas kategori (Smartphones & Fashion/Batik), harga diskon, stok inventori, verifikasi pembayaran (BCA, Mandiri, QRIS), serta pelacakan status pengiriman pesanan pelanggan.",
+      points: [
+        "Katalog Produk & Inventori Multi-Kategori: Pengelolaan produk unggulan lengkap dengan slug URL otomatis, pengaturan harga coret/diskon, pantauan stok unit, pencarian Command Bar (⌘K), serta koneksi langsung ke Etalase Toko Depan.",
+        "Manajemen Pesanan & Transaksi Pelanggan: Pemantauan order masuk (#TR-20260918) dengan filter status berlapis (Pending, Paid, Processing, Shipped, Completed, Cancelled), rincian pembayaran (BCA, Mandiri, QRIS), dan input nomor resi ekspedisi."
+      ],
+      role: "Full-Stack Web Developer & UI/UX Designer",
+      stack: ["Laravel", "MySQL", "Tailwind CSS", "JavaScript", "E-Commerce Admin", "QRIS & Bank Transfer"],
+      cover: "assets/img/portfolio-mobilex-katalog.png",
+      gallery: [
+        "assets/img/portfolio-mobilex-katalog.png",
+        "assets/img/portfolio-mobilex-pesanan.png"
+      ],
+      galleryCaptions: [
+        "Katalog Produk Toko Romlah — Manajemen Varian, Harga Diskon & Stok Unit",
+        "Manajemen Pesanan Pelanggan — Pantauan Transaksi, Status Bayar & Ekspedisi"
+      ],
       links: {},
       highlight: ""
+    },
+    {
+      id: "templatku-ui",
+      title: "TemplatKu — AI UI Prototype & No-Code Studio",
+      subtitle: "Platform Generator Prototipe UI Berbahasa Indonesia & Visual Block Builder",
+      category: "web",
+      year: 2026,
+      portrait: false,
+      summary: "Platform prototipe UI pertama berbahasa Indonesia yang menyusun seluruh halaman, token warna, spesifikasi DESIGN.md, serta kode HTML & Vanilla CSS modular secara instan dari deskripsi kebutuhan sistem (Web Desktop maupun Mobile App), dilengkapi studio kanvas drag-and-drop blok UI.",
+      points: [
+        "Prompt-to-UI Berbahasa Indonesia & Tema Desain Terkurasi: Cukup ceritakan kebutuhan sistem (seperti dashboard penjualan UMKM, landing page SaaS, atau absensi karyawan), dan TemplatKu menyusun struktur antarmuka lengkap dengan pilihan tema desain terkurasi.",
+        "Visual Studio & Katalog Blok UI No-Code: Kanvas interaktif multi-halaman dengan katalog komponen siap pasang (4 Kartu KPI Dashboard, Donut & Sales Analytics, Tabel Recent Invoices, Navbar Modern), editor Design Tokens, fitur Rancang AI, dan Ekspor ZIP Pro."
+      ],
+      role: "Product Creator, UI/UX Architect & Full-Stack Developer",
+      stack: ["Laravel", "HTML5 & Vanilla CSS Modular", "JavaScript ES6+", "AI Prompt Builder", "No-Code UI Canvas", "Design Tokens"],
+      cover: "assets/img/portfolio-templatku-home.png",
+      gallery: [
+        "assets/img/portfolio-templatku-home.png",
+        "assets/img/portfolio-templatku-editor.png"
+      ],
+      galleryCaptions: [
+        "Beranda TemplatKu — AI Prompt Studio Berbahasa Indonesia & Tema Desain Terkurasi",
+        "Workspace Visual Editor — Katalog Blok UI Drag-and-Drop, Design Tokens & Ekspor ZIP"
+      ],
+      links: {},
+      highlight: "AI Prompt · No-Code UI Studio"
     },
     {
       id: "techop-id",
-      title: "techop.id",
+      title: "techop.id — Platform Agensi Solusi Digital",
+      subtitle: "Website Resmi Software House, Profil Tim Eksekutif & Simulasi Konsultasi IT",
       category: "web",
       year: 2026,
-      summary: "Company profile digital agency.",
-      role: "Designer & Developer",
-      stack: ["Laravel", "Tailwind"],
-      cover: "assets/img/techop.webp",
-      gallery: [],
+      portrait: false,
+      summary: "Platform web resmi penyedia layanan solusi digital @techop.id yang dipimpin oleh Wira Sukma Saputra sebagai Chief Executive Officer (CEO) — melayani Website Development, UI/UX Design Figma, Mobile App Development, dan Game Development dengan rekam jejak 100+ proyek selesai dan tingkat kepuasan 99%.",
+      points: [
+        "Beranda Layanan & Reputasi Agensi: Menampilkan ekosistem layanan teknologi (Web, UI/UX, Mobile App, Game Dev), metrik pencapaian (100+ Proyek Selesai, 24/7 Support, 99% Satisfaction), testimoni klien, dan showcase layanan Desain UI/UX Figma interaktif.",
+        "Jajaran Tim Profesional & Kepemimpinan CEO: Memperkenalkan struktur inti tim techop.id di mana Wira Sukma Saputra menjabat sebagai Chief Executive Officer (CEO) bersama jajaran Full Stack Developer, Android Developer, Copywriter, dan Game Developer.",
+        "Simulasi Diskusi & Konsultasi Proyek Interaktif: Fitur chat simulasi real-time bersama Tim Konsultan techop.id yang mengedukasi klien terkait garansi 30 hari pasca live, 100% hak milik source code & database ber-MoU legal, pantauan staging 24/7, serta integrasi WhatsApp."
+      ],
+      role: "Chief Executive Officer (CEO), Lead UI/UX & Full-Stack Developer",
+      stack: ["Laravel", "Tailwind CSS", "JavaScript", "Figma Design System", "Interactive Chat Simulator"],
+      cover: "assets/img/portfolio-techop-home.png",
+      gallery: [
+        "assets/img/portfolio-techop-home.png",
+        "assets/img/portfolio-techop-team.png",
+        "assets/img/portfolio-techop-konsultasi.png"
+      ],
+      galleryCaptions: [
+        "Beranda techop.id — Solusi Digital Terpercaya & Showcase Layanan",
+        "Kenali Tim Profesional Kami — Wira Sukma Saputra (CEO) & Tim Engineer",
+        "Tanya Langsung ke Tim Ahli — Simulasi Konsultasi Proyek & Garansi MoU"
+      ],
       links: {},
-      highlight: ""
+      highlight: "100+ Proyek · 99% Satisfaction"
     }
   ],
 

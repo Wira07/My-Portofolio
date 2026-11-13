@@ -1,0 +1,90 @@
+---
+title: "Parent Notifications (SMK Model Patriot IV)"
+slug: "parent-notifications"
+locale: "en"
+summary: "Native Android app for SMK Model Patriot IV parents featuring WhatsApp authentication and real-time Firebase FCM alerts."
+category: ["android", "uiux"]
+role: "Android Developer & UI/UX Designer"
+year: 2025
+duration: "TODO_METRIC"
+client: "SMK Model Patriot IV"
+stack: ["Kotlin", "Android Jetpack", "WhatsApp Login Auth", "Firebase FCM", "REST API"]
+cover: "/images/work/parent-notifications.png"
+coverAlt: "Blueprint of WhatsApp login and FCM notification pipeline for SMK Model Patriot IV"
+draft: true
+metrics:
+  - label: "Onboarded Guardians"
+    value: "TODO_METRIC"
+    note: "Awaiting school administration report"
+  - label: "Alert Delivery Latency"
+    value: "TODO_METRIC"
+    note: "Dependent on regional mobile carriers"
+links: {}
+architecture:
+  title: "WhatsApp Authentication & Real-Time FCM Push Flow"
+  caption: "Replaces forgotten email passwords with verified parent WhatsApp numbers already on file."
+  nodes:
+    - { id: "app", label: "Parent App", sub: "Kotlin + FCM Token", group: "input" }
+    - { id: "wa", label: "WhatsApp Gateway", sub: "OTP Verification", group: "core" }
+    - { id: "api", label: "School Backend", sub: "Guardian & Student Map", group: "core" }
+    - { id: "fcm", label: "Firebase FCM", sub: "Push Notification Fanout", group: "output" }
+    - { id: "db", label: "School Database", sub: "Attendance & Notices", group: "storage" }
+  edges:
+    - { from: "app", to: "api", label: "WA Login" }
+    - { from: "api", to: "wa", label: "Send OTP" }
+    - { from: "api", to: "db", label: "Verify Student" }
+    - { from: "api", to: "fcm", label: "Trigger Alert" }
+    - { from: "fcm", to: "app", label: "Instant Push" }
+  mermaid: |
+    sequenceDiagram
+      participant P as Parent Android App
+      participant B as School API
+      participant W as WhatsApp Gateway
+      participant F as Firebase FCM
+      P->>B: Request OTP via WA Number
+      B->>W: Deliver Verification Code
+      P->>B: Verify Code + Bind FCM Token
+      B->>F: Dispatch Attendance/Notice Alert
+      F-->>P: Real-Time Push Notification
+gallery:
+  - src: "/images/work/parent-notifications.png"
+    alt: "Parent Notifications system architecture diagram"
+    caption: "WhatsApp OTP onboarding and real-time Firebase Cloud Messaging alert flow."
+    width: 1280
+    height: 800
+featured: true
+order: 3
+---
+
+## Context
+
+Important school announcements and daily attendance updates frequently get buried in noisy parent group chats. **SMK Model Patriot IV** needed an official, private channel directly on guardians' Android devices.
+
+## Problem
+
+1. **Password friction**: Many parents rarely check email and easily lose password credentials.
+2. **Timely visibility**: Parents need high-priority alerts without opening an app manually every morning.
+3. **Multi-student households**: A single parent WhatsApp number must cleanly surface records for siblings enrolled at the same school.
+
+## Approach & Technical Trade-Offs
+
+- **WhatsApp Number + OTP Login over Email/Password**: Aligning login with the WhatsApp number already stored in school records eliminates onboarding drop-off. *Trade-off*: relies on gateway uptime, mitigated with OTP throttling and admin fallback verification.
+- **Automatic FCM Token Sync**: Refreshing tokens on login and `onNewToken` callbacks guarantees reliable alert routing.
+
+## Architecture
+
+The Android client authenticates via WhatsApp OTP against the school API, registers its FCM token against verified student profiles, and receives targeted push notifications whenever attendance or bulletin events trigger.
+
+## Outcomes
+
+- Frictionless passwordless onboarding paired with structured real-time notification routing.
+- Rollout metrics remain unconfirmed pending final school administration sign-off.
+
+## Lessons Learned
+
+For regional Indonesian EdTech, simplifying first-time authentication has greater adoption impact than adding extra secondary screens.
+
+## Gallery
+
+Architecture diagram illustrated above.
+

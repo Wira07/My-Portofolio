@@ -72,8 +72,12 @@ export function init(highlightsData) {
       const points = $$(".hl-card__points li", card);
       const chips = $$(".hl-card__tags .chip", card);
 
-      const tl = gsap.timeline({
-        scrollTrigger: { trigger: card, start: "top 88%", once: true }
+      const tl = gsap.timeline({ paused: true });
+      ScrollTrigger.create({
+        trigger: card,
+        start: "top 88%",
+        once: true,
+        onEnter: () => tl.play()
       });
 
       tl.fromTo(

@@ -1,0 +1,83 @@
+---
+title: "YOLO11 Object Detection System"
+slug: "yolo11-detection"
+locale: "en"
+summary: "Reproducible YOLO11 object detection training and evaluation pipeline paired with structured client-ready documentation."
+category: ["ai"]
+role: "Computer Vision Engineer & Technical Writer"
+year: 2025
+duration: "TODO_METRIC"
+client: "Computer Vision R&D Client"
+stack: ["Python", "YOLO11", "OpenCV", "ONNX", "Dataset Curation", "Technical Docs"]
+cover: "/images/work/yolo11-detection.png"
+coverAlt: "YOLO11 reproducible training and client handover pipeline architecture"
+draft: true
+metrics:
+  - label: "Validation mAP@50"
+    value: "TODO_METRIC"
+    note: "Pending final client object classes"
+  - label: "Batch Inference Speed"
+    value: "TODO_METRIC"
+    note: "Pending target server hardware run"
+links: {}
+architecture:
+  title: "YOLO11 Curation, Training, Evaluation & Client Handover Pipeline"
+  caption: "Versioned dataset splits and declarative training configs make experiments reproducible by client teams."
+  nodes:
+    - { id: "raw", label: "Dataset Curation", sub: "Verified Labels & Splits", group: "input" }
+    - { id: "train", label: "YOLO11 Training", sub: "Controlled Augmentation", group: "core" }
+    - { id: "eval", label: "Metric Evaluation", sub: "Confusion Matrix & Audit", group: "core" }
+    - { id: "export", label: "Model Export", sub: "PT / ONNX Artifacts", group: "storage" }
+    - { id: "docs", label: "Client Playbook", sub: "Inference & Retrain Guide", group: "output" }
+  edges:
+    - { from: "raw", to: "train", label: "YAML Split" }
+    - { from: "train", to: "eval", label: "Best Weights" }
+    - { from: "eval", to: "export", label: "Verified Model" }
+    - { from: "eval", to: "docs", label: "Threshold Guide" }
+  mermaid: |
+    flowchart LR
+      D[Curated Dataset] --> T[YOLO11 Training Pipeline]
+      T --> E[Evaluation & Error Analysis]
+      E --> X[PT / ONNX Model Artifacts]
+      E --> DOC[Reproducible Client Playbook]
+gallery:
+  - src: "/images/work/yolo11-detection.png"
+    alt: "YOLO11 object detection training and documentation workflow"
+    caption: "End-to-end delivery from dataset audit to reproducible client documentation."
+    width: 1280
+    height: 800
+featured: false
+order: 7
+---
+
+## Context
+
+Many computer vision engagements end as brittle experiment notebooks that client engineers struggle to rerun six months later. This **YOLO11 Object Detection** project paired model engineering directly with maintainable client handover documentation.
+
+## Problem
+
+1. **Inconsistent raw bounding-box labels** created noise during baseline training runs.
+2. **Operational handover gap**: Client teams required clear inference scripts, calibrated confidence thresholds, and retraining playbooks for future data drops.
+
+## Approach & Technical Trade-Offs
+
+- **Dataset Audit Prior to Model Scaling**: Cleaned mislabeled bounding boxes and eliminated train/validation leakage before adjusting model capacities. *Trade-off*: higher upfront curation effort, dramatically more trustworthy validation scores.
+- **Declarative Run Configs + Playbook**: Bundled evaluation scripts, failure-mode notes, and retraining commands alongside exported ONNX/PT artifacts.
+
+## Architecture
+
+Four deterministic stages link validated dataset YAML manifests to controlled YOLO11 training, error-analysis exports, and structured client operational manuals.
+
+## Outcomes
+
+- Reproducible vision workflow and client-ready inference/retraining playbook delivered cleanly.
+- Quantitative benchmark numbers remain withheld for verification pending final client sign-off.
+
+## Lessons Learned
+
+For client-facing AI work, clear failure-mode boundaries and retraining instructions carry just as much value as the weights file itself.
+
+## Gallery
+
+Pipeline topology illustrated above.
+

@@ -1,0 +1,94 @@
+---
+title: "techop.id"
+slug: "techop-id"
+locale: "en"
+summary: "Official digital agency web platform built with Laravel Blade and Tailwind CSS featuring an interactive project consultation flow."
+category: ["web", "uiux"]
+role: "Lead UI/UX & Full-Stack Laravel Developer"
+year: 2026
+duration: "4 weeks"
+client: "techop.id Digital Agency"
+stack: ["Laravel", "Blade Templates", "Tailwind CSS", "JavaScript", "Figma Design System"]
+cover: "/images/projects/portfolio-techop-home.png"
+coverAlt: "Landing interface of techop.id digital agency web platform"
+draft: false
+metrics:
+  - label: "Structured Service Tracks"
+    value: "4 Tracks"
+    note: "Web, UI/UX Figma, Mobile App, Game Dev"
+  - label: "Lead Conversion Rate"
+    value: "TODO_METRIC"
+    note: "Post-launch analytics tracking in progress"
+links: {}
+architecture:
+  title: "techop.id Server-Rendered Agency Architecture & Consultation Flow"
+  caption: "Laravel Blade SSR paired with lightweight vanilla interactive consultation components."
+  nodes:
+    - { id: "visitor", label: "Prospective Client", sub: "Desktop & Mobile Browser", group: "input" }
+    - { id: "laravel", label: "Laravel Router", sub: "Blade SSR + Vite Assets", group: "core" }
+    - { id: "sim", label: "Consultation Module", sub: "Interactive Scope Q&A", group: "core" }
+    - { id: "content", label: "Service Catalog", sub: "Packages & Team Profiles", group: "storage" }
+    - { id: "wa", label: "WhatsApp / Leads", sub: "Direct Engineering Intake", group: "output" }
+  edges:
+    - { from: "visitor", to: "laravel", label: "HTTP Request" }
+    - { from: "content", to: "laravel", label: "Hydrate Views" }
+    - { from: "laravel", to: "sim", label: "Render Flow" }
+    - { from: "sim", to: "wa", label: "Scoped Inquiry" }
+  mermaid: |
+    flowchart LR
+      U[Prospective Client] --> R[Laravel Blade SSR]
+      D[(Service & Team Data)] --> R
+      R --> S[Interactive Consultation Simulator]
+      S --> WA[WhatsApp / Project Intake]
+gallery:
+  - src: "/images/projects/portfolio-techop-home.png"
+    alt: "techop.id primary landing page showcase"
+    caption: "Agency landing page with structured service matrix and clean pill navigation."
+    width: 1280
+    height: 800
+  - src: "/images/projects/portfolio-techop-team.png"
+    alt: "techop.id leadership and engineering team showcase"
+    caption: "Cross-disciplinary team presentation establishing technical credibility."
+    width: 1280
+    height: 800
+  - src: "/images/projects/portfolio-techop-konsultasi.png"
+    alt: "techop.id interactive project consultation interface"
+    caption: "Guided Q&A simulator explaining warranties and MoU source code ownership."
+    width: 1280
+    height: 800
+featured: false
+order: 5
+---
+
+## Context
+
+Prospective SME and corporate clients often hesitate to contact agencies whose websites obscure the engineers behind the work, post-launch warranty policies, and how service tracks are structured in-house.
+
+## Problem
+
+1. **Fast mobile delivery with refined aesthetics**: Heavy client-side agency templates frequently stall over Indonesian mobile networks.
+2. **Pre-sales clarity**: Repeated questions around source code ownership, MoUs, and support windows needed clear answers upfront.
+3. **Structured team visibility**: Visitors want transparency into leadership and technical specialization before booking a call.
+
+## Approach & Technical Trade-Offs
+
+- **Laravel Blade SSR + Tailwind CSS over Heavy SPA**: Server rendering yields fast initial document paint and predictable SEO indexing across service landing pages without client routing overhead.
+- **Interactive Consultation Simulator**: Surfaces contractual clarity (30-day warranty, full source ownership) in a familiar Q&A flow before escalating to WhatsApp.
+
+## Architecture
+
+Modular Laravel routes pull curated service catalogs and team data, composing semantic Blade layouts enhanced progressively with zero-framework JavaScript interactions.
+
+## Outcomes
+
+- Delivered cohesive four-track service showcase, transparent team directory, and guided consultation simulator.
+- Long-term lead conversion analytics remain withheld for verification.
+
+## Lessons Learned
+
+Stating ownership terms and engineering workflow clearly on the landing experience elevates the quality of incoming project briefs.
+
+## Gallery
+
+Production interface captures displayed above.
+

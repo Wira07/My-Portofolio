@@ -1,0 +1,77 @@
+---
+import type { WorkEntry } from "@/lib/content";
+import { formatMetricValue } from "@/lib/content";
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+
+interface Props {
+  item: WorkEntry;
+  locale: Locale;
+}
+
+const { item, locale } = Astro.props;
+const durationFormatted = formatMetricValue(item.data.duration);
+const hasLinks = Boolean(item.data.links?.live || item.data.links?.repo || item.data.links?.demo);
+---
+
+<aside class="rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface)] p-5">
+  <dl class="divide-y divide-[var(--line)] text-sm">
+    <div class="py-3 first:pt-0">
+      <dt class="mono-label text-[var(--text-dim)]">{t(locale, "work.meta.role")}</dt>
+      <dd class="mt-1 font-medium text-[var(--text)]">{item.data.role}</dd>
+    </div>
+    <div class="py-3">
+      <dt class="mono-label text-[var(--text-dim)]">{t(locale, "work.meta.duration")}</dt>
+      <dd class="mt-1 font-mono text-[var(--text)]">
+        {durationFormatted.display}
+      </dd>
+    </div>
+    <div class="py-3">
+      <dt class="mono-label text-[var(--text-dim)]">{t(locale, "work.meta.year")}</dt>
+      <dd class="mt-1 font-mono text-[var(--text)]">{item.data.year}</dd>
+    </div>
+    <div class="py-3">
+      <dt class="mono-label text-[var(--text-dim)]">{t(locale, "work.meta.client")}</dt>
+      <dd class="mt-1 text-[var(--text)]">{item.data.client}</dd>
+    </div>
+    <div class="py-3">
+      <dt class="mono-label text-[var(--text-dim)]">{t(locale, "work.meta.stack")}</dt>
+      <dd class="mt-2 flex flex-wrap gap-1.5">
+        {item.data.stack.map((tech) => (
+          <span class="rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-2)] px-2 py-0.5 font-mono text-[11px] text-[var(--text)]">
+            {tech}
+          </span>
+        ))}
+      </dd>
+    </div>
+    <div class="py-3 last:pb-0">
+      <dt class="mono-label text-[var(--text-dim)]">{t(locale, "work.meta.links")}</dt>
+      <dd class="mt-2">
+        {
+          hasLinks ? (
+            <div class="flex flex-wrap gap-2">
+              {item.data.links.live && (
+                <a href={item.data.links.live} target="_blank" rel="noopener noreferrer" class="link-underline font-mono text-xs text-[var(--accent)]">
+                  {t(locale, "work.meta.live")} ↗
+                </a>
+              )}
+              {item.data.links.repo && (
+                <a href={item.data.links.repo} target="_blank" rel="noopener noreferrer" class="link-underline font-mono text-xs text-[var(--accent)]">
+                  {t(locale, "work.meta.repo")} ↗
+                </a>
+              )}
+              {item.data.links.demo && (
+                <a href={item.data.links.demo} target="_blank" rel="noopener noreferrer" class="link-underline font-mono text-xs text-[var(--accent)]">
+                  {t(locale, "work.meta.demo")} ↗
+                </a>
+              )}
+            </div>
+          ) : (
+            <span class="font-mono text-xs text-[var(--text-dim)]">{t(locale, "work.meta.confidential")}</span>
+          )
+        }
+      </dd>
+    </div>
+  </dl>
+</aside>
+

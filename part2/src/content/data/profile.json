@@ -1,0 +1,159 @@
+{
+  "studioName": "wira.studio",
+  "ownerName": "Wira Sukma Saputra",
+  "portrait": "/images/projects/wira-portrait.png",
+  "location": {
+    "id": "Kuningan, Jawa Barat, Indonesia",
+    "en": "West Java, Indonesia"
+  },
+  "email": "wiralodrasaputra07@gmail.com",
+  "emailUser": "wiralodrasaputra07",
+  "emailDomain": "gmail.com",
+  "whatsappUrl": "https://wa.me/6281219195308",
+  "whatsappDisplay": "+62 812-1919-5308",
+  "social": {
+    "github": "https://github.com/wira07",
+    "linkedin": "https://linkedin.com/in/wira-sukma-saputra"
+  },
+  "documents": {
+    "cv": "/cv.pdf",
+    "capabilityDeck": "/capability-deck.pdf"
+  },
+  "status": {
+    "available": true,
+    "id": "Menerima proyek baru — Q1 2027",
+    "en": "Available for select work — Q1 2027"
+  },
+  "siteVersion": "v2.0.0",
+  "commitRef": "studio-ed10",
+  "pillars": {
+    "id": [
+      {
+        "code": "01",
+        "title": "Full-stack End-to-End",
+        "desc": "Rekayasa lintas lapisan: Web (PHP/Laravel, JavaScript), Android (Kotlin), telemetri IoT (MQTT), Computer Vision (Python, YOLO11), dan UI/UX."
+      },
+      {
+        "code": "02",
+        "title": "Product Thinking",
+        "desc": "Berangkat dari spesifikasi masalah (PRD) dan arsitektur sistem sebelum menulis baris kode pertama hingga deployment."
+      },
+      {
+        "code": "03",
+        "title": "Konteks Lokal Indonesia",
+        "desc": "Teruji membangun aplikasi nyata untuk sekolah, UMKM, logistik, dan perangkat monitoring industri dengan jaringan terbatas."
+      },
+      {
+        "code": "04",
+        "title": "Transparansi Proses",
+        "desc": "Serah terima lengkap beserta dokumentasi arsitektur, keputusan trade-off, dan panduan operasional klien-ready."
+      }
+    ],
+    "en": [
+      {
+        "code": "01",
+        "title": "Full-Stack End-to-End",
+        "desc": "Unified engineering across Web (PHP/Laravel, JavaScript), Android (Kotlin), IoT telemetry (MQTT), Computer Vision (Python, YOLO11), and UI/UX."
+      },
+      {
+        "code": "02",
+        "title": "Product Thinking",
+        "desc": "Working backward from written product requirements and system boundaries before writing production code or shipping releases."
+      },
+      {
+        "code": "03",
+        "title": "Indonesian Context",
+        "desc": "Battle-tested software built for schools, SMEs, logistics teams, and industrial hardware operating on variable local networks."
+      },
+      {
+        "code": "04",
+        "title": "Process Transparency",
+        "desc": "Handover packages always include clear architectural notes, explicit trade-offs, and client-ready operational documentation."
+      }
+    ]
+  },
+  "education": [
+    {
+      "period": "Sep 2021 – Mei 2025",
+      "degree": {
+        "id": "S1 Teknik Informatika",
+        "en": "B.Sc. in Informatics Engineering"
+      },
+      "institution": "Universitas Kuningan — Fakultas Ilmu Komputer",
+      "note": {
+        "id": "Fokus rekayasa aplikasi mobile Android, sistem web full-stack, serta kolaborasi riset terapan bersama dosen.",
+        "en": "Focused on native Android engineering, full-stack web architecture, and applied university research collaborations."
+      }
+    }
+  ],
+  "experience": [
+    {
+      "period": "Sep 2025 – Sekarang",
+      "periodEn": "Sep 2025 – Present",
+      "role": "Web Developer",
+      "org": "PT. Hadiscada Inovasindo",
+      "summary": {
+        "id": "Mengembangkan sistem web korporat, portal monitoring industri multi-tenant, dan integrasi telemetri perangkat lapangan.",
+        "en": "Building corporate web platforms, multi-tenant industrial telemetry dashboards, and real-time device integration."
+      }
+    },
+    {
+      "period": "Okt 2024 – Sekarang",
+      "periodEn": "Oct 2024 – Present",
+      "role": "Android Developer & UI/UX Designer",
+      "org": "Jobnation.id",
+      "summary": {
+        "id": "Merancang antarmuka Figma hingga implementasi aplikasi Android yang konsisten antara sistem desain dan kode produksi.",
+        "en": "Bridging Figma design systems directly into production Android implementations and iterative usability testing."
+      }
+    },
+    {
+      "period": "Jan 2024 – Apr 2025",
+      "periodEn": "Jan 2024 – Apr 2025",
+      "role": "Freelance Android Developer",
+      "org": "Independen / Klien Pendidikan & Bisnis",
+      "summary": {
+        "id": "Mengembangkan aplikasi Android berbasis Kotlin & Jetpack Compose dengan integrasi Firebase Auth, FCM, REST API, serta edge TFLite.",
+        "en": "Delivered production Kotlin & Jetpack Compose Android applications integrated with Firebase, FCM, REST APIs, and TFLite."
+      }
+    },
+    {
+      "period": "Jan 2023 – Des 2024",
+      "periodEn": "Jan 2023 – Dec 2024",
+      "role": "Freelance UI/UX Designer",
+      "org": "Startup, UMKM & Agensi Digital",
+      "summary": {
+        "id": "Menyusun arsitektur informasi, wireframe, dan design system terukur lengkap dengan dokumentasi hand-off untuk tim developer.",
+        "en": "Crafted information architecture, wireframes, interactive prototypes, and WCAG-aware Figma design systems."
+      }
+    }
+  ],
+  "certifications": [
+    {
+      "org": "Bangkit Academy 2023",
+      "title": "Cloud Computing Learning Path (Google, Gojek, Tokopedia, Traveloka)",
+      "year": "2023"
+    },
+    {
+      "org": "Dicoding Indonesia",
+      "title": "Android Developer & Jetpack Compose Specialist",
+      "year": "2023–2024"
+    },
+    {
+      "org": "Dicoding Indonesia",
+      "title": "Belajar Prinsip Pemrograman Kotlin & Fundamental Aplikasi Android",
+      "year": "2023"
+    },
+    {
+      "org": "Dicoding Indonesia",
+      "title": "Cloud Practitioner Essentials (AWS) & Back-End Web (PHP/Node.js)",
+      "year": "2023"
+    },
+    {
+      "org": "IT Festival UNIKU",
+      "title": "Juara 2 Kompetisi UI/UX Figma Tingkat Kabupaten Kuningan",
+      "year": "2022"
+    }
+  ]
+}
+

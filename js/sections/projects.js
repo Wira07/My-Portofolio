@@ -63,15 +63,33 @@ export function init(projects) {
 
     $$(".project__row", list).forEach((row) => {
       const p = byId.get(row.dataset.id);
+      const rowThumbImg = $(".project__thumb-img", row);
+      const screenItems = $$(".project__screen-item", row);
+
       row.addEventListener("pointerenter", (e) => {
-        previewImg.src = p.cover;
+        previewImg.src = rowThumbImg ? rowThumbImg.src : p.cover;
         previewFrame.classList.toggle("is-portrait", Boolean(p.portrait));
         gsap.set(preview, { x: e.clientX + 40, y: e.clientY });
         gsap.fromTo(previewFrame, { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.5, ease: motion.ease.out, overwrite: true });
       }, { signal: ac.signal });
+
       row.addEventListener("pointerleave", () => {
+        if (rowThumbImg && rowThumbImg.src !== p.cover) {
+          rowThumbImg.src = p.cover;
+          screenItems.forEach((el, idx) => el.classList.toggle("is-active", idx === 0));
+        }
         gsap.to(previewFrame, { clipPath: "inset(0% 0% 100% 0%)", duration: 0.4, ease: motion.ease.inOut, overwrite: true });
       }, { signal: ac.signal });
+
+      screenItems.forEach((item) => {
+        item.addEventListener("pointerenter", () => {
+          const src = item.dataset.screenSrc;
+          if (!src) return;
+          screenItems.forEach((el) => el.classList.toggle("is-active", el === item));
+          if (rowThumbImg) rowThumbImg.src = src;
+          previewImg.src = src;
+        }, { signal: ac.signal });
+      });
     });
     return () => { ac.abort(); gsap.set(preview, { clearProps: "all" }); };
   });
@@ -111,20 +129,104 @@ export function init(projects) {
   };
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-  function fill(p) {
+  let activeProject = null;
+  let activeScreenIdx = 0;
+
+  function setModalScreen(idx) {
+    if (!activeProject) return;
+    const gal = Array.isArray(activeProject.gallery) && activeProject.gallery.length ? activeProject.gallery : [activeProject.cover];
+    const caps = Array.isArray(activeProject.galleryCaptions) ? activeProject.galleryCaptions : [];
+    activeScreenIdx = ((idx % gal.length) + gal.length) % gal.length;
+
+    const coverImg = $("#modal-cover-img");
+    const capText = $("#modal-caption-text");
+    const capCount = $("#modal-caption-count");
+
+    if (coverImg) {
+      gsap.fromTo(coverImg, { opacity: 0.35, scale: 0.985 }, { opacity: 1, scale: 1, duration: 0.35, ease: "power2.out" });
+      coverImg.src = gal[activeScreenIdx];
+      coverImg.alt = caps[activeScreenIdx] || `Tampilan proyek ${activeProject.title}`;
+    }
+    if (capText) {
+      capText.textContent = caps[activeScreenIdx] || `${activeProject.title} — Tampilan ${activeScreenIdx + 1}`;
+    }
+    if (capCount) {
+      capCount.textContent = `Layar ${String(activeScreenIdx + 1).padStart(2, "0")} / ${String(gal.length).padStart(2, "0")}`;
+    }
+
+    $$(".modal__gallery-item", contentEl).forEach((btn, i) => {
+      btn.classList.toggle("is-active", i === activeScreenIdx);
+      btn.setAttribute("aria-pressed", String(i === activeScreenIdx));
+    });
+  }
+
+  function fill(p, initialIdx = 0) {
+    activeProject = p;
+    const gal = Array.isArray(p.gallery) && p.gallery.length ? p.gallery : [p.cover];
+    const caps = Array.isArray(p.galleryCaptions) ? p.galleryCaptions : [];
+    activeScreenIdx = Math.max(0, Math.min(gal.length - 1, initialIdx));
+
+    const currentSrc = gal[activeScreenIdx] || p.cover;
+    const currentCap = caps[activeScreenIdx] || `${p.title} — Tampilan Utama`;
+
+    const pointsHtml =
+      Array.isArray(p.points) && p.points.length
+        ? `<div class="modal__points-wrap">
+            <h3 class="label modal__points-title">Fitur &amp; Sorotan Utama</h3>
+            <ul class="modal__points">
+              ${p.points.map((pt) => `<li>${esc(pt)}</li>`).join("")}
+            </ul>
+          </div>`
+        : "";
+
+    const galleryHtml =
+      gal.length > 1
+        ? `<div class="modal__gallery-section" style="margin-top:var(--sp-8)">
+            <p class="label modal__gallery-label">Galeri Tangkapan Layar (${gal.length} Layar — Klik untuk memperbesar)</p>
+            <div class="modal__gallery${p.portrait ? " modal__gallery--portrait" : ""}" role="group" aria-label="Galeri tangkapan layar proyek">
+              ${gal
+                .map(
+                  (g, idx) => `
+                <button class="modal__gallery-item${idx === activeScreenIdx ? " is-active" : ""}" type="button" data-gal-idx="${idx}" aria-pressed="${idx === activeScreenIdx}">
+                  <span class="modal__gallery-thumb"><img src="${esc(g)}" alt="${esc(caps[idx] || `${p.title} layar ${idx + 1}`)}" loading="lazy"></span>
+                  <span class="modal__gallery-cap"><b>${String(idx + 1).padStart(2, "0")}</b> ${esc(caps[idx] || `Tampilan ${idx + 1}`)}</span>
+                </button>`
+                )
+                .join("")}
+            </div>
+          </div>`
+        : "";
+
     contentEl.innerHTML = `
-      <p class="label section__eyebrow" data-m><b>${esc(p.year)}</b> ${esc(CATEGORY_LABEL[p.category] || p.category)}</p>
+      <p class="label section__eyebrow" data-m><b>${esc(p.year)}</b> ${esc(CATEGORY_LABEL[p.category] || p.category)}${p.subtitle ? ` · ${esc(p.subtitle)}` : ""}</p>
       <h2 class="modal__title" id="modal-title" data-m>${esc(p.title)}</h2>
-      <div class="modal__cover${p.portrait ? " modal__cover--portrait" : ""}" id="modal-cover" style="margin-top:var(--sp-8)"><img src="${esc(p.cover)}" alt="Tampilan proyek ${esc(p.title)}" width="1200" height="750"></div>
+      <div class="modal__cover${p.portrait ? " modal__cover--portrait" : ""}" id="modal-cover" style="margin-top:var(--sp-8)">
+        <img id="modal-cover-img" src="${esc(currentSrc)}" alt="${esc(currentCap)}" width="1200" height="750">
+      </div>
+      <div class="modal__caption-bar" data-m>
+        <div class="modal__caption-info">
+          <span class="label modal__caption-count" id="modal-caption-count">Layar ${String(activeScreenIdx + 1).padStart(2, "0")} / ${String(gal.length).padStart(2, "0")}</span>
+          <p class="modal__caption-text" id="modal-caption-text">${esc(currentCap)}</p>
+        </div>
+        ${
+          gal.length > 1
+            ? `<div class="modal__caption-nav">
+                <button class="btn btn--ghost btn--sm" type="button" data-gal-prev aria-label="Layar sebelumnya">← Sebelumnya</button>
+                <button class="btn btn--ghost btn--sm" type="button" data-gal-next aria-label="Layar berikutnya">Berikutnya →</button>
+              </div>`
+            : ""
+        }
+      </div>
       <div class="modal__body">
         <div data-m>
           <p class="modal__summary">${esc(p.summary)}</p>
-          ${p.highlight ? `<p class="stat__num grad" style="margin-top:var(--sp-6)">${esc(p.highlight)}</p>` : ""}
-          ${p.gallery && p.gallery.length ? `<div class="modal__gallery${p.portrait ? " modal__gallery--portrait" : ""}" style="margin-top:var(--sp-8)" tabindex="0" aria-label="Galeri proyek">${p.gallery.map((g) => `<img src="${esc(g)}" alt="" loading="lazy">`).join("")}</div>` : ""}
+          ${p.highlight ? `<p class="stat__num grad" style="margin-top:var(--sp-6);font-size:clamp(1.6rem,3vw,2.6rem)">${esc(p.highlight)}</p>` : ""}
+          ${pointsHtml}
+          ${galleryHtml}
         </div>
         <dl class="modal__facts" data-m>
           <div class="modal__fact"><dt class="label">Peran</dt><dd>${esc(p.role)}</dd></div>
-          <div class="modal__fact"><dt class="label">Stack</dt><dd class="modal__stack">${p.stack.map((s) => `<span class="chip">${esc(s)}</span>`).join("")}</dd></div>
+          <div class="modal__fact"><dt class="label">Stack &amp; Teknologi</dt><dd class="modal__stack">${p.stack.map((s) => `<span class="chip">${esc(s)}</span>`).join("")}</dd></div>
           <div class="modal__fact"><dt class="label">Tautan</dt><dd class="modal__links">${fmtLinks(p.links)}</dd></div>
         </dl>
       </div>`;
@@ -141,13 +243,13 @@ export function init(projects) {
     return null;
   }
 
-  function openModal(row) {
+  function openModal(row, initialIdx = 0) {
     const p = byId.get(row.dataset.id);
     if (!p || isOpen) return;
     isOpen = true;
     lastFocus = row;
     source = sourceFor(row);
-    fill(p);
+    fill(p, initialIdx);
 
     modal.classList.add("is-open");
     modal.setAttribute("aria-hidden", "false");
@@ -207,20 +309,41 @@ export function init(projects) {
   }
 
   list.addEventListener("click", (e) => {
+    const screenEl = e.target.closest(".project__screen-item");
     const row = e.target.closest(".project__row");
-    if (row) openModal(row);
+    if (row) {
+      const idx = screenEl ? Number(screenEl.dataset.screenIdx) || 0 : 0;
+      openModal(row, idx);
+    }
   });
   closeBtn.addEventListener("click", closeModal);
   backdrop.addEventListener("click", closeModal);
   contentEl.addEventListener("click", (e) => {
     const a = e.target.closest("[data-close]");
-    if (a) closeModal();
+    if (a) {
+      closeModal();
+      return;
+    }
+    const galItem = e.target.closest("[data-gal-idx]");
+    if (galItem) {
+      setModalScreen(Number(galItem.dataset.galIdx) || 0);
+      return;
+    }
+    if (e.target.closest("[data-gal-prev]")) {
+      setModalScreen(activeScreenIdx - 1);
+      return;
+    }
+    if (e.target.closest("[data-gal-next]")) {
+      setModalScreen(activeScreenIdx + 1);
+    }
   });
 
-  // Esc menutup + focus trap
+  // Esc menutup + panah kiri/kanan galeri + focus trap
   document.addEventListener("keydown", (e) => {
     if (!isOpen) return;
     if (e.key === "Escape") { e.preventDefault(); closeModal(); return; }
+    if (e.key === "ArrowLeft") { setModalScreen(activeScreenIdx - 1); return; }
+    if (e.key === "ArrowRight") { setModalScreen(activeScreenIdx + 1); return; }
     if (e.key !== "Tab") return;
     const focusables = $$('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])', modal).filter((el) => el.offsetParent !== null || el === closeBtn);
     if (!focusables.length) return;

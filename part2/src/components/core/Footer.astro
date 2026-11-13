@@ -1,0 +1,189 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { localePath, t } from "@/lib/i18n";
+import { getProfile } from "@/lib/content";
+import Wordmark from "./Wordmark.astro";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const profile = getProfile();
+
+const sitemapLinks = [
+  { href: localePath(locale, "/"), label: t(locale, "nav.home") },
+  { href: localePath(locale, "/work"), label: t(locale, "nav.work") },
+  { href: localePath(locale, "/capabilities"), label: t(locale, "nav.capabilities") },
+  { href: localePath(locale, "/process"), label: t(locale, "nav.process") },
+  { href: localePath(locale, "/notes"), label: t(locale, "nav.notes") },
+  { href: localePath(locale, "/about"), label: t(locale, "nav.about") },
+  { href: localePath(locale, "/engage"), label: t(locale, "nav.engage") },
+  { href: localePath(locale, "/uses"), label: t(locale, "nav.uses") }
+];
+---
+
+<footer class="border-t border-[var(--line)] bg-[var(--surface)] py-14">
+  <div class="studio-container">
+    <div class="grid grid-cols-1 gap-10 md:grid-cols-12">
+      <div class="md:col-span-5">
+        <Wordmark href={localePath(locale, "/")} label={t(locale, "meta.brand")} />
+        <p class="mt-3 max-w-sm text-sm text-[var(--text-dim)]">
+          {t(locale, "meta.studioDescriptor")} — {profile.location[locale]}
+        </p>
+        <div class="mt-5 inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] px-3 py-1.5 font-mono text-xs">
+          <span class="text-[var(--text-dim)]">{t(locale, "footer.localTimeLabel")}:</span>
+          <span id="wib-clock" class="text-[var(--accent)] tabular-nums">--:-- WIB</span>
+        </div>
+      </div>
+
+      <div class="md:col-span-3">
+        <h2 class="mono-label text-[var(--text-dim)]">{t(locale, "footer.sitemapTitle")}</h2>
+        <ul class="mt-4 grid grid-cols-2 gap-2.5 text-sm">
+          {
+            sitemapLinks.map((item) => (
+              <li>
+                <a href={item.href} class="text-[var(--text)] no-underline transition-colors hover:text-[var(--accent)]">
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="md:col-span-4 flex flex-col justify-between gap-6">
+        <div>
+          <h2 class="mono-label text-[var(--text-dim)]">{t(locale, "footer.connectTitle")}</h2>
+          <div class="mt-4 flex flex-col gap-2.5 text-sm">
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                id="footer-email-btn"
+                data-u={profile.emailUser}
+                data-d={profile.emailDomain}
+                data-copied={t(locale, "footer.emailCopied")}
+                data-default={t(locale, "footer.copyEmail")}
+                class="inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] px-3 py-1.5 font-mono text-xs text-[var(--text)] transition-colors hover:border-[var(--accent)]"
+              >
+                <span id="footer-email-display">
+                  {profile.emailUser} [at] {profile.emailDomain}
+                </span>
+                <span class="text-[var(--accent)]" id="footer-email-status">
+                  {t(locale, "footer.copyEmail")}
+                </span>
+              </button>
+            </div>
+            <div class="mt-1 flex flex-wrap gap-4 font-mono text-xs">
+              <a
+                href={profile.social.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-underline text-[var(--text-dim)] hover:text-[var(--text)]"
+              >
+                GitHub
+              </a>
+              <a
+                href={profile.social.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-underline text-[var(--text-dim)] hover:text-[var(--text)]"
+              >
+                LinkedIn
+              </a>
+              <a
+                href={profile.whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-underline text-[var(--text-dim)] hover:text-[var(--text)]"
+              >
+                WhatsApp
+              </a>
+              <a href="/rss.xml" class="link-underline text-[var(--text-dim)] hover:text-[var(--text)]">
+                RSS
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 class="mono-label text-[var(--text-dim)]">{t(locale, "footer.docsTitle")}</h2>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <a
+              href={profile.documents.cv}
+              download
+              class="rounded-[var(--radius-md)] border border-[var(--line)] px-3 py-1.5 font-mono text-xs text-[var(--text)] no-underline transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            >
+              {t(locale, "footer.cvLabel")}
+            </a>
+            <a
+              href={profile.documents.capabilityDeck}
+              download
+              class="rounded-[var(--radius-md)] border border-[var(--line)] px-3 py-1.5 font-mono text-xs text-[var(--text)] no-underline transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            >
+              {t(locale, "footer.deckLabel")}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-12 flex flex-col gap-3 border-t border-[var(--line)] pt-6 font-mono text-xs text-[var(--text-dim)] sm:flex-row sm:items-center sm:justify-between">
+      <p>
+        © {new Date().getFullYear()} {profile.ownerName} — {profile.studioName}
+      </p>
+      <p>
+        {t(locale, "footer.versionLabel")}: {profile.siteVersion}+{profile.commitRef}
+      </p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function setupFooter() {
+    const clock = document.getElementById("wib-clock");
+    if (clock) {
+      const updateClock = () => {
+        try {
+          const now = new Date();
+          const fmt = new Intl.DateTimeFormat("en-GB", {
+            timeZone: "Asia/Jakarta",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+          }).format(now);
+          clock.textContent = `${fmt} WIB`;
+        } catch {
+          clock.textContent = "WIB";
+        }
+      };
+      updateClock();
+      setInterval(updateClock, 30000);
+    }
+
+    const emailBtn = document.getElementById("footer-email-btn");
+    const emailDisplay = document.getElementById("footer-email-display");
+    const emailStatus = document.getElementById("footer-email-status");
+    if (emailBtn && emailDisplay) {
+      const fullEmail = `${emailBtn.dataset.u}@${emailBtn.dataset.d}`;
+      emailDisplay.textContent = fullEmail;
+      if (emailBtn.dataset.bound !== "true") {
+        emailBtn.dataset.bound = "true";
+        emailBtn.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(fullEmail);
+            if (emailStatus) emailStatus.textContent = emailBtn.dataset.copied || "Copied";
+            setTimeout(() => {
+              if (emailStatus) emailStatus.textContent = emailBtn.dataset.default || "Copy";
+            }, 2200);
+          } catch {
+            window.location.href = `mailto:${fullEmail}`;
+          }
+        });
+      }
+    }
+  }
+
+  setupFooter();
+  document.addEventListener("astro:after-swap", setupFooter);
+</script>

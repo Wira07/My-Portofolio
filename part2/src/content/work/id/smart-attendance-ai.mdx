@@ -1,0 +1,84 @@
+---
+title: "Smart Attendance AI"
+slug: "smart-attendance-ai"
+locale: "id"
+summary: "Aplikasi presensi Android & Computer Vision menggunakan YOLO11, pengenalan wajah, dan liveness detection anti-spoofing."
+category: ["android", "ai"]
+role: "Mobile & AI Integration Engineer"
+year: 2025
+duration: "TODO_METRIC"
+client: "Riset & Implementasi Internal"
+stack: ["Kotlin", "CameraX", "YOLO11", "Face Recognition", "Liveness Detection", "REST API"]
+cover: "/images/work/smart-attendance-ai.png"
+coverAlt: "Cetak biru sistem Smart Attendance AI berbasis YOLO11 dan liveness detection"
+draft: true
+metrics:
+  - label: "Waktu Verifikasi Wajah"
+    value: "TODO_METRIC"
+    note: "Pengujian lintas tipe perangkat masih berlangsung"
+  - label: "Tingkat Tolak Spoofing"
+    value: "TODO_METRIC"
+    note: "Menunggu dataset uji pencahayaan beragam"
+links: {}
+architecture:
+  title: "Pipeline Verifikasi Presensi: CameraX -> Liveness -> Embedding Match"
+  caption: "Deteksi ROI wajah dipercepat dengan YOLO11 sebelum validasi keaslian wajah dan pencocokan identitas."
+  nodes:
+    - { id: "cam", label: "Android CameraX", sub: "Frame Stream YUV/Bitmap", group: "input" }
+    - { id: "yolo", label: "YOLO11 Detector", sub: "Lokalisasi Wajah Cepat", group: "core" }
+    - { id: "live", label: "Liveness Check", sub: "Validasi Kedipan & Pose", group: "core" }
+    - { id: "embed", label: "Face Matcher", sub: "Cosine Distance Scoring", group: "storage" }
+    - { id: "log", label: "API Presensi", sub: "Catat Kehadiran & Timestamp", group: "output" }
+  edges:
+    - { from: "cam", to: "yolo", label: "Frame" }
+    - { from: "yolo", to: "live", label: "ROI Crop" }
+    - { from: "live", to: "embed", label: "Pass" }
+    - { from: "embed", to: "log", label: "Verified ID" }
+  mermaid: |
+    flowchart LR
+      A[CameraX Frame] --> B[YOLO11 Face ROI]
+      B --> C[Liveness Challenge]
+      C -->|Asli| D[Face Embedding Match]
+      D --> E[Attendance Log API]
+gallery:
+  - src: "/images/work/smart-attendance-ai.png"
+    alt: "Diagram visual arsitektur Smart Attendance AI"
+    caption: "Arsitektur pemrosesan kamera ke validasi liveness dan pencatatan presensi."
+    width: 1280
+    height: 800
+featured: true
+order: 2
+---
+
+## Konteks
+
+Sistem presensi berbasis PIN atau foto statis mudah dimanipulasi (*buddy punching*) menggunakan foto dari layar ponsel maupun cetakan kertas. **Smart Attendance AI** dirancang untuk menggabungkan kepraktisan kamera Android dengan verifikasi biometrik berlapis.
+
+## Masalah
+
+1. **Pencahayaan tidak seragam** di pintu masuk kantor atau ruang kelas sering menurunkan akurasi *face recognizer* standar.
+2. **Serangan spoofing sederhana** menggunakan foto atau rekaman video harus disaring sebelum permintaan presensi dicatat sebagai kehadiran sah.
+3. **Beban memori pada perangkat Android menengah** mengharuskan pemrosesan frame tetap responsif tanpa membuat UI kamera patah-patah.
+
+## Pendekatan & Keputusan Teknis (Trade-Off)
+
+- **YOLO11 untuk ROI Wajah + Liveness Terpisah**: Alih-alih mengirim seluruh frame beresolusi penuh ke model berat, YOLO11 mengekstrak *bounding box* wajah lebih dulu sehingga area input untuk *liveness* dan *embedding* lebih bersih. *Trade-off*: menambah satu tahap prapemrosesan, tetapi mengurangi false positive dari latar belakang ramai.
+- **Pipeline Liveness Berbasis Tantangan Gerak Singkat**: Memvalidasi respons alami pengguna alih-alih hanya mengandalkan sensor kedalaman perangkat keras (yang tidak tersedia di semua ponsel Android). *Trade-off*: waktu checkin sedikit lebih panjang dibanding sekali jepret, demi keamanan yang jauh lebih dapat dipertanggungjawabkan.
+
+## Arsitektur
+
+CameraX di Kotlin menangkap stream pratinjau, meneruskan frame terpilih ke detektor wajah YOLO11, menjalankan validasi *liveness*, lalu mencocokkan vektor wajah sebelum mencatat kehadiran ke server.
+
+## Hasil
+
+- Alur otentikasi wajah terstruktur berhasil mengintegrasikan tahap deteksi, validasi liveness, dan pencatatan presensi otomatis.
+- Metrik benchmark numerik masih ditandai `DRAFT` hingga uji beban selesai pada perangkat target kelas menengah.
+
+## Pelajaran
+
+Kualitas UX pada aplikasi biometrik sangat ditentukan oleh panduan antarmuka kamera (indikator jarak, kecerahan, dan umpan balik status yang jelas), bukan sekadar skor model di lingkungan laboratorium.
+
+## Galeri
+
+Cetak biru arsitektur terlampir di atas; tangkapan layar aplikasi produksi akan ditambahkan setelah uji coba tertutup selesai.
+

@@ -1,0 +1,27 @@
+---
+title: "WhatsApp Login + FCM Architecture for Parent Apps"
+slug: "whatsapp-login-fcm-parent-app"
+locale: "en"
+summary: "Passwordless onboarding using school-verified WhatsApp numbers paired with resilient Firebase Cloud Messaging token lifecycles."
+publishedAt: "2026-07-10"
+readingTime: "5 min"
+tags: ["Android", "WhatsApp Auth", "Firebase FCM", "EdTech", "UX"]
+relatedWork: ["parent-notifications"]
+---
+
+## Removing Password Friction for Parents
+
+In regional Indonesian school deployments, almost every guardian uses WhatsApp daily while few actively check email or remember portal passwords.
+
+Key guardrails for WhatsApp OTP authentication:
+- **Roster Pre-Validation**: Check the guardian phone number against enrolled student records *before* calling the messaging gateway to eliminate wasted OTP dispatches.
+- **Bounded Cooldowns & Retry Caps**: Enforce 60-second resend intervals and capped OTP verification attempts.
+
+## Keeping FCM Tokens Reliable Across Device Changes
+
+Missed school alerts typically result from stale device tokens left behind after handsets change:
+
+1. Bind `device_token` immediately upon successful OTP login.
+2. Sync rotated tokens inside `FirebaseMessagingService.onNewToken` whenever a local session exists.
+3. Clean up `UNREGISTERED` tokens automatically inside backend delivery workers to maintain clean fanout queues.
+

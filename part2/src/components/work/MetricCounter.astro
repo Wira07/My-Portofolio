@@ -1,0 +1,50 @@
+---
+import { formatMetricValue } from "@/lib/content";
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+
+interface Metric {
+  label: string;
+  value: string;
+  note?: string;
+}
+
+interface Props {
+  metrics: Metric[];
+  locale: Locale;
+  title: string;
+}
+
+const { metrics, locale, title } = Astro.props;
+---
+
+{
+  metrics.length > 0 && (
+    <section class="my-8 rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface)] p-5 md:p-6">
+      <h2 class="mono-label text-[var(--text-dim)]">{title}</h2>
+      <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {metrics.map((m) => {
+          const parsed = formatMetricValue(m.value);
+          const isNumeric = !parsed.isTodo && /^\d/.test(parsed.display);
+          return (
+            <div class="rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] p-4">
+              <div
+                class="font-sans text-2xl font-semibold text-[var(--accent)] tabular-nums"
+                data-count-to={isNumeric ? parsed.display : undefined}
+              >
+                {parsed.display}
+              </div>
+              <div class="mt-1 text-sm font-medium text-[var(--text)]">{m.label}</div>
+              {(m.note || parsed.isTodo) && (
+                <div class="mt-1 font-mono text-[11px] text-[var(--text-dim)]">
+                  {parsed.isTodo ? t(locale, "work.metricsTodoNote") : m.note}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  )
+}
+
