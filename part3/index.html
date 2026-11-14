@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RAJAWALI ROYALE — 3D Tactical Battle Royale</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+</head>
+<body>
+<!-- SVG Colorblindness Filters -->
+<svg width="0" height="0" style="position:absolute;pointer-events:none;" aria-hidden="true">
+  <defs>
+    <filter id="cb-protanopia-filter">
+      <feColorMatrix type="matrix" values="0.567,0.433,0,0,0  0.558,0.442,0,0,0  0,0.242,0.758,0,0  0,0,0,1,0"/>
+    </filter>
+    <filter id="cb-deuteranopia-filter">
+      <feColorMatrix type="matrix" values="0.625,0.375,0,0,0  0.700,0.300,0,0,0  0,0.300,0.700,0,0  0,0,0,1,0"/>
+    </filter>
+    <filter id="cb-tritanopia-filter">
+      <feColorMatrix type="matrix" values="0.950,0.050,0,0,0  0,0.433,0.567,0,0  0,0.475,0.525,0,0  0,0,0,1,0"/>
+    </filter>
+  </defs>
+</svg>
+<div id="game-root">
+  <canvas id="gl-canvas"></canvas>
+
+  <!-- Post/Screen FX Overlays -->
+  <div id="fx-overlay-zone"></div>
+  <div id="fx-overlay-damage"></div>
+  <div id="fx-overlay-flash"></div>
+
+  <!-- Pointer Lock Prompt Banner -->
+  <div id="pointer-banner" class="tac-panel pointer-banner hidden">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F2B705" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/></svg>
+    <span data-i18n="pointerPrompt">Klik layar untuk mengunci kursor dan membidik</span>
+  </div>
+
+  <!-- MAIN MENU SCREEN -->
+  <section id="screen-menu" class="screen-overlay">
+    <div class="menu-top-bar">
+      <div class="brand-block">
+        <div class="brand-kicker">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L4 7v6c0 5.5 3.4 9.7 8 11 4.6-1.3 8-5.5 8-11V7l-8-5z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+          <span>OPERASI PULAU RAJAWALI</span>
+        </div>
+        <h1 class="brand-title">RAJAWALI ROYALE</h1>
+        <p class="brand-sub" data-i18n="brandSub">Pertempuran taktis 3D di kepulauan tropis 1,6 × 1,6 km dengan simulasi balistik proyektil, suara spasial procedural, dan AI tempur adaptif.</p>
+      </div>
+      <div class="tac-panel menu-status-pill">
+        <span id="menu-preset-badge" class="tabular label-uc" style="color:var(--accent)">MEDIUM</span>
+        <span>|</span>
+        <span id="menu-webgl-status" class="tabular">WebGL2 Siap</span>
+      </div>
+    </div>
+
+    <div class="menu-body">
+      <nav class="menu-nav" aria-label="Menu Utama">
+        <button id="btn-menu-play" class="tac-btn primary">
+          <span data-i18n="menuPlay">Mainkan</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>
+        </button>
+        <button id="btn-menu-practice" class="tac-btn olive">
+          <span data-i18n="menuPractice">Mode Latihan</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button id="btn-menu-settings" class="tac-btn">
+          <span data-i18n="menuSettings">Pengaturan</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <button id="btn-menu-howto" class="tac-btn">
+          <span data-i18n="menuHowTo">Cara Bermain</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </button>
+        <button id="btn-menu-stats" class="tac-btn">
+          <span data-i18n="menuStats">Statistik</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </button>
+        <button id="btn-menu-studio" class="tac-btn">
+          <span>Inspeksi Material &amp; Pulau</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="4"/></svg>
+        </button>
+      </nav>
+
+      <div class="tac-panel menu-bench-controls">
+        <span class="label-uc" style="font-size:11px;color:var(--text-dim)">Kamera Menu:</span>
+        <button id="btn-menu-cam-island" class="tac-btn sm">Panorama Pulau</button>
+        <button id="btn-menu-cam-studio" class="tac-btn sm">Sampel PBR (12)</button>
+      </div>
+    </div>
+
+    <footer class="menu-footer">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="rating-badge">16+</span>
+        <span>Konten kekerasan fiksi bersenjata. Tanpa gore. Semua aset 3D, tekstur PBR, dan audio disintesis procedural di browser.</span>
+      </div>
+      <div class="tabular">v1.0.0 — Build WebGL2</div>
+    </footer>
+  </section>
+
+  <!-- GENERATING WORLD / LOADING SCREEN -->
+  <section id="screen-loading" class="screen-overlay hidden">
+    <div class="tac-modal loading-box">
+      <div class="label-uc" style="color:var(--accent);font-size:11px;">MEMPERSIAPKAN PERTEMPURAN</div>
+      <h2 id="loading-title" style="margin-top:4px;font-size:20px;font-weight:800;">Membangun Pulau Rajawali...</h2>
+      <div class="progress-track"><div id="loading-bar" class="progress-fill"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;">
+        <span id="loading-stage" style="color:var(--text-dim);">Menghitung heightmap medan...</span>
+        <span id="loading-pct" class="tabular" style="font-weight:700;color:var(--accent);">0%</span>
+      </div>
+      <div class="loading-tip" id="loading-tip">
+        Tip Taktis: Peluru memiliki drop dan hambatan udara. Gunakan PageUp / PageDown untuk menyetel zeroing jarak tembak.
+      </div>
+    </div>
+  </section>
+
+  <!-- IN-GAME HUD -->
+  <div id="hud-layer" class="hidden">
+    <!-- Top Left: Minimap -->
+    <div class="hud-corner-tl">
+      <div class="tac-panel minimap-wrap">
+        <canvas id="minimap-canvas" width="200" height="200"></canvas>
+        <span id="minimap-zoom-tag" class="minimap-zoom-tag tabular">N: SEDANG • M: PETA</span>
+      </div>
+      <div class="tac-panel minimap-meta tabular">
+        <span id="hud-poi-name">Pulau Rajawali</span>
+        <span id="hud-fps-inline" class="hidden">60 FPS</span>
+      </div>
+    </div>
+
+    <!-- Top Center: Compass + Zone -->
+    <div class="hud-top-center">
+      <div class="tac-panel compass-bar">
+        <canvas id="compass-canvas" width="360" height="30"></canvas>
+        <div class="compass-caret"></div>
+      </div>
+      <div class="tac-panel zone-pill tabular">
+        <span id="hud-zone-phase">FASE 1</span>
+        <span>|</span>
+        <span id="hud-zone-timer" style="color:var(--zone);font-weight:700;">02:00</span>
+        <span id="hud-zone-dist" style="color:var(--text-dim);">Aman</span>
+      </div>
+    </div>
+
+    <!-- Top Right: Alive / Kills + Controller Badge + Kill Feed -->
+    <div class="hud-corner-tr">
+      <div class="tac-panel match-counter-box tabular">
+        <div class="counter-cell"><span class="label-uc" style="font-size:11px;color:var(--text-dim);">HIDUP</span><span id="hud-alive" class="counter-val">40</span></div>
+        <div class="counter-cell"><span class="label-uc" style="font-size:11px;color:var(--text-dim);">KILL</span><span id="hud-kills" class="counter-val" style="color:var(--text-main);">0</span></div>
+      </div>
+      <div id="hud-pad-badge" class="tac-panel hud-pad-badge tabular">STIK SIAP • [START/F4] CHEAT</div>
+      <div id="hud-kill-feed" class="kill-feed"></div>
+    </div>
+
+    <!-- Vehicle Driving Telemetry Pill -->
+    <div id="hud-vehicle-pill" class="tac-panel hud-vehicle-pill hidden tabular">
+      <span class="veh-shield">KEBAL DALAM KENDARAAN</span>
+      <span id="hud-veh-speed" class="veh-speed">Mobil • 0 km/j • R2/W Gas • L3 Boost • F/□ Turun</span>
+    </div>
+
+    <!-- Center Crosshair / Hitmarker / Scope / Damage Sectors / Alert / Interact -->
+    <div id="scope-overlay" class="hidden"></div>
+    <div id="hud-alert-banner" class="tac-panel"></div>
+    <svg id="hud-crosshair" viewBox="0 0 64 64" aria-hidden="true">
+      <circle id="ch-dot" cx="32" cy="32" r="1.4" fill="#EDEFF1"/>
+      <line id="ch-top" x1="32" y1="22" x2="32" y2="14" stroke="#EDEFF1" stroke-width="1.8"/>
+      <line id="ch-bot" x1="32" y1="42" x2="32" y2="50" stroke="#EDEFF1" stroke-width="1.8"/>
+      <line id="ch-left" x1="22" y1="32" x2="14" y2="32" stroke="#EDEFF1" stroke-width="1.8"/>
+      <line id="ch-right" x1="42" y1="32" x2="50" y2="32" stroke="#EDEFF1" stroke-width="1.8"/>
+    </svg>
+    <svg id="hitmarker-svg" viewBox="0 0 44 44" aria-hidden="true">
+      <line x1="8" y1="8" x2="16" y2="16" stroke="#FFFFFF" stroke-width="2.2"/>
+      <line x1="36" y1="8" x2="28" y2="16" stroke="#FFFFFF" stroke-width="2.2"/>
+      <line x1="8" y1="36" x2="16" y2="28" stroke="#FFFFFF" stroke-width="2.2"/>
+      <line x1="36" y1="36" x2="28" y2="28" stroke="#FFFFFF" stroke-width="2.2"/>
+    </svg>
+    <svg id="damage-sectors" viewBox="0 0 260 260" aria-hidden="true"></svg>
+    <div id="hud-hit-popup" class="tabular"></div>
+    <div id="hud-subtitles"></div>
+    <div id="hud-interact" class="tac-panel hidden">
+      <span id="hud-interact-text">Tekan F — Buka / Ambil</span>
+    </div>
+    <div id="hud-cast-bar" class="tac-panel hidden">
+      <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;">
+        <span id="hud-cast-label">Menggunakan Medkit...</span>
+        <span id="hud-cast-sec" class="tabular" style="color:var(--accent);">4.0s</span>
+      </div>
+      <div class="cast-track"><div id="hud-cast-fill" class="cast-fill"></div></div>
+    </div>
+    <div id="hud-status-pills"></div>
+
+    <!-- Bottom Left: Heal Quickslots -->
+    <div class="hud-corner-bl">
+      <div class="quickslot-row">
+        <div class="tac-panel qslot"><span class="qslot-key">7</span><span>Medkit</span><span id="qs-medkit" class="qslot-cnt tabular">0</span></div>
+        <div class="tac-panel qslot"><span class="qslot-key">8</span><span>FirstAid</span><span id="qs-firstaid" class="qslot-cnt tabular">0</span></div>
+        <div class="tac-panel qslot"><span class="qslot-key">9</span><span>Perban</span><span id="qs-bandage" class="qslot-cnt tabular">0</span></div>
+        <div class="tac-panel qslot"><span class="qslot-key">0</span><span>Boost</span><span id="qs-boost" class="qslot-cnt tabular">0</span></div>
+      </div>
+    </div>
+
+    <!-- Bottom Center: HP / Boost / Armor / Stance -->
+    <div class="hud-bottom-center">
+      <div class="tac-panel vitals-panel">
+        <div class="boost-seg-row" title="Boost">
+          <div class="boost-seg"><div id="boost-seg-1"></div></div>
+          <div class="boost-seg"><div id="boost-seg-2"></div></div>
+          <div class="boost-seg"><div id="boost-seg-3"></div></div>
+          <div class="boost-seg"><div id="boost-seg-4"></div></div>
+        </div>
+        <div class="hp-track"><div id="hud-hp-fill" class="hp-fill"></div></div>
+        <div class="vitals-sub tabular">
+          <div style="display:flex;gap:6px;">
+            <span class="armor-badge">H <b id="hud-helm">0</b></span>
+            <span class="armor-badge">V <b id="hud-vest">0</b></span>
+            <span class="armor-badge">T <b id="hud-bag">L0</b></span>
+            <span class="armor-badge" id="hud-stance">BERDIRI</span>
+          </div>
+          <span><b id="hud-hp-num" style="color:var(--text-main);">100</b> HP</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Right: Weapon / Ammo -->
+    <div class="hud-corner-br">
+      <div id="hud-weapon-slots">
+        <div class="wslot-pill active" id="ws-1">1: UTAMA</div>
+        <div class="wslot-pill" id="ws-2">2: SEKUNDER</div>
+        <div class="wslot-pill" id="ws-3">3: PISTOL</div>
+        <div class="wslot-pill" id="ws-4">4: PANCI</div>
+        <div class="wslot-pill" id="ws-5">5: GRANAT</div>
+      </div>
+      <div class="tac-panel weapon-card">
+        <div class="weapon-top">
+          <span id="hud-weapon-name" class="weapon-name">TIDAK BERSENJATA</span>
+          <span id="hud-fire-mode" class="fire-mode-badge">SEMI</span>
+        </div>
+        <div id="hud-weapon-sil" style="height:26px;display:flex;align-items:center;opacity:0.88;"></div>
+        <div class="ammo-row tabular">
+          <span><span id="hud-ammo-mag" class="ammo-mag">0</span> <span class="ammo-res">/ <span id="hud-ammo-res">0</span></span></span>
+          <span id="hud-zeroing" style="font-size:11px;color:var(--text-dim);">100m</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BIG INTERACTIVE MAP [M] -->
+  <div id="map-overlay" class="hidden">
+    <div class="tac-modal bigmap-frame">
+      <div class="bigmap-bar">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <strong style="letter-spacing:0.08em;color:var(--accent);">PETA TAKTIS PULAU RAJAWALI [1.6×1.6 KM]</strong>
+          <span id="bigmap-coords" class="tabular" style="font-size:11px;color:var(--text-dim);">Klik Kanan / MMB: Ping • Drag: Geser • Scroll: Zoom</span>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button id="bigmap-center" class="tac-btn sm">Pusatkan Pemain</button>
+          <button id="bigmap-clear-ping" class="tac-btn sm">Hapus Ping</button>
+          <button id="bigmap-close" class="tac-btn sm primary">Tutup [M]</button>
+        </div>
+      </div>
+      <canvas id="bigmap-canvas" width="760" height="760"></canvas>
+    </div>
+  </div>
+
+  <!-- MODAL LAYER (Setup, Settings, HowTo, Stats, Pause, Tab Inventory) -->
+  <div id="modal-backdrop" class="modal-backdrop hidden">
+    <div class="tac-modal modal-window" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h2 id="modal-title" class="modal-title">JUDUL MODAL</h2>
+        <button id="modal-close-btn" class="tac-btn sm">Tutup [ESC]</button>
+      </div>
+      <div id="modal-tabs" class="tab-bar hidden"></div>
+      <div id="modal-body" class="modal-content"></div>
+      <div id="modal-footer" class="modal-footer"></div>
+    </div>
+  </div>
+
+  <!-- START / F4 CHEAT MENU OVERLAY -->
+  <div id="cheat-overlay" class="modal-backdrop hidden" onclick="if(event.target===this)window.__RAJAWALI__?.CheatUI?.close()">
+    <div class="tac-modal cheat-window" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="cheat-pill-tag">START / F4</span>
+          <h2 class="modal-title" style="margin:0;">MENU CHEAT &amp; KENDARAAN TAKTIS</h2>
+        </div>
+        <button id="cheat-close-btn" class="tac-btn sm" onclick="window.__RAJAWALI__?.CheatUI?.close()">Tutup [START / ESC]</button>
+      </div>
+      <div id="cheat-pad-status" class="cheat-pad-bar tabular">STIK SIAP • TEKAN START ATAU F4</div>
+      <div id="cheat-list" class="cheat-list"></div>
+      <div class="modal-footer" style="justify-content:space-between;font-size:11px;color:var(--text-dim);">
+        <span>Navigasi Stik: D-Pad / L-Stick &bull; Pilih: <b style="color:var(--text-main);">A / R2</b> &bull; Tutup: <b style="color:var(--text-main);">START / B / ESC</b></span>
+        <span>Kebal musuh aktif selama di Mobil/Motor! Turun = kembali realistis.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- F3 DEBUG OVERLAY -->
+  <aside id="debug-overlay" class="hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <strong style="color:var(--accent);">DEBUG &amp; PROFILER [F3]</strong>
+      <span id="dbg-state" style="color:var(--olive);">STATE: BOOT</span>
+    </div>
+    <div id="dbg-metrics" class="debug-grid tabular"></div>
+    <div class="debug-actions">
+      <button class="tac-btn sm" data-dbg="toggle-studio">Toggle Studio PBR (M1)</button>
+      <button class="tac-btn sm" data-dbg="tp-sukamaju">TP Sukamaju</button>
+      <button class="tac-btn sm" data-dbg="tp-pelabuhan">TP Pelabuhan</button>
+      <button class="tac-btn sm" data-dbg="tp-menara">TP Menara</button>
+      <button class="tac-btn sm" data-dbg="cycle-time">Ganti Waktu</button>
+      <button class="tac-btn sm" data-dbg="cycle-weather">Ganti Cuaca</button>
+      <button class="tac-btn sm" data-dbg="spawn-bots">Spawn 4 Bot</button>
+      <button class="tac-btn sm primary" data-dbg="run-selftest">Jalankan selfTest()</button>
+    </div>
+    <pre id="dbg-selftest-out" class="hidden" style="margin-top:8px;max-height:140px;overflow:auto;background:#050608;padding:6px;border:1px solid var(--border-hair);color:#B8F2C2;"></pre>
+  </aside>
+
+  <!-- FATAL ERROR FALLBACK SCREEN -->
+  <div id="error-screen" class="hidden">
+    <div class="tac-modal" style="max-width:520px;padding:28px;">
+      <div class="label-uc" style="color:var(--warn);font-size:11px;">KESALAHAN SISTEM</div>
+      <h2 id="err-title" style="margin:6px 0 10px;font-size:20px;">Gagal Menginisialisasi Grafik 3D</h2>
+      <p id="err-desc" style="color:var(--text-dim);font-size:13px;margin-bottom:18px;"></p>
+      <div style="display:flex;gap:10px;">
+        <button id="err-retry" class="tac-btn primary">Muat Ulang Halaman</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.showFatalError = function(title, desc) {
+  const el = document.getElementById("error-screen");
+  if (!el) return;
+  document.getElementById("err-title").textContent = title;
+  document.getElementById("err-desc").textContent = desc;
+  el.classList.remove("hidden");
+  document.getElementById("err-retry").onclick = () => location.reload();
+};
+window.addEventListener("error", (ev) => {
+  if (ev?.message && ev.message.includes("Failed to resolve module specifier")) {
+    window.showFatalError("Gagal Memuat Library 3D (Three.js CDN)", "Pastikan koneksi internet aktif untuk memuat module Three.js v0.170.0 dari jsDelivr CDN, lalu muat ulang halaman.");
+  }
+});
+</script>
+
+<script type="module">
+import * as THREE_NS from "three";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
+import { Sky } from "three/addons/objects/Sky.js";
+import { CSM } from "three/addons/csm/CSM.js";
+import * as BufferGeometryUtils from "three/addons/utils/BufferGeometryUtils.js";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+
+window.THREE = { ...THREE_NS };
+window.EffectComposer = EffectComposer;
+window.RenderPass = RenderPass;
+window.UnrealBloomPass = UnrealBloomPass;
+window.ShaderPass = ShaderPass;
+window.OutputPass = OutputPass;
+window.FXAAShader = FXAAShader;
+window.Sky = Sky;
+window.CSM = CSM;
+window.BufferGeometryUtils = { ...BufferGeometryUtils };
+window.RoundedBoxGeometry = RoundedBoxGeometry;
+
+const MODULES = [
+  "js/config.js",
+  "js/audio-assets.js",
+  "js/world.js",
+  "js/loot-map.js",
+  "js/characters-ai.js",
+  "js/weapons-physics.js",
+  "js/player.js",
+  "js/render-ui.js",
+  "js/cheats-vehicles.js",
+  "js/match-game.js"
+];
+
+(async () => {
+  try {
+    for (const src of MODULES) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = src;
+        s.async = false;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error("Gagal memuat " + src));
+        document.body.appendChild(s);
+      });
+    }
+  } catch (err) {
+    window.showFatalError("Gagal Memuat Modul Game", err?.message || String(err));
+  }
+})();
+</script>
+</body>
+</html>
