@@ -19,7 +19,7 @@ const Player = (() => {
   let adsLerp = 0, zeroDist = 100, scopeMagOverride = null;
   let activeSlot = 0; // 0:primary, 1:secondary, 2:pistol, 3:pan
   let helm = { level: 2, dur: 150 }, vest = { level: 2, dur: 220 }, bag = { level: 2, cap: 330 };
-  let hitmarkerTimer = 0, dmgIndicatorTimer = 0;
+  let hitmarkerTimer = 0, dmgIndicatorTimer = 0, respawnTimer = 0;
   let alive = true, hudTickAcc = 0, killsStat = 0, dmgStat = 0;
   let activeZonesRef = null, playerRig = null, forceRigVisible = false;
   const combatTargetsBuf = [];
@@ -136,17 +136,7 @@ const Player = (() => {
       rackPickups.push({ x: rx, y: baseH + 1.25, z: rz, weaponId: wk, label: `F — Ambil ${WEAPONS_DB[wk].name}` });
     });
 
-    // Shooting Lanes Silhouette Targets at 25m, 50m, 100m, 200m, 300m
-    const distances = [
-      { d: 25, ox: -4, moving: false, label: '25m' },
-      { d: 50, ox: 2,  moving: true,  label: '50m (Gerak)' },
-      { d: 100, ox: -6, moving: false, label: '100m' },
-      { d: 200, ox: 4, moving: false, label: '200m' },
-      { d: 300, ox: 0, moving: false, label: '300m' }
-    ];
-    distances.forEach((cfg) => {
-      const tx = cx + cfg.ox;
-      const tz = cz + 35 - cfg.d;
+    function addDummyTarget(tx, tz, moving, label) {
       const th = World.getHeight(tx, tz);
       const tGrp = new THREE.Group();
       const post = new THREE.Mesh(new THREE.BoxGeometry(0.14, 1.8, 0.14), Assets.get('wood'));
@@ -161,8 +151,8 @@ const Player = (() => {
       rangeGroup.add(tGrp);
 
       targets.push({
-        alive: true, hp: 100, maxHp: 100, name: `Dummy ${cfg.label}`,
-        baseX: tx, pos: new THREE.Vector3(tx, th, tz), moving: cfg.moving,
+        alive: true, hp: 100, maxHp: 100, name: label,
+        baseX: tx, pos: new THREE.Vector3(tx, th, tz), moving,
         mesh: tGrp, respawnTimer: 0, helm: { level: 1, dur: 80 }, vest: { level: 1, dur: 200 },
         rayHitTest(ro, rd, maxT) {
           // Head sphere check
@@ -195,21 +185,63 @@ const Player = (() => {
           return null;
         }
       });
+    }
+
+    // Shooting Lanes Silhouette Targets at 25m, 50m, 100m, 200m, 300m
+    const distances = [
+      { d: 25, ox: -4, moving: false, label: '25m' },
+      { d: 50, ox: 2,  moving: true,  label: '50m (Gerak)' },
+      { d: 100, ox: -6, moving: false, label: '100m' },
+      { d: 200, ox: 4, moving: false, label: '200m' },
+      { d: 300, ox: 0, moving: false, label: '300m' }
+    ];
+    distances.forEach((cfg) => addDummyTarget(cx + cfg.ox, cz + 35 - cfg.d, cfg.moving, `Dummy ${cfg.label}`));
+
+    // Kota Piccadilly Practice Weapon Rack & Urban Plaza Target Dummies
+    const cityRx = 163.5, cityRz = 121.0;
+    const cityH = World.getHeight(cityRx, cityRz);
+    const cityTable = new THREE.Mesh(new THREE.BoxGeometry(8.8, 0.9, 1.1), Assets.get('wood'));
+    cityTable.position.set(cityRx, cityH + 0.45, cityRz);
+    cityTable.castShadow = true; cityTable.receiveShadow = true;
+    rangeGroup.add(cityTable);
+    Physics.addCollider({ minX: cityRx - 4.4, maxX: cityRx + 4.4, minY: cityH, maxY: cityH + 0.92, minZ: cityRz - 0.55, maxZ: cityRz + 0.55, mat: 'wood', tag: 'range' });
+    wKeys.forEach((wk, i) => {
+      const wx = (cityRx - 3.8) + i * 0.76;
+      const built = ModelBuilders.buildWeaponModel(wk, {});
+      built.root.traverse(m => { if (m.isMesh) m.castShadow = false; });
+      built.root.position.set(wx, cityH + 1.05, cityRz);
+      built.root.rotation.y = Math.PI * 0.5;
+      built.root.scale.setScalar(1.05);
+      rangeGroup.add(built.root);
+      rackPickups.push({ x: wx, y: cityH + 1.05, z: cityRz, weaponId: wk, label: `F — Ambil ${WEAPONS_DB[wk].name}` });
     });
+    const cityTargets = [
+      [167.5, 106, false, 'Dummy Kota 25m Kanan'],
+      [149.5, 104, false, 'Dummy Kota 25m Kiri'],
+      [154.5, 73,  true,  'Dummy Kota 50m (Gerak)'],
+      [164.5, 66,  false, 'Dummy Kota 50m'],
+      [157.5, 56,  false, 'Dummy Kota 100m']
+    ];
+    cityTargets.forEach(([tx, tz, mv, lbl]) => addDummyTarget(tx, tz, mv, lbl));
 
     scene.add(rangeGroup);
   }
 
-  function spawnAt(x, z, yawRad = Math.PI) {
+  function spawnAt(x, z, yawRad = Math.PI, pitchRad = 0) {
     if (typeof VehiclesSys !== 'undefined') VehiclesSys.dismount(true);
     if (typeof ChidoriSys !== 'undefined') ChidoriSys.clearAll();
     const h = World.getHeight(x, z);
     pos.set(x, h + 0.05, z);
     vel.set(0, 0, 0);
-    yaw = yawRad; pitch = 0; hp = 100; boost = 0; alive = true;
+    yaw = yawRad; pitch = pitchRad; hp = 100; boost = 0; alive = true; respawnTimer = 0;
     stance = 'stand'; curEyeH = CONFIG.player.eye.stand;
     isTpp = perspectiveMode === 'tpp' ? true : perspectiveMode === 'fpp' ? false : !!UI.settings.defaultTpp;
+    const dmgEl = document.getElementById('fx-overlay-damage');
+    if (dmgEl) dmgEl.style.opacity = '0';
+    const dsEl = document.getElementById('damage-sectors');
+    if (dsEl) dsEl.innerHTML = '';
     initViewmodel();
+    updateHUD(0.4);
   }
 
   function setPerspectiveMode(mode) {
@@ -368,22 +400,24 @@ const Player = (() => {
 
   function pickupItem(it, fromCrate = null) {
     if (!it || it.taken) return false;
-    const d = it.def || Loot.ITEMS[it.itemId];
+    const itemId = it.itemId || it.id || it.def?.id;
+    const d = it.def || (itemId ? Loot.ITEMS[itemId] : null);
     if (!d) return false;
     if (d.cat === 'weapon') {
-      if (it.itemId === 'pan') {
+      if (itemId === 'pan') {
         slots[3] = { id: 'pan', mag: 0, mode: 'melee', att: {} };
-      } else if (it.itemId === 'p92') {
+      } else if (itemId === 'p92') {
         slots[2] = { id: 'p92', mag: WEAPONS_DB.p92.mag, mode: 'single', att: {} };
         activeSlot = 2;
       } else {
+        const defW = WEAPONS_DB[itemId];
+        if (!defW) return false;
         const dst = activeSlot <= 1 ? activeSlot : (slots[0].id === 'pan' ? 0 : slots[1].id === 'pan' ? 1 : 0);
         const prev = slots[dst];
         if (prev.id && prev.id !== 'pan') {
           Loot.spawnItemAt(prev.id, pos.x + 0.4, pos.y, pos.z + 0.4, 1);
         }
-        const defW = WEAPONS_DB[it.itemId];
-        slots[dst] = { id: it.itemId, mag: defW.mag, mode: defW.modes[0], att: {} };
+        slots[dst] = { id: itemId, mag: defW.mag, mode: defW.modes[0], att: {} };
         activeSlot = dst;
       }
       vmBuildKey = ''; rebuildActiveWeaponMesh();
@@ -420,7 +454,7 @@ const Player = (() => {
       }
     }
 
-    if (fromCrate) {
+    if (fromCrate && Array.isArray(fromCrate.items)) {
       const idx = fromCrate.items.indexOf(it);
       if (idx >= 0) fromCrate.items.splice(idx, 1);
     } else {
@@ -624,6 +658,9 @@ const Player = (() => {
       return;
     }
     let dmg = rawDmg;
+    if (typeof Game !== 'undefined' && Game.state === 'PRACTICE' && attackerPos !== null) {
+      dmg *= 0.35;
+    }
     if ((zone === 'head' || zone === 'neck') && helm.level > 0 && helm.dur > 0) {
       const aSpec = CONFIG.armor.helm[helm.level - 1];
       const abs = dmg * aSpec.abs;
@@ -639,9 +676,12 @@ const Player = (() => {
     const dmgEl = document.getElementById('fx-overlay-damage');
     if (dmgEl) {
       dmgEl.style.opacity = '0.85';
-      setTimeout(() => { if (dmgEl && hp > 20) dmgEl.style.opacity = '0'; }, 350);
+      setTimeout(() => {
+        if (!dmgEl) return;
+        dmgEl.style.opacity = (alive && hp <= 20) ? '0.22' : '0';
+      }, 320);
     }
-    if (attackerPos) {
+    if (attackerPos && Number.isFinite(attackerPos.x) && Number.isFinite(attackerPos.z)) {
       const ds = document.getElementById('damage-sectors');
       if (ds) {
         const ang = Math.atan2(-(attackerPos.x - pos.x), -(attackerPos.z - pos.z)) - yaw;
@@ -652,8 +692,12 @@ const Player = (() => {
     }
     if (hp <= 0) {
       alive = false;
+      respawnTimer = 0.45;
+      updateHUD(0);
       Game.onPlayerEliminated?.(cause);
+      return;
     }
+    updateHUD(0);
   }
 
   function applyDamageToTarget(tgt, rawDmg, zone, dist, hitPos, hitDir, owner) {
@@ -702,19 +746,58 @@ const Player = (() => {
   }
 
   function healFull() {
+    alive = true; respawnTimer = 0;
     hp = 100; boost = 100;
     helm = { level: 3, dur: CONFIG.armor.helm[2].dur };
     vest = { level: 3, dur: CONFIG.armor.vest[2].dur };
     bag = { level: 3, cap: 80 + (typeof Loot !== 'undefined' && Loot.ITEMS?.bag3?.cap ? Loot.ITEMS.bag3.cap : 350) };
     Object.assign(meds, { medkit: 3, firstaid: 5, bandage: 10, drink: 5, painkiller: 3, adrenaline: 3 });
     Object.assign(throwables, { frag: 5, smoke: 3, flashbang: 3 });
+    const dmgEl = document.getElementById('fx-overlay-damage');
+    if (dmgEl) dmgEl.style.opacity = '0';
+    updateHUD(0.4);
     AudioSys.playUiTone('alert');
   }
 
   function update(dt, elapsed, inp) {
-    if (!alive) return;
-
     const gp = Input.pollGamepad();
+    if (!alive) {
+      const canAutoRevive = typeof Game !== 'undefined' && (
+        Game.state === 'PRACTICE' ||
+        (Game.state === 'MATCH' && typeof MatchSys !== 'undefined' && MatchSys.phase === 'LOBBY_ISLAND')
+      );
+      if (canAutoRevive) {
+        respawnTimer -= dt;
+        const sens = UI.settings.sensitivity * 0.0022;
+        const invY = UI.settings.invertY ? -1 : 1;
+        let dx = inp.dx, dy = inp.dy;
+        if (gp && !(typeof CheatUI !== 'undefined' && CheatUI.isOpen)) {
+          dx += gp.lookX * 19 * (dt * 60);
+          dy += gp.lookY * 14 * (dt * 60);
+        }
+        yaw -= dx * sens;
+        pitch = Util.clamp(pitch - dy * sens * invY, -1.48, 1.48);
+        if (Render.camera) Render.camera.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ'));
+        if (respawnTimer <= 0) {
+          alive = true;
+          hp = 100;
+          helm = { level: 2, dur: 150 };
+          vest = { level: 2, dur: 220 };
+          const dmgEl = document.getElementById('fx-overlay-damage');
+          if (dmgEl) dmgEl.style.opacity = '0';
+          const dsEl = document.getElementById('damage-sectors');
+          if (dsEl) dsEl.innerHTML = '';
+          updateHUD(0.4);
+          UI.showAlertBanner?.('PELINDUNG LATIHAN AKTIF — HP & ARMOR DIPULIHKAN', 1.8);
+        }
+      }
+      combatTargetsBuf.length = 0;
+      for (let i = 0; i < targets.length; i++) combatTargetsBuf.push(targets[i]);
+      const aiBots = AI.bots;
+      for (let i = 0; i < aiBots.length; i++) combatTargetsBuf.push(aiBots[i]);
+      Ballistics.step(dt, combatTargetsBuf, applyDamageToTarget);
+      return;
+    }
     // Handle Vehicle Driving Mode cleanly (high-speed travel + bulletproof armor until dismount)
     if (typeof VehiclesSys !== 'undefined' && VehiclesSys.isDriving()) {
       const cheatPaused = typeof CheatUI !== 'undefined' && CheatUI.isOpen;
@@ -1050,16 +1133,17 @@ const Player = (() => {
       const bobX = Math.sin(elapsed * 9.5) * 0.012 * bobAmp;
       const bobY = Math.abs(Math.cos(elapsed * 9.5)) * 0.010 * bobAmp + Math.sin(elapsed * 2.1) * 0.003 * (1 + (sprintSec > 6 ? 1.5 : 0));
 
-      const hipX = 0.20, hipY = -0.19, hipZ = -0.44;
+      const hipX = 0.145, hipY = -0.142, hipZ = -0.345;
       const adsY = -(vmWeaponHolder?.userData.sightY || 0.09);
       const vx = Util.lerp(hipX, 0.0, adsLerp) + bobX - recoilKickYaw * 0.4;
       const vy = Util.lerp(hipY, adsY, adsLerp) + bobY - wallLower * 0.12 - (reloadTimer > 0 ? 0.09 : 0);
       const vz = Util.lerp(hipZ, -0.32, adsLerp) + recoilKickPitch * 0.25 + wallLower * 0.14;
       vmRoot.position.set(vx, vy, vz);
 
-      let rX = recoilKickPitch * 0.9 - wallLower * 0.65 - (reloadTimer > 0 ? 0.35 : 0);
-      let rY = -recoilKickYaw * 0.5 + (wantsSprint ? 0.45 : 0) + (inspectTimer > 0 ? Math.sin(inspectTimer * 3.5) * 0.5 : 0);
-      let rZ = meleeTimer > 0 ? -Math.sin(meleeTimer * 9) * 1.1 : (wantsSprint ? 0.25 : 0);
+      const hipCant = 1.0 - adsLerp;
+      let rX = 0.025 * hipCant + recoilKickPitch * 0.9 - wallLower * 0.65 - (reloadTimer > 0 ? 0.35 : 0);
+      let rY = 0.085 * hipCant - recoilKickYaw * 0.5 + (wantsSprint ? 0.45 : 0) + (inspectTimer > 0 ? Math.sin(inspectTimer * 3.5) * 0.5 : 0);
+      let rZ = -0.03 * hipCant + (meleeTimer > 0 ? -Math.sin(meleeTimer * 9) * 1.1 : (wantsSprint ? 0.25 : 0));
       vmRoot.rotation.set(rX, rY, rZ);
     }
 
@@ -1106,7 +1190,7 @@ const Player = (() => {
     if (!interactPromptTarget) {
       if (nearVeh) interactPromptTarget = { kind: 'vehicle', label: `F / □ — Naik ${nearVeh.label}`, data: nearVeh };
       else if (nearDoor) interactPromptTarget = { kind: 'door', label: nearDoor.isOpen ? 'F / □ — Tutup Pintu' : 'F / □ — Buka Pintu', data: nearDoor };
-      else if (nearCrate) interactPromptTarget = { kind: 'crate', label: `F / □ — Geledah Peti (${nearCrate.items.length} item)`, data: nearCrate };
+      else if (nearCrate && Array.isArray(nearCrate.items)) interactPromptTarget = { kind: 'crate', label: `F / □ — Geledah Peti (${nearCrate.items.length} item)`, data: nearCrate };
       else if (nearLoot.length) interactPromptTarget = { kind: 'loot', label: `F / □ — Ambil ${nearLoot[0].def.name}`, data: nearLoot[0] };
     }
 

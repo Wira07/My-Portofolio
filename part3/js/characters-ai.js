@@ -3,69 +3,335 @@
 // ════════════════════════════════════════════════════════════════════════════
 const CharacterRig = (() => {
   const PALETTES = [
-    0x4B593B, 0x7E6B4F, 0x3D464E, 0x3A583E, 0x2F3B4D,
-    0x5A4E3B, 0x615A48, 0x5B3538, 0x2C3035, 0x8A7858
+    0xFFFFFF, 0xD8CFC0, 0xB8C6D4, 0xB4C4B0, 0xAAB8CA,
+    0xCEC2AE, 0xC4BEB0, 0xC8B4B4, 0xAEB6C0, 0xD6C8AC
   ];
   let geos = null;
   let mats = null;
 
+  function makeCamoTexture() {
+    const cv = document.createElement('canvas');
+    cv.width = 128; cv.height = 128;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = '#2d3d50';
+    ctx.fillRect(0, 0, 128, 128);
+    // Digital tactical urban / slate-blue / tan multi-camo blocks (matching Reference Image 2)
+    const cols = ['#1d2631', '#3b4f66', '#4d6278', '#8c7d63', '#a59579', '#242f3d', '#686e73'];
+    let seed = 1337;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    for (let i = 0; i < 220; i++) {
+      ctx.fillStyle = cols[i % cols.length];
+      const x = Math.floor(rnd() * 32) * 4;
+      const y = Math.floor(rnd() * 32) * 4;
+      const w = (1 + Math.floor(rnd() * 5)) * 4;
+      const h = (1 + Math.floor(rnd() * 3)) * 4;
+      ctx.fillRect(x, y, w, h);
+    }
+    // Ripstop micro-grid weave
+    ctx.strokeStyle = 'rgba(10,14,18,0.18)';
+    ctx.lineWidth = 1;
+    for (let p = 0; p < 128; p += 4) {
+      ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, 128); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(128, p); ctx.stroke();
+    }
+    const tex = new THREE.CanvasTexture(cv);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(2, 2);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  function makeBalaclavaTexture() {
+    const cv = document.createElement('canvas');
+    cv.width = 128; cv.height = 128;
+    const ctx = cv.getContext('2d');
+    const grad = ctx.createLinearGradient(0, 0, 128, 128);
+    grad.addColorStop(0, '#cfd4dc');
+    grad.addColorStop(0.5, '#e6eaef');
+    grad.addColorStop(1, '#adb4be');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 128, 128);
+    // Fine micro-perforated breathable mesh pores (exact match to Reference Image 2 lower-face mask)
+    ctx.fillStyle = 'rgba(65, 72, 82, 0.42)';
+    for (let y = 2; y < 128; y += 3) {
+      for (let x = (y % 6 === 2 ? 1 : 3); x < 128; x += 3) {
+        ctx.fillRect(x, y, 1.2, 1.2);
+      }
+    }
+    // Subtle vertical center seam
+    ctx.strokeStyle = 'rgba(90, 98, 110, 0.35)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(64, 0); ctx.lineTo(64, 128); ctx.stroke();
+    const tex = new THREE.CanvasTexture(cv);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(2, 2);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  function makeVisorTexture() {
+    const cv = document.createElement('canvas');
+    cv.width = 64; cv.height = 32;
+    const ctx = cv.getContext('2d');
+    // Iridescent blue -> violet -> crimson/orange ski-goggle lens gradient
+    const grad = ctx.createLinearGradient(0, 4, 64, 28);
+    grad.addColorStop(0.0, '#1652d0');
+    grad.addColorStop(0.28, '#6a2bc2');
+    grad.addColorStop(0.55, '#d83858');
+    grad.addColorStop(0.78, '#eb6842');
+    grad.addColorStop(1.0, '#1e5CE6');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 64, 32);
+    ctx.fillStyle = 'rgba(255,255,255,0.32)';
+    ctx.fillRect(6, 5, 52, 4);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  function makePdaTexture() {
+    const cv = document.createElement('canvas');
+    cv.width = 64; cv.height = 64;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = '#041624';
+    ctx.fillRect(0, 0, 64, 64);
+    ctx.strokeStyle = '#00d8ff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(3, 3, 58, 58);
+    ctx.fillStyle = 'rgba(0, 216, 255, 0.25)';
+    ctx.fillRect(8, 10, 48, 26);
+    ctx.fillStyle = '#48ffff';
+    for (let i = 0; i < 6; i++) {
+      ctx.fillRect(10 + i * 8, 42, 5, 14 - (i % 3) * 4);
+    }
+    ctx.beginPath();
+    ctx.arc(32, 23, 9, 0, Math.PI * 2);
+    ctx.stroke();
+    const tex = new THREE.CanvasTexture(cv);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  function xf(g, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) {
+    if (rx) g.rotateX(rx);
+    if (ry) g.rotateY(ry);
+    if (rz) g.rotateZ(rz);
+    if (x || y || z) g.translate(x, y, z);
+    return g;
+  }
+  const bGeo = (w, h, d, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) => xf(new THREE.BoxGeometry(w, h, d), x, y, z, rx, ry, rz);
+  const cGeo = (rt, rb, h, x = 0, y = 0, z = 0, seg = 10, rx = 0, ry = 0, rz = 0) => xf(new THREE.CylinderGeometry(rt, rb, h, seg), x, y, z, rx, ry, rz);
+  const sGeo = (r, x = 0, y = 0, z = 0, ws = 12, hs = 9, sx = 1, sy = 1, sz = 1, pL = Math.PI * 2, tL = Math.PI) => {
+    const g = new THREE.SphereGeometry(r, ws, hs, 0, pL, 0, tL);
+    if (sx !== 1 || sy !== 1 || sz !== 1) g.scale(sx, sy, sz);
+    return xf(g, x, y, z);
+  };
+  const mGeo = (list) => BufferGeometryUtils.mergeGeometries(list, false);
+
   function ensureShared() {
     if (geos) return;
+    const camoTex = makeCamoTexture();
+    const maskTex = makeBalaclavaTexture();
+    const visorTex = makeVisorTexture();
+    const pdaTex = makePdaTexture();
+
+    // 1. Pelvis + Battle Belt + Left-Hip Smoke/Frag Canister
+    const pelvisPant = mGeo([
+      bGeo(0.35, 0.16, 0.23, 0, 0, 0),
+      bGeo(0.18, 0.10, 0.24, 0, -0.05, 0) // groin pad
+    ]);
+    const pelvisBelt = mGeo([
+      bGeo(0.375, 0.058, 0.255, 0, 0.055, 0),                // heavy MOLLE battle belt
+      bGeo(0.075, 0.11, 0.085, -0.205, 0.01, 0.01),          // left hip utility pouch
+      bGeo(0.080, 0.13, 0.095,  0.205, -0.01, -0.01),        // right hip drop-leg holster
+      cGeo(0.028, 0.028, 0.125, -0.175, 0.005, -0.115, 10, 0.12, 0, -0.15), // left-hip smoke/frag canister (Ref Image 2)
+      bGeo(0.024, 0.028, 0.030, -0.175, 0.072, -0.115)       // grenade spoon/fuze head
+    ]);
+    const pelvisAccent = mGeo([
+      bGeo(0.072, 0.052, 0.022, 0, 0.055, -0.132),           // Cobra belt buckle
+      cGeo(0.0295, 0.0295, 0.024, -0.175, 0.022, -0.115, 10, 0.12, 0, -0.15) // red band on belt canister
+    ]);
+
+    // 2. Torso + Jacket Shoulders + Collar
+    const chestSuit = mGeo([
+      bGeo(0.43, 0.34, 0.25, 0, 0, 0),
+      sGeo(0.092, -0.235, 0.115, 0, 10, 8, 1.0, 1.05, 1.05), // left shoulder deltoid pad
+      sGeo(0.092,  0.235, 0.115, 0, 10, 8, 1.0, 1.05, 1.05), // right shoulder deltoid pad
+      cGeo(0.118, 0.148, 0.078, 0, 0.185, 0, 12),            // combat collar
+      bGeo(0.012, 0.085, 0.070, -0.318, 0.09, 0, 0, 0, 0.12), // left shoulder patch
+      bGeo(0.012, 0.085, 0.070,  0.318, 0.09, 0, 0, 0, -0.12) // right shoulder patch
+    ]);
+
+    // 3. Heavy Plate Carrier Vest + 4 Front STANAG Mag Pouches + Diagonal Sling (Ref Image 2)
+    const vestBody = mGeo([
+      bGeo(0.445, 0.355, 0.285, 0, -0.005, 0),               // main front/back plate carrier
+      bGeo(0.32, 0.065, 0.295, 0, 0.12, 0),                  // upper chest admin panel
+      bGeo(0.085, 0.065, 0.26, -0.155, 0.178, 0),            // left padded shoulder strap
+      bGeo(0.085, 0.065, 0.26,  0.155, 0.178, 0),            // right padded shoulder strap
+      bGeo(0.465, 0.14, 0.22, 0, -0.08, 0)                   // cummerbund side armor wraps
+    ]);
+    const pouchParts = [
+      bGeo(0.15, 0.075, 0.025, 0, 0.085, -0.152)             // chest admin velcro pouch
+    ];
+    const hwParts = [
+      // Diagonal tactical rifle sling across chest (exact match to Ref Image 2)
+      bGeo(0.036, 0.42, 0.018, -0.02, 0.01, -0.154, 0, 0, -0.62),
+      // Radio / PTT unit on left upper chest + antenna wire
+      bGeo(0.052, 0.078, 0.034, -0.145, 0.115, -0.152),
+      cGeo(0.004, 0.004, 0.14, -0.162, 0.19, -0.142, 6),
+      // Chest morale/ID patch plate
+      bGeo(0.086, 0.038, 0.010, 0.01, 0.095, -0.164),
+      // Shoulder strap D-rings & buckles
+      bGeo(0.048, 0.018, 0.024, -0.155, 0.155, -0.138),
+      bGeo(0.048, 0.018, 0.024,  0.155, 0.155, -0.138)
+    ];
+    // 4 Front Open-Top Magazine Pouches + 4 Ribbed STANAG Mags + Bungee Pull Tabs
+    const magXs = [-0.138, -0.046, 0.046, 0.138];
+    for (let i = 0; i < 4; i++) {
+      const mx = magXs[i];
+      pouchParts.push(
+        bGeo(0.078, 0.125, 0.046, mx, -0.075, -0.165),       // tan/camo pouch body
+        bGeo(0.082, 0.018, 0.050, mx, -0.045, -0.165),       // upper MOLLE webbing band
+        bGeo(0.082, 0.018, 0.050, mx, -0.095, -0.165)        // lower MOLLE webbing band
+      );
+      hwParts.push(
+        bGeo(0.062, 0.068, 0.032, mx, -0.002, -0.165, 0.08, 0, 0), // dark STANAG mag sticking out top
+        bGeo(0.040, 0.014, 0.036, mx,  0.034, -0.163),             // Magpul floorplate loop
+        bGeo(0.010, 0.095, 0.008, mx, -0.045, -0.190)              // vertical retention bungee cord
+      );
+    }
+    const vestPouches = mGeo(pouchParts);
+    const vestHardware = mGeo(hwParts);
+
+    // 4. Head + Perforated Lower-Face Balaclava + Iridescent Ski Goggles + ComTac Headset
+    const headCranium = sGeo(0.132, 0, 0.005, 0.004, 14, 12, 0.95, 1.04, 1.02);
+    const balaclavaGeo = mGeo([
+      sGeo(0.126, 0, -0.022, -0.024, 14, 10, 0.92, 0.96, 0.98),    // front-only lower face mask wrap
+      bGeo(0.118, 0.088, 0.095, 0, -0.056, -0.052),                // sculpted jaw & chin guard
+      cGeo(0.018, 0.038, 0.072, 0, -0.012, -0.120, 8, -0.25, 0, 0) // contoured nose bridge
+    ]);
+    // Smoothly curved wrap-around ski/ballistic goggle lens (-Z front, zero vertical box seams)
+    const goggleLens = xf(new THREE.CylinderGeometry(0.138, 0.134, 0.068, 22, 1, false, Math.PI * 0.68, Math.PI * 0.64), 0, 0.022, -0.006);
+    const headRigging = mGeo([
+      // Contoured ski-goggle rubber frame top/bottom + helmet strap
+      xf(new THREE.CylinderGeometry(0.141, 0.141, 0.012, 20, 1, false, Math.PI * 0.67, Math.PI * 0.66), 0, 0.056, -0.006),
+      xf(new THREE.CylinderGeometry(0.136, 0.136, 0.010, 20, 1, false, Math.PI * 0.69, Math.PI * 0.62), 0, -0.012, -0.006),
+      bGeo(0.285, 0.032, 0.22, 0, 0.022, -0.01),
+      // ComTac Tactical Headset Ear-cups + Boom Mic
+      cGeo(0.046, 0.046, 0.038, -0.138, -0.012, -0.005, 10, 0, 0, Math.PI * 0.5),
+      cGeo(0.046, 0.046, 0.038,  0.138, -0.012, -0.005, 10, 0, 0, Math.PI * 0.5),
+      bGeo(0.010, 0.010, 0.115, -0.112, -0.052, -0.068, 0.18, -0.38, 0),
+      sGeo(0.014, -0.048, -0.058, -0.128, 8, 6), // mic windscreen foam
+      // Dark chin guard & strap
+      bGeo(0.112, 0.022, 0.088, 0, -0.098, -0.046)
+    ]);
+
+    // 5. FAST High-Cut Tactical Helmet + NVG Mount + Side Rails + Right-Side Flashlight Pod (Ref Image 2)
+    const fastHelmShell = mGeo([
+      sGeo(0.158, 0, 0.022, 0.005, 16, 12, 0.98, 0.96, 1.05, Math.PI * 2, Math.PI * 0.54),
+      bGeo(0.235, 0.024, 0.065, 0, 0.058, -0.128, 0.12, 0, 0) // front brow rim
+    ]);
+    const fastHelmHardware = mGeo([
+      // Front NVG Wilcox Mount Shroud + 3 Vent Slots
+      bGeo(0.064, 0.056, 0.022, 0, 0.082, -0.152, -0.18, 0, 0),
+      bGeo(0.038, 0.036, 0.028, 0, 0.082, -0.156, -0.18, 0, 0),
+      bGeo(0.028, 0.010, 0.016, -0.058, 0.088, -0.138, 0,  0.30, 0),
+      bGeo(0.028, 0.010, 0.016,  0.058, 0.088, -0.138, 0, -0.30, 0),
+      // Side ARC Accessory Rails (left & right)
+      bGeo(0.018, 0.022, 0.145, -0.152, 0.042, -0.015, 0.08, 0, 0),
+      bGeo(0.018, 0.022, 0.145,  0.152, 0.042, -0.015, 0.08, 0, 0),
+      // Right-side Helmet Tactical Light Pod (character's right = +X, visible on viewer's left in Ref Image 2!)
+      bGeo(0.028, 0.026, 0.036,  0.164, 0.052, -0.055),
+      cGeo(0.020, 0.018, 0.072,  0.172, 0.052, -0.068, 12, Math.PI * 0.5, 0, 0)
+    ]);
+    const helmLightLens = cGeo(0.015, 0.015, 0.006, 0.172, 0.052, -0.105, 10, Math.PI * 0.5, 0, 0);
+
+    // 6. Arms + Full-Length Camo Sleeves + Two-Tone Armored Gloves + Forearm Tactical PDA
+    const upperArm = cGeo(0.074, 0.062, 0.26, 0, -0.13, 0, 10);
+    const foreArm  = cGeo(0.060, 0.048, 0.24, 0, -0.12, 0, 10);
+    const elbAndCuff = mGeo([
+      sGeo(0.058, 0, 0, 0.012, 8, 6),                         // elbow pad
+      cGeo(0.051, 0.050, 0.036, 0, -0.225, 0, 10),            // wrist velcro cuff
+      bGeo(0.082, 0.034, 0.080, 0, -0.255, 0),                // dark carbon-fiber knuckle plate
+      bGeo(0.074, 0.042, 0.036, 0, -0.285, -0.018)            // dark finger grip pads
+    ]);
+    const gloveTan = mGeo([
+      bGeo(0.078, 0.078, 0.074, 0, -0.265, 0),                // tan leather glove body
+      bGeo(0.032, 0.048, 0.034, 0, -0.260, -0.046, 0.25, 0, 0) // articulated thumb
+    ]);
+    // Left-forearm glowing cyan tactical wrist-screen (Ref Image 2)
+    const pdaFrame  = bGeo(0.064, 0.105, 0.022, -0.018, -0.135, -0.048, 0, 0.22, 0);
+    const pdaScreen = bGeo(0.050, 0.086, 0.006, -0.020, -0.135, -0.058, 0, 0.22, 0);
+
+    // 7. Legs + Cargo Pockets + Contoured Knee Pads + Laced Combat Boots
+    const thigh = mGeo([
+      cGeo(0.104, 0.082, 0.42, 0, -0.21, 0, 10),
+      bGeo(0.035, 0.15, 0.11, -0.088, -0.20, 0),
+      bGeo(0.035, 0.15, 0.11,  0.088, -0.20, 0)
+    ]);
+    const shin = cGeo(0.078, 0.060, 0.40, 0, -0.20, 0, 10);
+    const legGear = mGeo([
+      bGeo(0.108, 0.118, 0.048, 0, 0, -0.076),                // knee pad shell
+      bGeo(0.165, 0.026, 0.165, 0, 0, -0.005),                // knee pad strap
+      bGeo(0.124, 0.028, 0.275, 0, -0.475, -0.055)            // lugged boot sole
+    ]);
+    const bootUpper = mGeo([
+      cGeo(0.068, 0.065, 0.11, 0, -0.35, 0, 10),              // boot ankle cuff
+      bGeo(0.116, 0.095, 0.26, 0, -0.425, -0.055)             // boot vamp & toe
+    ]);
+
+    const panMerged = mGeo([
+      cGeo(0.16, 0.15, 0.03, 0, 0, 0, 14, Math.PI * 0.5, 0, 0),
+      bGeo(0.03, 0.18, 0.025, 0, -0.20, 0)
+    ]);
+
     geos = {
-      pelvis:   new THREE.BoxGeometry(0.35, 0.16, 0.23),
-      belt:     new THREE.BoxGeometry(0.37, 0.055, 0.25),
-      buckle:   new THREE.BoxGeometry(0.08, 0.055, 0.03),
-      pouch:    new THREE.BoxGeometry(0.06, 0.10, 0.08),
-      waist:    new THREE.CylinderGeometry(0.16, 0.17, 0.16, 10),
-      chest:    new THREE.BoxGeometry(0.43, 0.34, 0.25),
-      collar:   new THREE.CylinderGeometry(0.11, 0.145, 0.07, 10),
-      shoulder: new THREE.SphereGeometry(0.082, 10, 8),
-      neck:     new THREE.CylinderGeometry(0.068, 0.080, 0.11, 10),
-      head:     new THREE.SphereGeometry(0.132, 14, 12),
-      jaw:      new THREE.BoxGeometry(0.145, 0.095, 0.13),
-      goggles:  new THREE.BoxGeometry(0.20, 0.055, 0.06),
-      capCrown: new THREE.SphereGeometry(0.138, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.50),
-      capBrim:  new THREE.BoxGeometry(0.20, 0.018, 0.12),
-      upperArm: new THREE.CylinderGeometry(0.070, 0.058, 0.26, 10),
-      foreArm:  new THREE.CylinderGeometry(0.056, 0.044, 0.25, 10),
-      elbow:    new THREE.SphereGeometry(0.055, 8, 6),
-      hand:     new THREE.BoxGeometry(0.076, 0.092, 0.076),
-      thigh:    new THREE.CylinderGeometry(0.100, 0.078, 0.42, 10),
-      kneePad:  new THREE.BoxGeometry(0.10, 0.11, 0.045),
-      shin:     new THREE.CylinderGeometry(0.075, 0.058, 0.40, 10),
-      bootCuff: new THREE.CylinderGeometry(0.066, 0.064, 0.10, 10),
-      foot:     new THREE.BoxGeometry(0.115, 0.095, 0.26),
-      sole:     new THREE.BoxGeometry(0.122, 0.025, 0.27),
-      helm1:    new THREE.SphereGeometry(0.152, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.56),
-      helm2:    new THREE.SphereGeometry(0.158, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.60),
-      helm3:    new THREE.SphereGeometry(0.165, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.64),
-      visor:    new THREE.BoxGeometry(0.23, 0.10, 0.08),
-      vest:     new THREE.BoxGeometry(0.45, 0.36, 0.29),
-      vestMag:  new THREE.BoxGeometry(0.075, 0.11, 0.04),
-      bag1:     new THREE.BoxGeometry(0.27, 0.34, 0.15),
-      bag2:     new THREE.BoxGeometry(0.32, 0.42, 0.19),
-      bag3:     new THREE.BoxGeometry(0.36, 0.48, 0.24),
-      panDisk:  new THREE.CylinderGeometry(0.16, 0.15, 0.03, 14),
-      panHand:  new THREE.BoxGeometry(0.03, 0.18, 0.025),
-      chute:    new THREE.SphereGeometry(2.6, 16, 8, 0, Math.PI * 2, 0, Math.PI * 0.46)
+      pelvisPant, pelvisBelt, pelvisAccent,
+      waist: new THREE.CylinderGeometry(0.165, 0.175, 0.16, 10),
+      chestSuit,
+      neck: new THREE.CylinderGeometry(0.070, 0.082, 0.11, 10),
+      headCranium, balaclavaGeo, goggleLens, headRigging,
+      fastHelmShell, fastHelmHardware, helmLightLens,
+      vestBody, vestPouches, vestHardware,
+      bag1: new THREE.BoxGeometry(0.27, 0.34, 0.15),
+      bag2: new THREE.BoxGeometry(0.32, 0.42, 0.19),
+      bag3: new THREE.BoxGeometry(0.36, 0.48, 0.24),
+      upperArm, foreArm, elbAndCuff, gloveTan, pdaFrame, pdaScreen,
+      thigh, shin, legGear, bootUpper,
+      panMerged,
+      chute: new THREE.SphereGeometry(2.6, 16, 8, 0, Math.PI * 2, 0, Math.PI * 0.46)
     };
+
     mats = {
-      skin: new THREE.MeshStandardMaterial({ color: 0xC68E68, roughness: 0.70 }),
-      boots: new THREE.MeshStandardMaterial({ color: 0x1E2023, roughness: 0.80 }),
-      gearDark: new THREE.MeshStandardMaterial({ color: 0x262B2E, roughness: 0.78, metalness: 0.1 }),
-      visorTint: new THREE.MeshStandardMaterial({ color: 0x16222E, roughness: 0.22, metalness: 0.55 }),
-      brass: new THREE.MeshStandardMaterial({ color: 0x8F7948, roughness: 0.4, metalness: 0.7 }),
-      armor: [null,
-        new THREE.MeshStandardMaterial({ color: 0x4E5B42, roughness: 0.68 }),
-        new THREE.MeshStandardMaterial({ color: 0x625B48, roughness: 0.64 }),
-        new THREE.MeshStandardMaterial({ color: 0x333A42, roughness: 0.46, metalness: 0.30 })
+      skin: new THREE.MeshStandardMaterial({ color: 0xC68E68, roughness: 0.68 }),
+      balaclava: new THREE.MeshStandardMaterial({ color: 0xE2E6EC, map: maskTex, roughness: 0.82, metalness: 0.04 }),
+      visorIridescent: new THREE.MeshPhysicalMaterial({
+        color: 0xFFFFFF, map: visorTex, emissive: 0x3A1642, emissiveIntensity: 0.28,
+        roughness: 0.12, metalness: 0.55, clearcoat: 1.0, clearcoatRoughness: 0.05
+      }),
+      wristScreen: new THREE.MeshStandardMaterial({
+        color: 0x88F4FF, map: pdaTex, emissive: 0x00D8FF, emissiveMap: pdaTex, emissiveIntensity: 1.15,
+        roughness: 0.18, metalness: 0.4
+      }),
+      pdaLens: new THREE.MeshStandardMaterial({ color: 0xFFFFFF, emissive: 0xFFF2CC, emissiveIntensity: 1.4 }),
+      boots: new THREE.MeshStandardMaterial({ color: 0x1B1E22, roughness: 0.76, metalness: 0.12 }),
+      gearDark: new THREE.MeshStandardMaterial({ color: 0x1E2328, roughness: 0.64, metalness: 0.22 }),
+      pouchTan: new THREE.MeshStandardMaterial({ color: 0x86775C, roughness: 0.74, metalness: 0.08 }),
+      redBand: new THREE.MeshStandardMaterial({ color: 0xC83228, roughness: 0.42, metalness: 0.35 }),
+      helmCamo: new THREE.MeshStandardMaterial({ color: 0xDCE2E8, map: camoTex, roughness: 0.68, metalness: 0.12 }),
+      vestBase: new THREE.MeshStandardMaterial({ color: 0x52585E, map: camoTex, roughness: 0.70, metalness: 0.14 }),
+      armor: [
+        new THREE.MeshStandardMaterial({ color: 0xDCE2E8, map: camoTex, roughness: 0.68, metalness: 0.12 }),
+        new THREE.MeshStandardMaterial({ color: 0x889480, map: camoTex, roughness: 0.64, metalness: 0.16 }),
+        new THREE.MeshStandardMaterial({ color: 0x9C927A, map: camoTex, roughness: 0.58, metalness: 0.22 }),
+        new THREE.MeshStandardMaterial({ color: 0x4A5462, map: camoTex, roughness: 0.42, metalness: 0.38 })
       ],
-      pan: new THREE.MeshStandardMaterial({ color: 0x202328, roughness: 0.38, metalness: 0.82 }),
+      pan: new THREE.MeshStandardMaterial({ color: 0x202328, roughness: 0.36, metalness: 0.84 }),
       chute: new THREE.MeshStandardMaterial({ color: 0xE57A25, roughness: 0.68, side: THREE.DoubleSide }),
-      suits: PALETTES.map(col => new THREE.MeshStandardMaterial({ color: col, roughness: 0.84 })),
+      suits: PALETTES.map(col => new THREE.MeshStandardMaterial({ color: col, map: camoTex, roughness: 0.76, metalness: 0.06 })),
       pants: PALETTES.map(col => {
-        const c = new THREE.Color(col).multiplyScalar(0.84);
-        return new THREE.MeshStandardMaterial({ color: c, roughness: 0.88 });
+        const c = new THREE.Color(col).multiplyScalar(0.90);
+        return new THREE.MeshStandardMaterial({ color: c, map: camoTex, roughness: 0.80, metalness: 0.05 });
       })
     };
   }
@@ -78,12 +344,11 @@ const CharacterRig = (() => {
     const root = new THREE.Group();
 
     const pelvis = new THREE.Group(); pelvis.position.y = 0.89;
-    const pelvisM = new THREE.Mesh(geos.pelvis, pantMat);
-    const beltM = new THREE.Mesh(geos.belt, mats.gearDark); beltM.position.y = 0.06;
-    const buckleM = new THREE.Mesh(geos.buckle, mats.brass); buckleM.position.set(0, 0.06, -0.125);
-    const pouchL = new THREE.Mesh(geos.pouch, mats.gearDark); pouchL.position.set(-0.20, 0.02, 0);
-    const pouchR = new THREE.Mesh(geos.pouch, mats.gearDark); pouchR.position.set(0.20, 0.02, 0);
-    pelvis.add(pelvisM, beltM, buckleM, pouchL, pouchR);
+    pelvis.add(
+      new THREE.Mesh(geos.pelvisPant, pantMat),
+      new THREE.Mesh(geos.pelvisBelt, mats.gearDark),
+      new THREE.Mesh(geos.pelvisAccent, mats.redBand)
+    );
     root.add(pelvis);
 
     const spine = new THREE.Group(); spine.position.y = 0.08;
@@ -92,50 +357,43 @@ const CharacterRig = (() => {
     pelvis.add(spine);
 
     const chest = new THREE.Group(); chest.position.y = 0.28;
-    const chestM = new THREE.Mesh(geos.chest, suitMat);
-    const collarM = new THREE.Mesh(geos.collar, mats.gearDark); collarM.position.y = 0.18;
-    const shCapL = new THREE.Mesh(geos.shoulder, suitMat); shCapL.position.set(-0.23, 0.12, 0);
-    const shCapR = new THREE.Mesh(geos.shoulder, suitMat); shCapR.position.set(0.23, 0.12, 0);
-    spine.add(chest); chest.add(chestM, collarM, shCapL, shCapR);
+    chest.add(new THREE.Mesh(geos.chestSuit, suitMat));
+    spine.add(chest);
 
     const neck = new THREE.Group(); neck.position.y = 0.22;
-    const neckM = new THREE.Mesh(geos.neck, mats.skin);
-    chest.add(neck); neck.add(neckM);
+    neck.add(new THREE.Mesh(geos.neck, mats.gearDark));
+    chest.add(neck);
 
     const head = new THREE.Group(); head.position.y = 0.13;
-    const headM = new THREE.Mesh(geos.head, mats.skin); headM.scale.set(0.94, 1.05, 1.02);
-    const jawM = new THREE.Mesh(geos.jaw, mats.skin); jawM.position.set(0, -0.055, -0.028);
-    const gogM = new THREE.Mesh(geos.goggles, mats.visorTint); gogM.position.set(0, 0.018, -0.105);
-    head.add(headM, jawM, gogM);
+    head.add(
+      new THREE.Mesh(geos.headCranium, mats.gearDark),
+      new THREE.Mesh(geos.balaclavaGeo, mats.balaclava),
+      new THREE.Mesh(geos.goggleLens, mats.visorIridescent),
+      new THREE.Mesh(geos.headRigging, mats.gearDark)
+    );
     neck.add(head);
 
-    // L0 Patrol Cap + L1-L3 Tactical Helmets (all forward features oriented toward -Z!)
-    const capGrp = new THREE.Group();
-    const capTop = new THREE.Mesh(geos.capCrown, mats.gearDark); capTop.position.y = 0.025;
-    const capVisor = new THREE.Mesh(geos.capBrim, mats.gearDark); capVisor.position.set(0, 0.028, -0.14); capVisor.rotation.x = 0.16;
-    capGrp.add(capTop, capVisor);
-    head.add(capGrp);
+    // Tactical FAST High-Cut Operator Helmets (L0-L3, all oriented toward -Z)
+    const makeFastHelmet = (lvl) => {
+      const hg = new THREE.Group();
+      hg.position.y = 0.022;
+      const shell = new THREE.Mesh(geos.fastHelmShell, mats.armor[lvl] || mats.helmCamo);
+      const hw = new THREE.Mesh(geos.fastHelmHardware, mats.gearDark);
+      const lens = new THREE.Mesh(geos.helmLightLens, mats.pdaLens);
+      hg.add(shell, hw, lens);
+      hg.visible = (lvl === 0);
+      head.add(hg);
+      return hg;
+    };
+    const helmMeshes = [makeFastHelmet(0), makeFastHelmet(1), makeFastHelmet(2), makeFastHelmet(3)];
 
-    const helmMeshes = [
-      capGrp,
-      new THREE.Mesh(geos.helm1, mats.armor[1]),
-      new THREE.Mesh(geos.helm2, mats.armor[2]),
-      new THREE.Group()
-    ];
-    helmMeshes[3].add(new THREE.Mesh(geos.helm3, mats.armor[3]));
-    const vis = new THREE.Mesh(geos.visor, mats.visorTint); vis.position.set(0, -0.01, -0.13);
-    helmMeshes[3].add(vis);
-    for (let i = 1; i <= 3; i++) { helmMeshes[i].position.y = 0.025; helmMeshes[i].visible = false; head.add(helmMeshes[i]); }
-
+    // Tactical Plate Carrier Vest with 4 Front Magazine Pouches + Sling (Always equipped on operator, upgraded by L1-L3)
     const vestGrp = new THREE.Group();
-    const vestBody = new THREE.Mesh(geos.vest, mats.armor[1]);
-    vestGrp.add(vestBody);
-    for (let m = -1; m <= 1; m++) {
-      const mag = new THREE.Mesh(geos.vestMag, mats.gearDark);
-      mag.position.set(m * 0.11, -0.04, -0.16);
-      vestGrp.add(mag);
-    }
-    vestGrp.visible = false;
+    const vestBody = new THREE.Mesh(geos.vestBody, mats.vestBase);
+    const vestPouches = new THREE.Mesh(geos.vestPouches, mats.pouchTan);
+    const vestHw = new THREE.Mesh(geos.vestHardware, mats.gearDark);
+    vestGrp.add(vestBody, vestPouches, vestHw);
+    vestGrp.visible = true;
     chest.add(vestGrp);
 
     // Backpacks & Pan sit on +Z (BACK side when character faces -Z!)
@@ -143,9 +401,7 @@ const CharacterRig = (() => {
     for (let i = 1; i <= 3; i++) { bagMeshes[i].position.set(0, 0.01, 0.21); bagMeshes[i].visible = false; chest.add(bagMeshes[i]); }
 
     const panGrp = new THREE.Group();
-    const pd = new THREE.Mesh(geos.panDisk, mats.pan); pd.rotation.x = Math.PI * 0.5;
-    const ph = new THREE.Mesh(geos.panHand, mats.pan); ph.position.set(0, -0.20, 0);
-    panGrp.add(pd, ph);
+    panGrp.add(new THREE.Mesh(geos.panMerged, mats.pan));
     panGrp.position.set(-0.08, -0.05, 0.175);
     panGrp.rotation.z = -0.35;
     chest.add(panGrp);
@@ -164,16 +420,23 @@ const CharacterRig = (() => {
     gunPivot.add(gunMount);
     chest.add(gunPivot);
 
-    // Arms
+    // Arms (Full digital camo sleeves + two-tone gloves + glowing cyan PDA on left forearm)
     const makeArm = (side) => {
       const sh = new THREE.Group(); sh.position.set(side * 0.26, 0.12, 0);
-      const uArm = new THREE.Mesh(geos.upperArm, suitMat); uArm.position.y = -0.13;
+      const uArm = new THREE.Mesh(geos.upperArm, suitMat);
       const elb = new THREE.Group(); elb.position.y = -0.26;
-      const elbCap = new THREE.Mesh(geos.elbow, mats.gearDark);
-      const fArm = new THREE.Mesh(geos.foreArm, mats.skin); fArm.position.y = -0.125;
+      const fArm = new THREE.Mesh(geos.foreArm, suitMat);
+      const elbGear = new THREE.Mesh(geos.elbAndCuff, mats.gearDark);
+      const glove = new THREE.Mesh(geos.gloveTan, mats.pouchTan);
       const hand = new THREE.Group(); hand.position.y = -0.25;
-      hand.add(new THREE.Mesh(geos.hand, mats.boots));
-      sh.add(uArm, elb); elb.add(elbCap, fArm, hand);
+      sh.add(uArm, elb);
+      elb.add(fArm, elbGear, glove, hand);
+      if (side === -1) {
+        elb.add(
+          new THREE.Mesh(geos.pdaFrame, mats.gearDark),
+          new THREE.Mesh(geos.pdaScreen, mats.wristScreen)
+        );
+      }
       chest.add(sh);
       return { sh, elb, hand, get rotation() { return sh.rotation; } };
     };
@@ -182,16 +445,14 @@ const CharacterRig = (() => {
     // Legs (boots toe facing -Z forward)
     const makeLeg = (side) => {
       const hip = new THREE.Group(); hip.position.set(side * 0.115, -0.06, 0);
-      const thigh = new THREE.Mesh(geos.thigh, pantMat); thigh.position.y = -0.21;
+      const thigh = new THREE.Mesh(geos.thigh, pantMat);
       const knee = new THREE.Group(); knee.position.y = -0.42;
-      const pad = new THREE.Mesh(geos.kneePad, mats.gearDark); pad.position.set(0, 0, -0.075);
-      const shin = new THREE.Mesh(geos.shin, pantMat); shin.position.y = -0.20;
-      const cuff = new THREE.Mesh(geos.bootCuff, mats.boots); cuff.position.y = -0.35;
+      const shin = new THREE.Mesh(geos.shin, pantMat);
+      const lGear = new THREE.Mesh(geos.legGear, mats.gearDark);
+      const bUp = new THREE.Mesh(geos.bootUpper, mats.boots);
       const foot = new THREE.Group(); foot.position.y = -0.41;
-      const fMesh = new THREE.Mesh(geos.foot, mats.boots); fMesh.position.set(0, -0.015, -0.055);
-      const sMesh = new THREE.Mesh(geos.sole, mats.gearDark); sMesh.position.set(0, -0.065, -0.055);
-      foot.add(fMesh, sMesh);
-      hip.add(thigh, knee); knee.add(pad, shin, cuff, foot);
+      hip.add(thigh, knee);
+      knee.add(shin, lGear, bUp, foot);
       pelvis.add(hip);
       return { hip, knee, foot, get rotation() { return hip.rotation; } };
     };
@@ -212,8 +473,12 @@ const CharacterRig = (() => {
     rig.weaponId = weaponId;
     while (rig.gunMount.children.length) rig.gunMount.remove(rig.gunMount.children[0]);
     if (weaponId && WEAPONS_DB[weaponId]) {
-      const built = ModelBuilders.buildWeaponModel(weaponId, {});
-      built.root.scale.setScalar(0.95);
+      const def = WEAPONS_DB[weaponId];
+      const defAtt = (def.style === 'ar' || def.style === 'scar' || def.style === 'ak' || def.style === 'smg' || def.style === 'vector')
+        ? { optic: 'reddot', grip: 'vertgrip' }
+        : {};
+      const built = ModelBuilders.buildWeaponModel(weaponId, defAtt);
+      built.root.scale.setScalar(1.06);
       rig.gunMount.add(built.root);
     }
   }
@@ -226,8 +491,8 @@ const CharacterRig = (() => {
     for (let i = 1; i <= 3; i++) {
       if (rig.bagMeshes[i]) rig.bagMeshes[i].visible = bagLvl === i;
     }
-    rig.vestGrp.visible = vestLvl > 0;
-    if (vestLvl > 0) rig.vestM.material = mats.armor[vestLvl];
+    rig.vestGrp.visible = true;
+    rig.vestM.material = vestLvl > 0 ? mats.armor[vestLvl] : mats.vestBase;
     rig.panGrp.visible = !!hasPan;
   }
 
@@ -532,10 +797,13 @@ const AI = (() => {
     initScene(scene);
     diffKey = difficulty;
     const rng = Util.mulberry32(World.seed + 5511);
+    const cityFocus = !!dropCenter?.cityFocus;
     for (let i = 0; i < count; i++) {
-      const poi = CONFIG.pois[i % CONFIG.pois.length];
+      const poi = (cityFocus && i % 5 !== 0)
+        ? { x: dropCenter.x || 160, z: dropCenter.z || 90 }
+        : CONFIG.pois[i % CONFIG.pois.length];
       const ang = rng() * Math.PI * 2;
-      const rad = 18 + rng() * 55;
+      const rad = cityFocus && i % 5 !== 0 ? (16 + rng() * 62) : (18 + rng() * 55);
       const gx = Util.clamp(poi.x + Math.cos(ang) * rad, -700, 700);
       const gz = Util.clamp(poi.z + Math.sin(ang) * rad, -700, 700);
       const startY = 380 + rng() * 140;
@@ -549,12 +817,16 @@ const AI = (() => {
     initScene(scene);
     diffKey = 'regular';
     const px = Player.pos.x, pz = Player.pos.z;
-    const offsets = [[-14, -36], [14, -40], [-6, -54], [10, -48], [-18, -28], [16, -30]];
+    const inCity = typeof World !== 'undefined' && World.isUrbanPlaza && World.isUrbanPlaza(px, pz);
+    const offsets = inCity
+      ? [[-12, -38], [13, -40], [-9, -56], [11, -54], [-13, -46], [8, -48]]
+      : [[-14, -36], [14, -40], [-6, -54], [10, -48], [-18, -28], [16, -30]];
     for (let i = 0; i < Math.min(count, offsets.length); i++) {
       const bx = px + offsets[i][0], bz = pz + offsets[i][1];
       const by = World.getHeight(bx, bz);
       const b = createBot(i, bx, bz, by, 'practice', i % 2 === 0 ? 'akm' : 'ump45', { x: bx, z: bz });
       b.chuteOpen = false;
+      if (inCity) b.fireCd = 2.6 + i * 0.4;
     }
     return bots.length;
   }

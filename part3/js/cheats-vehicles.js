@@ -292,58 +292,9 @@ const VehiclesSys = (() => {
   }
 
   function buildMotorMesh() {
-    const grp = new THREE.Group();
-    const bodyGrp = new THREE.Group();
-    grp.add(bodyGrp);
-
-    const paint = new THREE.MeshStandardMaterial({ color: 0xCE2828, roughness: 0.28, metalness: 0.45 });
-    const metal = new THREE.MeshStandardMaterial({ color: 0x262B32, roughness: 0.42, metalness: 0.65 });
-    const seatMat = new THREE.MeshStandardMaterial({ color: 0x1A1A1D, roughness: 0.82 });
-    const headMat = new THREE.MeshBasicMaterial({ color: 0xFFF7D6 });
-    const tailMat = new THREE.MeshBasicMaterial({ color: 0xFF2828 });
-
-    const engine = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.38, 0.68), metal);
-    engine.position.set(0, 0.48, 0.02);
-    engine.castShadow = true;
-
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.22, 1.25), metal);
-    frame.position.set(0, 0.72, -0.02);
-
-    const tank = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.26, 0.56), paint);
-    tank.position.set(0, 0.90, -0.26);
-    tank.rotation.x = 0.14;
-    tank.castShadow = true;
-
-    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.14, 0.72), seatMat);
-    seat.position.set(0, 0.84, 0.28);
-
-    const cowl = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.28, 0.38), paint);
-    cowl.position.set(0, 0.98, -0.68);
-    cowl.rotation.x = -0.35;
-
-    const fork = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.95, 8), metal);
-    fork.position.set(0, 0.72, -0.66);
-    fork.rotation.x = -0.32;
-
-    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.78, 8), metal);
-    bar.rotation.z = Math.PI * 0.5;
-    bar.position.set(0, 1.12, -0.52);
-
-    const exhaust = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.78, 8), metal);
-    exhaust.rotation.x = Math.PI * 0.5 - 0.14;
-    exhaust.position.set(0.20, 0.46, 0.55);
-
-    const hl = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.14, 0.10), headMat); hl.position.set(0, 0.94, -0.86);
-    const tl = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.08, 0.08), tailMat); tl.position.set(0, 0.86, 0.74);
-
-    bodyGrp.add(engine, frame, tank, seat, cowl, fork, bar, exhaust, hl, tl);
-
-    const wF = makeWheel(0.35, 0.16, true); wF.position.set(0, 0.35, -0.82);
-    const wR = makeWheel(0.36, 0.19, true); wR.position.set(0, 0.36, 0.72);
-    grp.add(wF, wR);
-    return { grp, bodyGrp, wheels: [wF, wR] };
+    // Motor detail tinggi dari MotoKit (rangka tubular, fork upside-down, mesin bersirip, knalpot, rantai, rem cakram)
+    return MotoKit.buildRideable(0xD02424);
   }
-
   function spawnVehicle(kind = 'mobil', autoBoard = true) {
     const scene = Render.scene;
     if (!scene || !Player.alive) return null;

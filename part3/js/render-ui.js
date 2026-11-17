@@ -72,10 +72,12 @@ const Render = (() => {
     // Viewmodel Isolated Pass Scene (58° fixed FOV, cleared depth buffer)
     vmScene = new THREE.Scene();
     vmCamera = new THREE.PerspectiveCamera(CONFIG.camera.viewmodelFov, window.innerWidth / window.innerHeight, 0.02, 8.0);
-    vmHemi = new THREE.HemisphereLight(0x9AD0F5, 0x565E44, 0.9);
-    vmSun = new THREE.DirectionalLight(0xFFF7EA, 2.8);
-    vmSun.position.set(2, 4, 2);
-    vmScene.add(vmHemi, vmSun);
+    vmHemi = new THREE.HemisphereLight(0xA4CCF0, 0x38424C, 1.05);
+    vmSun = new THREE.DirectionalLight(0xF0F6FF, 2.4);
+    vmSun.position.set(-1.5, 3.8, 1.6);
+    const vmRim = new THREE.DirectionalLight(0x9EC8F8, 1.35);
+    vmRim.position.set(1.8, 2.2, -1.5);
+    vmScene.add(vmHemi, vmSun, vmRim);
 
     // Pooled Muzzle Flash PointLights (6 max per Sec 16.2)
     for (let i = 0; i < 6; i++) {
@@ -312,18 +314,21 @@ const Render = (() => {
     scene.environmentIntensity = tod.night ? 0.52 : 0.70;
     if (vmScene) {
       vmScene.environment = envRT.texture;
-      vmScene.environmentIntensity = scene.environmentIntensity;
-      vmSun.color.setHex(tod.sunColor);
-      vmSun.intensity = tod.sunInt * (tod.night ? 0.9 : 0.85);
-      vmHemi.color.setHex(tod.hemiSky);
-      vmHemi.groundColor.setHex(tod.hemiGnd);
-      vmHemi.intensity = tod.hemiInt;
+      vmScene.environmentIntensity = tod.night ? 0.38 : 0.48;
+      vmSun.color.setHex(tod.sunColor).lerp(new THREE.Color(0xD8E8FA), 0.58);
+      vmSun.intensity = tod.sunInt * (tod.night ? 0.95 : 0.85);
+      vmHemi.color.setHex(tod.hemiSky).lerp(new THREE.Color(0x98C0E8), 0.55);
+      vmHemi.groundColor.setHex(0x28323E);
+      vmHemi.intensity = Math.max(0.85, tod.hemiInt);
     }
-    if (typeof WorldBuildings !== 'undefined' && WorldBuildings.setNightMode) WorldBuildings.setNightMode(!!tod.night);
+    if (typeof WorldBuildings !== 'undefined') {
+      if (WorldBuildings.setTimeOfDay) WorldBuildings.setTimeOfDay(todKey);
+      else if (WorldBuildings.setNightMode) WorldBuildings.setNightMode(!!tod.night);
+    }
     if (init._rain) init._rain.mesh.visible = currentWeather === 'hujan';
     if (init._flashlight) init._flashlight.enabled = !!tod.night;
     if (init._nightRim) init._nightRim.intensity = tod.night ? 2.6 : 0;
-    if (init._poiLights && !tod.night) {
+    if (init._poiLights && !tod.night && todKey !== 'sore') {
       for (let i = 0; i < init._poiLights.length; i++) init._poiLights[i].intensity = 0;
     }
   }
@@ -459,29 +464,54 @@ const Render = (() => {
     } else if (init._nightRim) {
       init._nightRim.intensity = 0;
     }
-    if (init._poiLights && isNight && camera && typeof WorldBuildings !== 'undefined') {
+    const hasWarmPoi = isNight || currentTod === 'sore';
+    if (init._poiLights && hasWarmPoi && camera && typeof WorldBuildings !== 'undefined') {
       init._poiLightTimer -= dt;
       if (init._poiLightTimer <= 0) {
-        init._poiLightTimer = 0.25;
-        const fps = WorldBuildings.footprints;
+        init._poiLightTimer = 0.22;
         const px = camera.position.x, pz = camera.position.z;
-        const nearest = [];
-        for (let i = 0; i < fps.length; i++) {
-          const b = fps[i];
-          const d2 = (b.cx - px) * (b.cx - px) + (b.cz - pz) * (b.cz - pz);
-          if (d2 < 110 * 110) nearest.push({ b, d2 });
-        }
-        nearest.sort((a, b) => a.d2 - b.d2);
-        for (let i = 0; i < init._poiLights.length; i++) {
-          const pl = init._poiLights[i];
-          if (i < nearest.length) {
-            const b = nearest[i].b;
-            const by = World.getHeight(b.cx, b.cz);
-            pl.position.set(b.cx, by + 2.6, b.cz);
-            pl.intensity = 9.5;
-          } else {
-            pl.intensity = 0;
+        const inCity = typeof World !== 'undefined' && World.isUrbanPlaza && World.isUrbanPlaza(px, pz);
+        if (inCity) {
+          const ch = World.getHeight(160, 90);
+          const spots = [
+            [154.8, ch + 8.1, 102.8, 0xFFBA68, isNight ? 18 : 13, 44],
+            [174.5, ch + 3.6, 101.0, 0x72E8FF, isNight ? 14 : 10, 36],
+            [133.5, ch + 9.0, 88.0,  0xFFAE52, isNight ? 15 : 11, 40],
+            [159.5, ch + 4.8, 89.0,  0xFFD49E, isNight ? 13 : 9,  36]
+          ];
+          for (let i = 0; i < init._poiLights.length; i++) {
+            const pl = init._poiLights[i], sp = spots[i];
+            if (sp) {
+              pl.position.set(sp[0], sp[1], sp[2]);
+              pl.color.setHex(sp[3]);
+              pl.intensity = sp[4];
+              pl.distance = sp[5];
+            } else { pl.intensity = 0; }
           }
+        } else if (isNight) {
+          const fps = WorldBuildings.footprints;
+          const nearest = [];
+          for (let i = 0; i < fps.length; i++) {
+            const b = fps[i];
+            const d2 = (b.cx - px) * (b.cx - px) + (b.cz - pz) * (b.cz - pz);
+            if (d2 < 110 * 110) nearest.push({ b, d2 });
+          }
+          nearest.sort((a, b) => a.d2 - b.d2);
+          for (let i = 0; i < init._poiLights.length; i++) {
+            const pl = init._poiLights[i];
+            pl.color.setHex(0xFFAF58);
+            pl.distance = 26;
+            if (i < nearest.length) {
+              const b = nearest[i].b;
+              const by = World.getHeight(b.cx, b.cz);
+              pl.position.set(b.cx, by + 2.6, b.cz);
+              pl.intensity = 9.5;
+            } else {
+              pl.intensity = 0;
+            }
+          }
+        } else {
+          for (let i = 0; i < init._poiLights.length; i++) init._poiLights[i].intensity = 0;
         }
       }
     }
@@ -531,7 +561,9 @@ const UI = (() => {
   let activeModal = null;
   let activeSettingsTab = 'grafis';
   let onStartMatchCallback = null;
-  let matchConfig = { participants: 40, difficulty: 'regular', tod: 'siang', weather: 'cerah', perspective: 'free', seed: CONFIG.seedDefault, mode: 'br' };
+  let onCloseModalCallback = null;
+  let alertTimerId = null;
+  let matchConfig = { participants: 40, difficulty: 'regular', tod: 'siang', weather: 'cerah', perspective: 'free', mapArea: 'island', seed: CONFIG.seedDefault, mode: 'br' };
 
   function applySettingsToDom() {
     document.documentElement.style.setProperty('--ui-scale', String((settings.uiScale || 100) / 100));
@@ -583,18 +615,41 @@ const UI = (() => {
     activeModal = title;
   }
 
+  function showAlertBanner(msg, durSec = 2.5) {
+    const el = document.getElementById('hud-alert-banner');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('visible');
+    if (alertTimerId) clearTimeout(alertTimerId);
+    alertTimerId = setTimeout(() => {
+      el.classList.remove('visible');
+      alertTimerId = null;
+    }, Math.max(400, durSec * 1000));
+  }
+
   function closeModal() {
     document.getElementById('modal-backdrop').classList.add('hidden');
     activeModal = null;
+    if (onCloseModalCallback) onCloseModalCallback();
   }
 
-  function showMatchSetupModal(mode = 'br') {
+  function showMatchSetupModal(mode = 'br', defaultArea = null) {
     matchConfig.mode = mode;
+    if (defaultArea) matchConfig.mapArea = defaultArea;
+    if (defaultArea === 'city') matchConfig.tod = 'sore';
+    else if (defaultArea === 'island' && matchConfig.tod === 'sore') matchConfig.tod = 'siang';
     const isPractice = mode === 'practice';
-    showModal(isPractice ? 'PENGATURAN MODE LATIHAN' : 'PENGATURAN PERTANDINGAN SOLO', (body) => {
+    const areaTitle = matchConfig.mapArea === 'city' ? ' — KOTA PICCADILLY' : '';
+    showModal((isPractice ? 'PENGATURAN MODE LATIHAN' : 'PENGATURAN PERTANDINGAN SOLO') + areaTitle, (body) => {
       body.innerHTML = `<div class="setup-grid">
+        <div class="field-card" style="grid-column:1 / -1;">
+          <div class="field-label"><span>Lokasi / Area Peta</span><span class="tabular" id="st-area-v">${matchConfig.mapArea === 'city' ? 'Kota Piccadilly' : 'Pulau Rajawali'}</span></div>
+          <div class="seg-group" data-group="mapArea">
+            ${[['island','Pulau Rajawali (Semua Area)'],['city','Kota Piccadilly (Perkotaan)']].map(([k,l]) => `<button class="seg-btn ${matchConfig.mapArea === k ? 'active' : ''}" data-val="${k}">${l}</button>`).join('')}
+          </div>
+        </div>
         <div class="field-card">
-          <div class="field-label"><span>Jumlah Peserta</span><span class="tabular" id="st-part-v">${isPractice ? '1 (Range)' : matchConfig.participants}</span></div>
+          <div class="field-label"><span>Jumlah Peserta</span><span class="tabular" id="st-part-v">${isPractice ? (matchConfig.mapArea === 'city' ? '1 + 4 Bot' : '1 (Range)') : matchConfig.participants}</span></div>
           <div class="seg-group" data-group="participants">
             ${[20, 40, 60].map(n => `<button class="seg-btn ${matchConfig.participants === n ? 'active' : ''}" data-val="${n}" ${isPractice ? 'disabled' : ''}>${n} Pemain</button>`).join('')}
           </div>
@@ -638,6 +693,12 @@ const UI = (() => {
             btn.classList.add('active');
             matchConfig[key] = key === 'participants' ? Number(btn.dataset.val) : btn.dataset.val;
             if (key === 'participants') document.getElementById('st-part-v').textContent = matchConfig.participants;
+            if (key === 'mapArea') {
+              const isC = matchConfig.mapArea === 'city';
+              document.getElementById('st-area-v').textContent = isC ? 'Kota Piccadilly' : 'Pulau Rajawali';
+              document.getElementById('modal-title').textContent = (isPractice ? 'PENGATURAN MODE LATIHAN' : 'PENGATURAN PERTANDINGAN SOLO') + (isC ? ' — KOTA PICCADILLY' : '');
+              if (isPractice) document.getElementById('st-part-v').textContent = isC ? '1 + 4 Bot' : '1 (Range)';
+            }
           };
         });
       });
@@ -920,16 +981,20 @@ const UI = (() => {
 
   function init(callbacks) {
     onStartMatchCallback = callbacks.onStartMatch;
+    onCloseModalCallback = callbacks.onCloseModal || null;
     applySettingsToDom();
 
-    document.getElementById('btn-menu-play').onclick = () => { AudioSys.playUiTone('click'); showMatchSetupModal('br'); };
-    document.getElementById('btn-menu-practice').onclick = () => { AudioSys.playUiTone('click'); showMatchSetupModal('practice'); };
+    document.getElementById('btn-menu-play').onclick = () => { AudioSys.playUiTone('click'); showMatchSetupModal('br', 'island'); };
+    document.getElementById('btn-menu-play-city').onclick = () => { AudioSys.playUiTone('click'); showMatchSetupModal('br', 'city'); };
+    document.getElementById('btn-menu-practice').onclick = () => { AudioSys.playUiTone('click'); showMatchSetupModal('practice', 'island'); };
+    document.getElementById('btn-menu-practice-city').onclick = () => { AudioSys.playUiTone('click'); showMatchSetupModal('practice', 'city'); };
     document.getElementById('btn-menu-settings').onclick = () => { AudioSys.playUiTone('click'); showSettingsModal(); };
     document.getElementById('btn-menu-howto').onclick = () => { AudioSys.playUiTone('click'); showHowToPlayModal(); };
     document.getElementById('btn-menu-stats').onclick = () => { AudioSys.playUiTone('click'); showStatsModal(); };
     document.getElementById('btn-menu-studio').onclick = () => { AudioSys.playUiTone('click'); callbacks.onCameraPreset('studio'); };
-    document.getElementById('btn-menu-cam-island').onclick = () => { AudioSys.playUiTone('click'); callbacks.onCameraPreset('island'); };
-    document.getElementById('btn-menu-cam-studio').onclick = () => { AudioSys.playUiTone('click'); callbacks.onCameraPreset('studio'); };
+    document.getElementById('btn-menu-cam-island').onclick = () => { AudioSys.playUiTone('click'); Render.applyAtmosphere('siang', Render.weather); callbacks.onCameraPreset('island'); };
+    document.getElementById('btn-menu-cam-city').onclick = () => { AudioSys.playUiTone('click'); Render.applyAtmosphere('sore', Render.weather); callbacks.onCameraPreset('city'); };
+    document.getElementById('btn-menu-cam-studio').onclick = () => { AudioSys.playUiTone('click'); Render.applyAtmosphere('siang', Render.weather); callbacks.onCameraPreset('studio'); };
     document.getElementById('modal-close-btn').onclick = () => { AudioSys.playUiTone('click'); closeModal(); };
   }
 
@@ -1179,7 +1244,7 @@ const UI = (() => {
   }
 
   return {
-    init, showLoading, hideLoading, showModal, closeModal,
+    init, showLoading, hideLoading, showModal, closeModal, showAlertBanner,
     showMatchSetupModal, showSettingsModal, showHowToPlayModal, showStatsModal,
     showPauseModal, showArsenalModal, showInventoryModal,
     recordMatchStats, showMatchResultModal,

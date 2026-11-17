@@ -15,7 +15,6 @@
 }
 </script>
 </head>
-</head>
 <body>
 <!-- SVG Colorblindness Filters -->
 <svg width="0" height="0" style="position:absolute;pointer-events:none;" aria-hidden="true">
@@ -72,9 +71,17 @@
           <span data-i18n="menuPlay">Mainkan</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>
         </button>
+        <button id="btn-menu-play-city" class="tac-btn city-accent">
+          <span>Mainkan &mdash; Kota Piccadilly</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V9l4-2v14M9 21V4l6 2v15M15 21V11l4 2v8"/></svg>
+        </button>
         <button id="btn-menu-practice" class="tac-btn olive">
           <span data-i18n="menuPractice">Mode Latihan</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button id="btn-menu-practice-city" class="tac-btn city-outline">
+          <span>Latihan &mdash; Kota Piccadilly</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="10" width="6" height="11"/><rect x="9" y="5" width="6" height="16"/><rect x="15" y="8" width="6" height="13"/></svg>
         </button>
         <button id="btn-menu-settings" class="tac-btn">
           <span data-i18n="menuSettings">Pengaturan</span>
@@ -97,6 +104,7 @@
       <div class="tac-panel menu-bench-controls">
         <span class="label-uc" style="font-size:11px;color:var(--text-dim)">Kamera Menu:</span>
         <button id="btn-menu-cam-island" class="tac-btn sm">Panorama Pulau</button>
+        <button id="btn-menu-cam-city" class="tac-btn sm city-outline">Kota Piccadilly</button>
         <button id="btn-menu-cam-studio" class="tac-btn sm">Sampel PBR (12)</button>
       </div>
     </div>
@@ -318,6 +326,7 @@
       <button class="tac-btn sm" data-dbg="tp-sukamaju">TP Sukamaju</button>
       <button class="tac-btn sm" data-dbg="tp-pelabuhan">TP Pelabuhan</button>
       <button class="tac-btn sm" data-dbg="tp-menara">TP Menara</button>
+      <button class="tac-btn sm" data-dbg="tp-kota">TP Kota Piccadilly</button>
       <button class="tac-btn sm" data-dbg="cycle-time">Ganti Waktu</button>
       <button class="tac-btn sm" data-dbg="cycle-weather">Ganti Cuaca</button>
       <button class="tac-btn sm" data-dbg="spawn-bots">Spawn 4 Bot</button>
@@ -385,6 +394,8 @@ const MODULES = [
   "js/audio-assets.js",
   "js/world.js",
   "js/loot-map.js",
+  "js/model-weapons.js",
+  "js/model-moto.js",
   "js/characters-ai.js",
   "js/weapons-physics.js",
   "js/player.js",

@@ -766,6 +766,60 @@ const Assets = (() => {
           const n = tileNoise(u, v, 22, 809) * 12;
           return { r: 74 + furrow * 18 + n, g: 56 + furrow * 14 + n * 0.8, b: 42 + furrow * 10, h: 0.5 + furrow * 0.35, rough: 0.94 };
         }
+      },
+      limestone: {
+        rx: 3, ry: 3, normStrength: 1.55, roughness: 0.84,
+        evalPixel: (u, v) => {
+          const rows = 8, cols = 4;
+          const gy = v * rows, row = Math.floor(gy), fy = gy - row;
+          const gx = (u * cols + (row % 2) * 0.5) % cols, fx = gx - Math.floor(gx);
+          const seam = fx < 0.03 || fx > 0.97 || fy < 0.045 || fy > 0.955;
+          const n = tileNoise(u, v, 10, 911) * 10 + tileNoise(u, v, 26, 919) * 6;
+          const shade = seam ? -26 : 0;
+          return { r: 196 + n + shade, g: 184 + n * 0.9 + shade, b: 162 + n * 0.8 + shade, h: seam ? 0.25 : 0.68 + n * 0.008, rough: seam ? 0.94 : 0.82 };
+        }
+      },
+      pavingStone: {
+        rx: 6, ry: 6, normStrength: 2.1, roughness: 0.44, metalness: 0.10,
+        evalPixel: (u, v) => {
+          const rows = 10, cols = 6;
+          const gy = v * rows, row = Math.floor(gy), fy = gy - row;
+          const gx = (u * cols + (row % 2) * 0.5) % cols, fx = gx - Math.floor(gx);
+          const joint = fx < 0.05 || fy < 0.07;
+          const blockShade = (((row * 19 + Math.floor(gx) * 31) % 15) - 7) * 1.4;
+          const puddle = tileNoise(u, v, 3, 941);
+          const wetSpot = puddle > 0.25 ? 1 : 0;
+          const base = 58 + blockShade + tileNoise(u, v, 22, 947) * 8 - (joint ? 16 : 0);
+          return { r: base, g: base + 3, b: base + 9, h: joint ? 0.22 : 0.72 + blockShade * 0.01, rough: wetSpot ? 0.20 : 0.52 };
+        }
+      },
+      slateRoof: {
+        rx: 4, ry: 4, normStrength: 2.0, roughness: 0.66,
+        evalPixel: (u, v) => {
+          const rows = 12, cols = 10;
+          const gy = v * rows, row = Math.floor(gy), fy = gy - row;
+          const gx = (u * cols + (row % 2) * 0.5) % cols, fx = gx - Math.floor(gx);
+          const seam = fy < 0.1 || fx < 0.04;
+          const n = tileNoise(u, v, 16, 971) * 7;
+          const vBase = 44 + n - (seam ? 12 : 0);
+          return { r: vBase, g: vBase + 4, b: vBase + 12, h: seam ? 0.3 : 0.72, rough: 0.64 };
+        }
+      },
+      bronzeStatue: {
+        rx: 2, ry: 2, normStrength: 1.8, roughness: 0.38, metalness: 0.72,
+        evalPixel: (u, v) => {
+          const pat = tileNoise(u, v, 10, 991);
+          const verdigris = pat > 0.35 ? 12 : 0;
+          const n = tileNoise(u, v, 24, 997) * 8;
+          return { r: 58 + n - verdigris * 0.4, g: 54 + n + verdigris * 0.7, b: 44 + n + verdigris * 0.4, h: 0.5 + n * 0.015, rough: 0.34 + pat * 0.12 };
+        }
+      },
+      busBlue: {
+        rx: 2, ry: 2, normStrength: 0.55, roughness: 0.26, metalness: 0.38,
+        evalPixel: (u, v) => {
+          const n = tileNoise(u, v, 12, 1013) * 5;
+          return { r: 22 + n, g: 52 + n, b: 96 + n * 1.2, h: 0.55 + n * 0.008, rough: 0.24 };
+        }
       }
     };
 
@@ -776,11 +830,29 @@ const Assets = (() => {
       if (onStep) onStep(k, i + 1, keys.length);
     }
 
-    // Also attach foliage leaf alpha texture & breakable window glass material
+    // Foliage leaf alpha, breakable glass & lightweight emissive/metallic urban materials
     materials.leafCard = buildFoliageMaterial(aniso);
     materials.glass = new THREE.MeshPhysicalMaterial({
       color: 0x3D637A, transparent: true, opacity: 0.56, roughness: 0.08, metalness: 0.25,
       side: THREE.DoubleSide, depthWrite: false
+    });
+    materials.warmGlow = new THREE.MeshStandardMaterial({
+      name: 'warmGlow', color: 0xFFE6BC, emissive: 0xFFB347, emissiveIntensity: 1.55, roughness: 0.28, metalness: 0.05
+    });
+    materials.neonCyan = new THREE.MeshStandardMaterial({
+      name: 'neonCyan', color: 0xC4F6FF, emissive: 0x2CE6FF, emissiveIntensity: 1.75, roughness: 0.2, metalness: 0.1
+    });
+    materials.goldTrim = new THREE.MeshStandardMaterial({
+      name: 'goldTrim', color: 0xE5B842, emissive: 0x9E720A, emissiveIntensity: 0.35, roughness: 0.32, metalness: 0.82
+    });
+    materials.craneYellow = new THREE.MeshStandardMaterial({
+      name: 'craneYellow', color: 0xE0A11B, roughness: 0.48, metalness: 0.35
+    });
+    materials.darkIron = new THREE.MeshStandardMaterial({
+      name: 'darkIron', color: 0x1D2127, roughness: 0.44, metalness: 0.68
+    });
+    materials.redSignal = new THREE.MeshStandardMaterial({
+      name: 'redSignal', color: 0xFF4242, emissive: 0xFF2828, emissiveIntensity: 1.6, roughness: 0.25
     });
   }
 

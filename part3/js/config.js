@@ -84,7 +84,7 @@ const CONFIG = {
     { id: 'sukamaju',  name: 'Desa Sukamaju',     x: -110, z: 280,  w: 240, h: 240, tier: 2, kind: 'village', targetH: 14.0 },
     { id: 'pabrik',    name: 'Pabrik Tua',        x: -420, z: 40,   w: 220, h: 180, tier: 3, kind: 'factory', targetH: 18.0 },
     { id: 'pangkalan', name: 'Pangkalan Elang',   x: 430,  z: 420,  w: 420, h: 260, tier: 3, kind: 'airbase', targetH: 10.0 },
-    { id: 'kotamini',  name: 'Kota Mini Bayu',    x: 160,  z: 90,   w: 300, h: 300, tier: 3, kind: 'urban',   targetH: 20.0 },
+    { id: 'kotamini',  name: 'Kota Piccadilly',   x: 160,  z: 90,   w: 340, h: 340, tier: 3, kind: 'urban',   targetH: 20.0 },
     { id: 'bukitpinus',name: 'Bukit Pinus',       x: -430, z: -380, w: 300, h: 300, tier: 1, kind: 'forest',  targetH: 52.0 },
     { id: 'menara',    name: 'Menara Radio',      x: -20,  z: -240, w: 120, h: 120, tier: 2, kind: 'Peak',    targetH: 82.0 },
     { id: 'pantai',    name: 'Pantai Selatan',    x: 100,  z: 610,  w: 400, h: 140, tier: 1, kind: 'beach',   targetH: 2.2 },

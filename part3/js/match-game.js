@@ -32,6 +32,7 @@ const Debug = (() => {
         else if (act === 'tp-sukamaju') Game.teleportCam(-110, 280);
         else if (act === 'tp-pelabuhan') Game.teleportCam(-440, 540);
         else if (act === 'tp-menara') Game.teleportCam(-20, -240);
+        else if (act === 'tp-kota') Game.teleportCam(156, 118);
         else if (act === 'cycle-time') {
           const nxt = tods[(tods.indexOf(Render.tod) + 1) % tods.length];
           Render.applyAtmosphere(nxt, Render.weather);
@@ -159,6 +160,7 @@ const MatchSys = (() => {
   // Spectate & Stats
   let spectateIdx = 0;
   let statsRecorded = false;
+  let lastSummary = null;
   const tmpCamTarget = new THREE.Vector3();
   const tmpDir = new THREE.Vector3();
 
@@ -277,6 +279,7 @@ const MatchSys = (() => {
     const kl = document.getElementById('hud-kills');
     if (kl) kl.textContent = '0';
 
+    const isCity = cfg?.mapArea === 'city';
     buildZoneCylinder(Render.scene);
     zoneIdx = 0;
     zoneState = 'WAIT';
@@ -285,8 +288,8 @@ const MatchSys = (() => {
     blueZone.x = 0; blueZone.z = 0; blueZone.r = p0.r0; blueZone.dps = p0.dps;
     const ang0 = rng() * Math.PI * 2;
     const shift0 = (p0.r0 - p0.r1) * 0.45 * rng();
-    whiteZone.x = Math.cos(ang0) * shift0;
-    whiteZone.z = Math.sin(ang0) * shift0;
+    whiteZone.x = isCity ? (160 + Math.cos(ang0) * 18) : (Math.cos(ang0) * shift0);
+    whiteZone.z = isCity ? (90 + Math.sin(ang0) * 18) : (Math.sin(ang0) * shift0);
     whiteZone.r = p0.r1;
     shrinkStart.x = 0; shrinkStart.z = 0; shrinkStart.r = p0.r0;
     Player.setZonesRef({ blue: blueZone, white: whiteZone });
@@ -295,18 +298,23 @@ const MatchSys = (() => {
     nextAirdropCd = 22;
     botsSpawned = false;
     statsRecorded = false;
+    lastSummary = null;
     matchElapsed = 0;
     spectateIdx = 0;
 
-    // Place player on valid Staging Coastland around SW beach (-460, 560)
-    let sx = -440, sz = 540;
-    for (let k = 0; k < 12; k++) {
-      const tx = -440 + k * 22, tz = 540 - k * 18;
-      if (World.getHeight(tx, tz) >= 2.2) { sx = tx; sz = tz; break; }
+    // Place player either at Kota Piccadilly urban square or SW Staging Coastland
+    let sx = -440, sz = 540, syaw = 0.3, spitch = 0;
+    if (isCity) {
+      sx = 155.5; sz = 118.5; syaw = 0.08; spitch = 0.04;
+    } else {
+      for (let k = 0; k < 12; k++) {
+        const tx = -440 + k * 22, tz = 540 - k * 18;
+        if (World.getHeight(tx, tz) >= 2.2) { sx = tx; sz = tz; break; }
+      }
     }
     Player.setPerspectiveMode(cfg.perspective || 'free');
     Player.initLoadoutForMode('br');
-    Player.spawnAt(sx, sz, 0.3);
+    Player.spawnAt(sx, sz, syaw, spitch);
     AI.bots.length = 0;
 
     phase = 'LOBBY_ISLAND';
@@ -314,9 +322,11 @@ const MatchSys = (() => {
     Input.setGameplayActive(true);
     document.getElementById('hud-layer').classList.remove('hidden');
     document.getElementById('hud-alive').textContent = String(totalParticipants);
+    const poiHud = document.getElementById('hud-poi-name');
+    if (poiHud) poiHud.textContent = isCity ? 'Kota Piccadilly (Perkotaan)' : 'Pulau Persiapan';
     const pill = ensureStatusPill();
     pill.classList.remove('hidden');
-    pill.innerHTML = 'PULAU PERSIAPAN • Terjun otomatis dalam <span id="lobby-sec">15</span>d • <span style="color:#F2B705">[SPACE / Klik: Naik Pesawat Sekarang]</span>';
+    pill.innerHTML = (isCity ? 'KOTA PICCADILLY (LOBI)' : 'PULAU PERSIAPAN') + ' &bull; Terjun otomatis dalam <span id="lobby-sec">15</span>d &bull; <span style="color:#F2B705">[SPACE / Klik: Naik Pesawat Sekarang]</span>';
     pill.onclick = () => { if (phase === 'LOBBY_ISLAND') enterPlane(); };
   }
 
@@ -325,19 +335,27 @@ const MatchSys = (() => {
     phase = 'PLANE';
     buildC130Plane(Render.scene);
 
-    // Compute seeded cross-island chord
+    // Compute seeded cross-island chord (passing directly above Kota Piccadilly if city mode)
+    const isCity = activeCfg?.mapArea === 'city';
     const a = rng() * Math.PI * 2;
-    planeStart.set(Math.cos(a) * 860, 540, Math.sin(a) * 860);
-    planeEnd.set(-Math.cos(a) * 860, 540, -Math.sin(a) * 860);
-    planeProgress = 0.22;
+    const cx = isCity ? 160 : 0;
+    const cz = isCity ? 90 : 0;
+    const span = isCity ? 640 : 860;
+    planeStart.set(cx + Math.cos(a) * span, 540, cz + Math.sin(a) * span);
+    planeEnd.set(cx - Math.cos(a) * span, 540, cz - Math.sin(a) * span);
+    planeProgress = isCity ? 0.34 : 0.22;
     planePos.lerpVectors(planeStart, planeEnd, planeProgress);
     planeYaw = Math.atan2(planeEnd.x - planeStart.x, planeEnd.z - planeStart.z);
     planeMesh.position.copy(planePos);
     planeMesh.rotation.set(0, planeYaw, 0);
 
-    // Spawn AI bots cleanly across the island (simulating enemy plane drops across POIs)
+    // Spawn AI bots cleanly across the island or concentrated around Kota Piccadilly
     if (!botsSpawned) {
-      AI.spawnMatchBots(Render.scene, totalParticipants - 1, activeCfg?.difficulty || 'regular');
+      AI.spawnMatchBots(Render.scene, totalParticipants - 1, activeCfg?.difficulty || 'regular', {
+        x: isCity ? 160 : 0,
+        z: isCity ? 90 : 0,
+        cityFocus: isCity
+      });
       botsSpawned = true;
     }
 
@@ -518,11 +536,11 @@ const MatchSys = (() => {
           // Spawn real Tier-3 supply loot crate at drop coordinates
           const desiredIds = ['m24', 'helm3', 'vest3', 'bag3', 'scope8x', 'medkit', 'adrenaline'];
           const allDefs = Loot.ITEMS || {};
-          const crateItems = desiredIds.filter(id => allDefs[id]).map(id => ({ id, def: allDefs[id], qty: allDefs[id].qty || 1 }));
+          const crateItems = desiredIds.filter(id => allDefs[id]).map(id => ({ itemId: id, id, def: allDefs[id], qty: allDefs[id].qty || 1 }));
           if (crateItems.length === 0) {
-            Object.values(allDefs).slice(0, 5).forEach(d => crateItems.push({ id: d.id, def: d, qty: 1 }));
+            Object.values(allDefs).slice(0, 5).forEach(d => crateItems.push({ itemId: d.id, id: d.id, def: d, qty: 1 }));
           }
-          Loot.spawnDeathCrate(new THREE.Vector3(airdrop.x, airdrop.groundY, airdrop.z), crateItems, 'Suplai Udara Tier-3');
+          Loot.spawnDeathCrate(airdrop.x, airdrop.groundY, airdrop.z, crateItems, 'Suplai Udara Tier-3');
         }
         airdrop.mesh.position.set(airdrop.x, airdrop.y, airdrop.z);
       } else {
@@ -537,6 +555,15 @@ const MatchSys = (() => {
         }
       }
     }
+  }
+
+  function openResultModal() {
+    if (!lastSummary) return;
+    UI.showMatchResultModal(
+      lastSummary,
+      () => Game.exitToMenu(),
+      () => Game.startMatchFlow(activeCfg)
+    );
   }
 
   function finishMatch(win, cause) {
@@ -556,14 +583,11 @@ const MatchSys = (() => {
       mode: 'Solo BR',
       cause
     };
+    lastSummary = summary;
     UI.recordMatchStats(summary);
     setTimeout(() => {
       if (phase === 'SPECTATE' || phase === 'RESULT') {
-        UI.showMatchResultModal(
-          summary,
-          () => Game.exitToMenu(),
-          () => Game.startMatchFlow(activeCfg)
-        );
+        openResultModal();
       }
     }, win ? 1800 : 1200);
   }
@@ -728,18 +752,27 @@ const MatchSys = (() => {
       advanceZone(dt);
       Throwables.update(dt);
       AI.update(dt, elapsed, Player.playerTarget, Throwables.smokes, { blue: blueZone, white: whiteZone });
+      Ballistics.step(dt, AI.bots, (tgt, dmg, zone, dist, hitPos, hitDir, owner) => {
+        if (tgt?.isBot) AI.applyBotDamage(tgt, dmg, zone, dist, hitPos, hitDir, owner);
+      });
       const aliveBots = AI.bots.filter(b => b.alive);
+      const pill = ensureStatusPill();
+      pill.classList.remove('hidden');
+      pill.onclick = () => { if (!UI.hasModalOpen) openResultModal(); };
       if (phase === 'SPECTATE' && aliveBots.length > 0) {
         if (Input.wasCodePressed('KeyQ')) spectateIdx = (spectateIdx - 1 + aliveBots.length) % aliveBots.length;
         if (Input.wasCodePressed('KeyE')) spectateIdx = (spectateIdx + 1) % aliveBots.length;
         const tgt = aliveBots[spectateIdx % aliveBots.length];
         Render.setViewmodelEnabled(false);
-        const pill = ensureStatusPill();
-        pill.classList.remove('hidden');
-        pill.innerHTML = `SPEKTATOR: <span style="color:#F2B705">${tgt.name}</span> (${Math.round(tgt.hp)} HP) • [Q/E Ganti Target]`;
+        pill.innerHTML = `SPEKTATOR: <span style="color:#F2B705">${tgt.name}</span> (${Math.round(tgt.hp)} HP) • [Q/E Ganti] • [SPACE / KLIK: Ringkasan]`;
         tmpCamTarget.set(tgt.pos.x + Math.sin(elapsed * 0.4) * 5.2, tgt.pos.y + 2.6, tgt.pos.z + Math.cos(elapsed * 0.4) * 5.2);
         Render.camera.position.lerp(tmpCamTarget, Math.min(1, dt * 6));
         Render.camera.lookAt(tgt.pos.x, tgt.pos.y + 1.35, tgt.pos.z);
+      } else {
+        pill.innerHTML = `${lastSummary?.win ? '<span style="color:#F2B705">★ JUARA #1 ★</span>' : 'PERTANDINGAN SELESAI'} • [KLIK / TEKAN SPACE: Ringkasan & Main Lagi]`;
+      }
+      if (!UI.hasModalOpen && lastSummary && (Input.wasCodePressed('Space') || Input.wasCodePressed('Enter') || (!(typeof CheatUI !== 'undefined' && CheatUI.isOpen) && Input.pollGamepad()?.startJust))) {
+        openResultModal();
       }
     }
   }
@@ -786,9 +819,7 @@ const Game = (() => {
 
     Input.init(canvas, {
       onLockLost: () => {
-        if ((state === 'PRACTICE' || state === 'MATCH') && !paused && !UI.hasModalOpen) {
-          triggerPause();
-        }
+        // Keep simulation running when pointer lock drops; banner prompts user to click to re-lock
       }
     });
 
@@ -798,6 +829,9 @@ const Game = (() => {
       },
       onCameraPreset: (mode) => {
         setCameraMode(mode);
+      },
+      onCloseModal: () => {
+        paused = false;
       }
     });
 
@@ -851,7 +885,7 @@ const Game = (() => {
     });
 
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden && (state === 'MATCH' || state === 'PRACTICE') && !paused) triggerPause();
+      if (!document.hidden) lastTime = performance.now();
     });
 
     const params = new URLSearchParams(location.search);
@@ -928,6 +962,7 @@ const Game = (() => {
     paused = false;
 
     UI.hideLoading();
+    const isCity = cfg.mapArea === 'city';
     if (cfg.mode === 'br') {
       state = 'MATCH';
       MatchSys.startMatch(cfg);
@@ -936,18 +971,38 @@ const Game = (() => {
 
     MatchSys.clearAll();
     AI.bots.length = 0;
+    AI.resetPlayerStats?.();
+    const kl = document.getElementById('hud-kills');
+    if (kl) kl.textContent = '0';
+    const kf = document.getElementById('hud-kill-feed');
+    if (kf) kf.innerHTML = '';
     Player.setPerspectiveMode(cfg.perspective || 'free');
     Player.initLoadoutForMode('practice');
-    Player.spawnAt(-110, 315, 0); // Looking straight toward 25..300m targets (-Z)
+    if (isCity) {
+      Player.spawnAt(155.5, 118.5, 0.08, 0.04); // Urban Piccadilly Plaza view
+      AI.spawnPracticeSkirmish(Render.scene, 4);
+    } else {
+      Player.spawnAt(-110, 315, 0, 0); // Looking straight toward 25..300m targets (-Z)
+    }
     state = 'PRACTICE';
     Input.setGameplayActive(true);
     document.getElementById('hud-layer').classList.remove('hidden');
-    document.getElementById('hud-poi-name').textContent = 'Arena Latihan Sukamaju';
-    document.getElementById('hud-alive').textContent = '1';
-    const alertEl = document.getElementById('hud-alert-banner');
-    alertEl.textContent = 'Klik layar untuk mengunci bidikan • Tekan TAB untuk kustomisasi 11 senjata & attachment';
-    alertEl.classList.add('visible');
-    setTimeout(() => alertEl.classList.remove('visible'), 5000);
+    document.getElementById('hud-poi-name').textContent = isCity ? 'Kota Piccadilly (Perkotaan)' : 'Arena Latihan Sukamaju';
+    document.getElementById('hud-alive').textContent = isCity ? '5' : '1';
+    const phEl = document.getElementById('hud-zone-phase');
+    const ztEl = document.getElementById('hud-zone-timer');
+    const zsEl = document.getElementById('hud-zone-dist');
+    if (phEl) phEl.textContent = 'LATIHAN';
+    if (ztEl) ztEl.textContent = '--:--';
+    if (zsEl) zsEl.textContent = isCity ? 'Mode Kota' : 'Range';
+    const hpEl = document.getElementById('hud-hit-popup');
+    if (hpEl) { hpEl.style.opacity = '0'; hpEl.textContent = ''; }
+    UI.showAlertBanner(
+      isCity
+        ? 'Kota Piccadilly: 4 Bot AI & Rak Senjata Urban siap! Tekan TAB untuk Senjata / Bintang START untuk Cheat'
+        : 'Klik layar untuk mengunci bidikan • Tekan TAB untuk kustomisasi 11 senjata & attachment',
+      5.0
+    );
   }
 
   function updateCamera(dt) {
@@ -956,6 +1011,12 @@ const Game = (() => {
       orbitAngle += dt * 0.35;
       cam.position.set(Math.sin(orbitAngle) * 14, 65.5, Math.cos(orbitAngle) * 14);
       cam.lookAt(0, 62.6, 0);
+    } else if (camMode === 'city') {
+      orbitAngle += dt * 0.14;
+      const ch = World.getHeight(160, 90);
+      const swayX = Math.sin(orbitAngle) * 1.4;
+      cam.position.set(155.5 + swayX, ch + 2.35, 118.5);
+      cam.lookAt(159.2, ch + 6.4, 86.0);
     } else if (camMode === 'poi' && camTargetOverride) {
       cam.position.set(camTargetOverride.x, camTargetOverride.y, camTargetOverride.z);
       cam.lookAt(camTargetOverride.lx, camTargetOverride.ly, camTargetOverride.lz);
@@ -972,12 +1033,24 @@ const Game = (() => {
 
   function loop(now) {
     requestAnimationFrame(loop);
-    const frameDt = Math.min(0.1, (now - lastTime) / 1000);
+    const frameDt = Math.min(0.05, Math.max(0.001, (now - lastTime) / 1000));
     const cap = UI.settings.fpsCap || 0;
     if (cap > 0 && now - lastTime < (1000 / cap) * 0.92) return;
     lastTime = now;
 
-    if (!paused) {
+    try {
+      if (paused) {
+        Input.consumeFrame();
+        const gpP = Input.pollGamepad();
+        if (gpP && (gpP.startJust || gpP.crouchJust)) {
+          UI.closeModal();
+          paused = false;
+        }
+        Input.endFrame();
+        Debug.update(frameDt, state);
+        return;
+      }
+
       elapsed += frameDt;
       if (state === 'PRACTICE') {
         const inp = Input.consumeFrame();
@@ -1004,6 +1077,8 @@ const Game = (() => {
       }
       World.update(elapsed, Render.camera, CONFIG.weather[Render.weather], frameDt, Player.pos);
       Render.renderFrame(elapsed, frameDt);
+    } catch (err) {
+      console.error('[RAJAWALI LOOP ERROR]', err);
     }
     Debug.update(frameDt, state);
   }
@@ -1012,7 +1087,8 @@ const Game = (() => {
     boot, exitToMenu, startMatchFlow,
     toggleStudioCamera() { setCameraMode(camMode === 'studio' ? 'island' : 'studio'); },
     teleportCam,
-    get state() { return state; }
+    get state() { return state; },
+    get paused() { return paused; }
   };
 })();
 

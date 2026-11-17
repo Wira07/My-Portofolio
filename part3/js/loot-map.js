@@ -143,17 +143,33 @@ const Loot = (() => {
   }
 
   function spawnDeathCrate(x, y, z, itemsList, ownerName = 'Kombatan') {
-    if (!crateGroup) return;
+    if (!crateGroup) return null;
+    let cx = x, cy = y, cz = z, list = itemsList, owner = ownerName;
+    if (x && typeof x === 'object') {
+      cx = Number(x.x) || 0;
+      cy = Number(x.y) || 0;
+      cz = Number(x.z) || 0;
+      list = Array.isArray(y) ? y : [];
+      owner = typeof z === 'string' && z ? z : 'Kombatan';
+    }
+    const normItems = Array.isArray(list)
+      ? list
+          .filter(it => it && (it.def || ITEMS[it.itemId || it.id]))
+          .map(it => {
+            const iid = it.itemId || it.id || it.def?.id;
+            return { itemId: iid, id: iid, def: it.def || ITEMS[iid], qty: it.qty || 1 };
+          })
+      : [];
     if (!crateGeo) crateGeo = new THREE.BoxGeometry(0.85, 0.48, 0.65);
     const m = new THREE.Mesh(crateGeo, Assets.get('wood'));
-    const h = Math.max(y, World.getHeight(x, z));
-    m.position.set(x, h + 0.24, z);
+    const h = Math.max(Number.isFinite(cy) ? cy : 0, World.getHeight(cx, cz));
+    m.position.set(cx, h + 0.24, cz);
     m.castShadow = true; m.receiveShadow = true;
     const lid = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.08, 0.68), new THREE.MeshStandardMaterial({ color: 0xD19A1B, roughness: 0.5 }));
     lid.position.y = 0.24;
     m.add(lid);
     crateGroup.add(m);
-    const crate = { x, y: h + 0.25, z, ownerName, items: itemsList, mesh: m };
+    const crate = { x: cx, y: h + 0.25, z: cz, ownerName: owner || 'Kombatan', items: normItems, mesh: m };
     deathCrates.push(crate);
     return crate;
   }
@@ -181,7 +197,7 @@ const Loot = (() => {
   function findNearbyCrate(x, y, z, rad = 2.8) {
     for (let i = 0; i < deathCrates.length; i++) {
       const c = deathCrates[i];
-      if (!c.items.length) continue;
+      if (!c || !Array.isArray(c.items) || c.items.length === 0) continue;
       if (Math.hypot(c.x - x, c.z - z) <= rad && Math.abs(c.y - y) < 2.2) return c;
     }
     return null;

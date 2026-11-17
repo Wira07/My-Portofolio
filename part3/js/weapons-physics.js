@@ -173,7 +173,7 @@ const Throwables = (() => {
       const dist = pTarget.distanceTo(pEye);
       if (dist < rad && hasLineOfSight(pEye, pTarget)) {
         const raw = (sp.maxDmg * (radiusOverride ? 1.25 : 1.0)) * (1 - (dist / rad) * 0.85);
-        Player.takeDamage(raw, pEye, owner === 'player' ? 'Granat Frag' : 'Ledakan');
+        Player.takeDamage(raw, 'chest', pEye, owner === 'player' ? 'Granat Frag' : 'Ledakan');
       }
     }
 
@@ -412,16 +412,21 @@ const Input = (() => {
 
     canvas.addEventListener('click', () => {
       AudioSys.ensureInit();
-      if (lockActiveState && !pointerLocked && !UI.hasModalOpen) {
-        canvas.requestPointerLock?.();
+      const overlayOpen = UI.hasModalOpen || (typeof CheatUI !== 'undefined' && CheatUI.isOpen) || (typeof MapUI !== 'undefined' && MapUI.isOpen);
+      if (lockActiveState && !pointerLocked && !overlayOpen) {
+        try {
+          const pr = canvas.requestPointerLock?.();
+          if (pr && typeof pr.catch === 'function') pr.catch(() => {});
+        } catch (_) {}
       }
     });
 
     document.addEventListener('pointerlockchange', () => {
       const wasLocked = pointerLocked;
       pointerLocked = document.pointerLockElement === canvasEl;
-      document.getElementById('pointer-banner')?.classList.toggle('hidden', !lockActiveState || pointerLocked || UI.hasModalOpen);
-      if (wasLocked && !pointerLocked && lockActiveState && !UI.hasModalOpen && onLockLost) {
+      const overlayOpen = UI.hasModalOpen || (typeof CheatUI !== 'undefined' && CheatUI.isOpen) || (typeof MapUI !== 'undefined' && MapUI.isOpen);
+      document.getElementById('pointer-banner')?.classList.toggle('hidden', !lockActiveState || pointerLocked || overlayOpen);
+      if (wasLocked && !pointerLocked && lockActiveState && !overlayOpen && onLockLost) {
         onLockLost();
       }
     });
@@ -752,306 +757,81 @@ const ATTACHMENTS_DB = {
 // MODEL BUILDERS — Multi-Part Procedural Weapons, Attachments & Tactical Hands
 // ════════════════════════════════════════════════════════════════════════════
 const ModelBuilders = (() => {
-  const gunPolyMat = new THREE.MeshStandardMaterial({ name: 'gunPolymer', color: 0x1E2124, roughness: 0.78, metalness: 0.12 });
-  const gunTanMat  = new THREE.MeshStandardMaterial({ name: 'gunTan', color: 0x8F7E62, roughness: 0.72, metalness: 0.14 });
-  const gunWalnut  = new THREE.MeshStandardMaterial({ name: 'gunWalnut', color: 0x54311B, roughness: 0.68, metalness: 0.05 });
-  const gunChrome  = new THREE.MeshStandardMaterial({ name: 'gunChrome', color: 0x9CA4AC, roughness: 0.22, metalness: 0.92 });
-  const opticGlass = new THREE.MeshStandardMaterial({ name: 'opticGlass', color: 0x164458, roughness: 0.08, metalness: 0.25, transparent: true, opacity: 0.55 });
-  const redDotGlow = new THREE.MeshBasicMaterial({ color: 0xFF3322 });
-  const gloveMat   = new THREE.MeshStandardMaterial({ name: 'tacticalGlove', color: 0x26292B, roughness: 0.86, metalness: 0.05 });
-  const skinMat    = new THREE.MeshStandardMaterial({ name: 'handSkin', color: 0xB88B6A, roughness: 0.8, metalness: 0.02 });
-
-  function extrudeProfile(pts, depth, bevel = 0.002) {
-    const shape = new THREE.Shape();
-    shape.moveTo(pts[0][0], pts[0][1]);
-    for (let i = 1; i < pts.length; i++) shape.lineTo(pts[i][0], pts[i][1]);
-    shape.closePath();
-    const g = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2 });
-    g.translate(0, 0, -depth * 0.5);
-    g.rotateY(Math.PI / 2); // align profile X along +Z (muzzle forward)
-    return g;
-  }
-
-  function addPicatinnyRail(parent, startZ, endZ, y, width = 0.021) {
-    const metalMat = Assets.get('gunmetal');
-    const step = 0.012;
-    const parts = [];
-    const base = new THREE.BoxGeometry(width, 0.005, endZ - startZ);
-    base.translate(0, y, (startZ + endZ) * 0.5);
-    parts.push(base);
-    for (let z = startZ + 0.005; z < endZ - 0.005; z += step) {
-      const tooth = new THREE.BoxGeometry(width * 1.04, 0.004, 0.006);
-      tooth.translate(0, y + 0.004, z);
-      parts.push(tooth);
-    }
-    const merged = BufferGeometryUtils.mergeGeometries(parts);
-    const mesh = new THREE.Mesh(merged, metalMat);
-    parent.add(mesh);
-  }
-
-  function addLatheBarrel(parent, radiusPts, zStart, mat) {
-    const vecs = radiusPts.map(([r, z]) => new THREE.Vector2(r, z));
-    const g = new THREE.LatheGeometry(vecs, 16);
-    g.rotateX(Math.PI / 2);
-    g.translate(0, 0, zStart);
-    const m = new THREE.Mesh(g, mat);
-    parent.add(m);
-    return m;
-  }
+  const sleeveBlueMat = new THREE.MeshStandardMaterial({ name: 'vmSleeveBlue', color: 0x26384E, roughness: 0.72, metalness: 0.08 });
+  const cuffRibMat    = new THREE.MeshStandardMaterial({ name: 'vmCuffRib', color: 0x1B2634, roughness: 0.80, metalness: 0.06 });
+  const gloveTanMat   = new THREE.MeshStandardMaterial({ name: 'vmGloveTan', color: 0x78705A, roughness: 0.66, metalness: 0.08 });
+  const gloveDarkMat  = new THREE.MeshStandardMaterial({ name: 'vmGloveDark', color: 0x1B1F24, roughness: 0.58, metalness: 0.22 });
+  const wristScreen   = new THREE.MeshStandardMaterial({ name: 'vmWristHud', color: 0x0A2536, emissive: 0x18B8FF, emissiveIntensity: 0.85, roughness: 0.2, metalness: 0.5 });
 
   function buildAttachmentMesh(attId) {
     const def = ATTACHMENTS_DB[attId];
     if (!def) return null;
-    const g = new THREE.Group();
-    const metalMat = Assets.get('gunmetal');
-
-    if (def.slot === 'optic') {
-      const mount = new THREE.Mesh(new RoundedBoxGeometry(0.028, 0.014, 0.05, 2, 0.002), metalMat);
-      g.add(mount);
-      if (attId === 'reddot' || attId === 'holo') {
-        const hood = new THREE.Mesh(new RoundedBoxGeometry(0.034, 0.032, attId === 'holo' ? 0.068 : 0.044, 2, 0.004), gunPolyMat);
-        hood.position.set(0, 0.02, 0);
-        const lens = new THREE.Mesh(new THREE.PlaneGeometry(0.024, 0.022), opticGlass);
-        lens.position.set(0, 0.022, 0.005);
-        const dot = new THREE.Mesh(new THREE.SphereGeometry(0.0014, 6, 6), redDotGlow);
-        dot.position.set(0, 0.022, 0.004);
-        g.add(hood, lens, dot);
-      } else {
-        const len = attId === 'scope15x' ? 0.24 : attId === 'scope8x' || attId === 'scope6x' ? 0.20 : 0.14;
-        const objR = attId === 'scope15x' ? 0.028 : attId === 'scope8x' ? 0.024 : 0.019;
-        addLatheBarrel(g, [
-          [0.016, 0], [0.016, 0.025], [0.012, 0.04], [0.012, len * 0.65], [objR, len * 0.8], [objR, len], [objR - 0.003, len]
-        ], -len * 0.45, metalMat);
-        // Scope rings
-        [-len * 0.16, len * 0.18].forEach(rz => {
-          const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.016, 12), metalMat);
-          ring.rotation.x = Math.PI / 2;
-          ring.position.set(0, 0.018, rz);
-          g.add(ring);
-        });
-        g.children.forEach(c => { if (c.geometry?.type === 'LatheGeometry') c.position.y += 0.022; });
-        const turret = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 0.014, 10), metalMat);
-        turret.position.set(0, 0.038, 0);
-        g.add(turret);
-      }
-    } else if (def.slot === 'muzzle') {
-      if (attId === 'suppressor') {
-        addLatheBarrel(g, [[0.016, 0], [0.018, 0.01], [0.018, 0.175], [0.015, 0.18], [0.006, 0.18]], 0, metalMat);
-      } else if (attId === 'comp') {
-        addLatheBarrel(g, [[0.012, 0], [0.015, 0.01], [0.015, 0.065], [0.010, 0.065]], 0, metalMat);
-      } else if (attId === 'flashhider') {
-        for (let i = 0; i < 4; i++) {
-          const a = (i / 4) * Math.PI * 2;
-          const prong = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.004, 0.048), metalMat);
-          prong.position.set(Math.cos(a) * 0.009, Math.sin(a) * 0.009, 0.024);
-          g.add(prong);
-        }
-      } else {
-        addLatheBarrel(g, [[0.015, 0], [0.015, 0.055], [0.012, 0.058]], 0, gunChrome);
-      }
-    } else if (def.slot === 'grip') {
-      const mount = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.01, 0.036), metalMat);
-      g.add(mount);
-      if (attId === 'vertgrip') {
-        const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.012, 0.095, 12), gunPolyMat);
-        cyl.position.set(0, -0.052, 0);
-        g.add(cyl);
-      } else if (attId === 'angledgrip') {
-        const ang = new THREE.Mesh(extrudeProfile([[ -0.04, -0.02 ], [0.03, -0.02], [0.05, 0.0], [-0.03, 0.0]], 0.024), gunPolyMat);
-        ang.position.set(0, -0.015, 0);
-        g.add(ang);
-      } else if (attId === 'laser') {
-        const box = new THREE.Mesh(new RoundedBoxGeometry(0.028, 0.022, 0.068, 2, 0.003), gunTanMat);
-        box.position.set(0.018, 0.015, 0);
-        const emit = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.01, 8), new THREE.MeshBasicMaterial({ color: 0x35FF66 }));
-        emit.rotation.x = Math.PI / 2; emit.position.set(0.018, 0.015, 0.036);
-        g.add(box, emit);
-      } else {
-        const half = new THREE.Mesh(new RoundedBoxGeometry(0.024, 0.055, 0.032, 2, 0.004), gunTanMat);
-        half.position.set(0, -0.03, 0);
-        g.add(half);
-      }
-    } else if (def.slot === 'mag') {
-      const h = def.extended ? 0.175 : 0.115;
-      const magMesh = new THREE.Mesh(new RoundedBoxGeometry(0.022, h, 0.052, 2, 0.003), def.extended ? gunTanMat : metalMat);
-      magMesh.position.set(0, -h * 0.3, 0);
-      magMesh.rotation.x = 0.14;
-      g.add(magMesh);
-      if (attId.includes('qd')) {
-        const loop = new THREE.Mesh(new THREE.TorusGeometry(0.016, 0.003, 6, 12), gunPolyMat);
-        loop.position.set(0, -h * 0.8, 0);
-        g.add(loop);
-      }
-    } else if (def.slot === 'stock') {
-      if (attId === 'cheekpad') {
-        const pad = new THREE.Mesh(new RoundedBoxGeometry(0.044, 0.035, 0.11, 2, 0.008), Assets.get('wood'));
-        pad.position.set(0, 0.03, -0.01);
-        g.add(pad);
-      } else {
-        const st = new THREE.Mesh(new RoundedBoxGeometry(0.038, 0.095, 0.12, 2, 0.006), gunTanMat);
-        st.position.set(0, -0.02, -0.04);
-        g.add(st);
-      }
-    }
-    return g;
+    if (def.slot === 'optic')  return GunKit.buildOptic(attId);
+    if (def.slot === 'muzzle') return GunKit.buildMuzzle(attId);
+    if (def.slot === 'grip')   return GunKit.buildGrip(attId);
+    if (def.slot === 'mag')    return GunKit.buildMag(attId);
+    if (def.slot === 'stock')  return GunKit.buildStock(attId);
+    return new THREE.Group();
   }
 
   function buildWeaponModel(weaponId, equippedAttachments = {}) {
     const def = WEAPONS_DB[weaponId] || WEAPONS_DB.m416;
     const root = new THREE.Group();
     root.name = `Weapon_${def.id}`;
-    const metal = Assets.get('gunmetal');
-    const wood = gunWalnut;
     const style = def.style;
 
     if (style === 'pan') {
-      // Skillet silhouette: deep round forged cast-iron bowl + stamped riveted handle + hanging hole
+      const metal = GunKit.mat('black');
+      const steel = GunKit.mat('steel');
       const panPts = [[0.001, 0], [0.115, 0.002], [0.135, 0.042], [0.128, 0.045], [0.108, 0.008], [0.001, 0.008]];
       const bowl = new THREE.Mesh(new THREE.LatheGeometry(panPts.map(([r, y]) => new THREE.Vector2(r, y)), 24), metal);
       bowl.position.set(0, 0.02, 0.28);
       bowl.rotation.x = Math.PI / 2;
       const handle = new THREE.Mesh(new RoundedBoxGeometry(0.024, 0.012, 0.17, 2, 0.003), metal);
       handle.position.set(0, 0.01, 0.08);
-      const bolster = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.016, 0.04), gunChrome);
+      const bolster = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.016, 0.04), steel);
       bolster.position.set(0, 0.016, 0.155);
       root.add(bowl, handle, bolster);
       return { root, sightY: 0.06, attachNodes: {} };
     }
 
-    if (style === 'pistol') {
-      // Multi-part P92 Pistol (Extruded frame + serrated slide + ergonomic grip + trigger + iron sights)
-      const frame = new THREE.Mesh(extrudeProfile([[ -0.03, -0.01], [0.17, -0.01], [0.17, 0.022], [-0.035, 0.022]], 0.026, 0.002), metal);
-      frame.position.set(0, 0.015, 0.05);
-      const slide = new THREE.Mesh(new RoundedBoxGeometry(0.025, 0.028, 0.195, 2, 0.003), metal);
-      slide.position.set(0, 0.044, 0.068);
-      const bbl = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 0.16, 12), gunChrome);
-      bbl.rotation.x = Math.PI / 2; bbl.position.set(0, 0.036, 0.105);
-      const grip = new THREE.Mesh(extrudeProfile([[-0.05, -0.095], [0.0, -0.095], [0.022, 0.01], [-0.025, 0.01]], 0.028, 0.003), gunPolyMat);
-      grip.position.set(0, -0.01, -0.015);
-      const guard = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.024, 0.045), metal);
-      guard.position.set(0, -0.005, 0.045);
-      // Iron sights
-      const frontPost = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.009, 0.008), gunChrome);
-      frontPost.position.set(0, 0.062, 0.155);
-      const rearL = new THREE.Mesh(new THREE.BoxGeometry(0.005, 0.008, 0.008), metal); rearL.position.set(-0.006, 0.062, -0.022);
-      const rearR = rearL.clone(); rearR.position.x = 0.006;
-      root.add(frame, slide, bbl, grip, guard, frontPost, rearL, rearR);
-      const attachNodes = mountAllSockets(root, def, equippedAttachments);
-      return { root, sightY: 0.064, attachNodes };
+    const body = GunKit.getBody(def);
+    root.add(GunKit.instantiate(body.geos));
+
+    // Modern tactical rifles/SMGs display the factory boxy reflex optic by default (matching Reference Image 1)
+    const defaultReflex = !equippedAttachments.optic && (style === 'ar' || style === 'scar' || style === 'smg' || style === 'vector');
+    const effOptic = equippedAttachments.optic || (defaultReflex ? 'reddot' : null);
+
+    // Backup Iron Sights (folded flat behind optic when an optic is mounted, deployed when bare)
+    const irons = GunKit.ironSights(body, !!effOptic);
+    if (irons) root.add(irons);
+
+    // Default flash-hider / muzzle device when no custom muzzle is attached
+    if (!equippedAttachments.muzzle && !body.hasMuzzle) {
+      const dm = GunKit.defaultMuzzle(body);
+      if (dm) root.add(dm);
     }
 
-    // Long guns / Rifles / SMGs / Shotguns
-    const bodyMat = style === 'scar' ? gunTanMat : metal;
-    const furnitureMat = (style === 'ak' || style === 'bolt' || style === 'dmr') ? gunWalnut : gunPolyMat;
+    const attachNodes = mountAllSockets(root, def, body, equippedAttachments, defaultReflex);
 
-    // 1. Upper + Lower Receiver (Extruded silhouette)
-    const recPts = [[-0.12, -0.012], [0.13, -0.012], [0.13, 0.062], [-0.115, 0.062]];
-    const rec = new THREE.Mesh(extrudeProfile(recPts, 0.036, 0.003), bodyMat);
-    rec.position.set(0, 0.012, 0.01);
-    root.add(rec);
-
-    // Charging handle & ejection port plate
-    const chHandle = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.01, 0.016), gunChrome);
-    chHandle.position.set(0.014, 0.052, style === 'ak' ? 0.06 : -0.08);
-    const boltPlate = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.018, 0.055), gunChrome);
-    boltPlate.position.set(0.019, 0.044, 0.03);
-    root.add(chHandle, boltPlate);
-
-    // 2. Pistol Grip + Trigger Guard + Curved Trigger
-    const grip = new THREE.Mesh(extrudeProfile([[-0.038, -0.095], [-0.004, -0.095], [0.022, 0.006], [-0.014, 0.006]], 0.027, 0.003), style === 'ak' ? wood : gunPolyMat);
-    grip.position.set(0, -0.002, -0.07);
-    const tGuard = new THREE.Mesh(new THREE.TorusGeometry(0.016, 0.003, 6, 12, Math.PI), metal);
-    tGuard.rotation.y = Math.PI / 2; tGuard.rotation.z = Math.PI;
-    tGuard.position.set(0, -0.004, -0.032);
-    const trigger = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.016, 0.005), gunChrome);
-    trigger.position.set(0, -0.004, -0.032); trigger.rotation.x = 0.25;
-    root.add(grip, tGuard, trigger);
-
-    // 3. Handguard / Forend
-    const hgLen = style === 'bolt' || style === 'sr' ? 0.34 : style === 'smg' || style === 'vector' ? 0.16 : 0.25;
-    const hgMat = style === 'scar' ? gunTanMat : style === 'ak' || style === 'bolt' || style === 'dmr' ? wood : gunPolyMat;
-    const hg = new THREE.Mesh(new RoundedBoxGeometry(0.040, 0.046, hgLen, 2, 0.005), hgMat);
-    hg.position.set(0, 0.024, 0.13 + hgLen * 0.5);
-    root.add(hg);
-
-    // Cooling vents / M-LOK slots along handguard sides
-    for (let v = 0; v < 5; v++) {
-      const slot = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.008, 0.018), metal);
-      slot.position.set(0, 0.028, 0.17 + v * 0.032);
-      if (0.17 + v * 0.032 < 0.13 + hgLen) root.add(slot);
-    }
-
-    // 4. Stepped Lathe Fluted Barrel + Gas Block
-    const bblEnd = def.sockets.muzzle ? def.sockets.muzzle[2] : 0.50;
-    const bblR = style === 'shotgun' ? 0.013 : 0.0095;
-    addLatheBarrel(root, [[bblR * 1.35, 0.0], [bblR, 0.06], [bblR, bblEnd - 0.16], [bblR * 0.85, bblEnd - 0.15]], 0.14, metal);
-    const bblMesh = root.children[root.children.length - 1];
-    bblMesh.position.y = 0.028;
-
-    if (style === 'ak' || style === 'ar' || style === 'scar' || style === 'dmr') {
-      const gasTube = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 0.18, 10), metal);
-      gasTube.rotation.x = Math.PI / 2; gasTube.position.set(0, 0.048, 0.25);
-      const gasBlock = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.036, 0.024), metal);
-      gasBlock.position.set(0, 0.038, 0.335);
-      root.add(gasTube, gasBlock);
-    }
-
-    // 5. Stock (Wooden sculpted rifle stock, collapsible AR buttstock, or folding SMG wire stock)
-    if (style === 'ak' || style === 'bolt' || style === 'dmr') {
-      const stockG = extrudeProfile([[-0.28, -0.08], [-0.02, -0.02], [-0.02, 0.02], [-0.28, 0.01]], 0.034, 0.004);
-      const stock = new THREE.Mesh(stockG, furnitureMat);
-      stock.position.set(0, 0.022, -0.09);
-      const buttPad = new THREE.Mesh(new THREE.BoxGeometry(0.036, 0.095, 0.014), metal);
-      buttPad.position.set(0, -0.012, -0.37);
-      root.add(stock, buttPad);
-    } else if (style === 'smg' || style === 'vector') {
-      const barTop = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.012, 0.20), metal);
-      barTop.position.set(0, 0.03, -0.20);
-      const butt = new THREE.Mesh(new RoundedBoxGeometry(0.026, 0.095, 0.024, 2, 0.004), gunPolyMat);
-      butt.position.set(0, 0.0, -0.30);
-      root.add(barTop, butt);
+    // Accurate ADS sight line height
+    let sightY = 0.095;
+    if (body.pistol) {
+      sightY = effOptic && body.sockets.optic ? (body.sockets.optic[1] + GunKit.opticLine(effOptic)) : 0.073;
+    } else if (effOptic && body.sockets.optic) {
+      sightY = body.sockets.optic[1] + GunKit.opticLine(effOptic);
     } else {
-      const bufTube = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.19, 12), metal);
-      bufTube.rotation.x = Math.PI / 2; bufTube.position.set(0, 0.03, -0.19);
-      const crane = new THREE.Mesh(new RoundedBoxGeometry(0.038, 0.098, 0.14, 2, 0.006), style === 'scar' ? gunTanMat : gunPolyMat);
-      crane.position.set(0, -0.002, -0.25);
-      root.add(bufTube, crane);
+      sightY = (body.railTop || 0.075) + 0.020;
     }
 
-    // 6. Default Magazine (Curved AK banana mag / straight box / angled Vector stick)
-    if (!equippedAttachments.mag && def.sockets.mag) {
-      if (style === 'ak' || style === 'shotgun') {
-        const magPts = [[-0.02, -0.15], [0.024, -0.15], [0.03, -0.04], [0.022, 0.02], [-0.024, 0.02], [-0.012, -0.05]];
-        const mag = new THREE.Mesh(extrudeProfile(magPts, 0.024, 0.002), style === 'ak' ? metal : gunPolyMat);
-        mag.position.set(0, -0.01, 0.085);
-        root.add(mag);
-      } else {
-        const mag = new THREE.Mesh(new RoundedBoxGeometry(0.022, style === 'vector' ? 0.14 : 0.115, 0.048, 2, 0.003), metal);
-        mag.position.set(0, -0.055, 0.075);
-        mag.rotation.x = style === 'vector' ? -0.22 : 0.12;
-        root.add(mag);
-      }
-    }
-
-    // 7. Top Picatinny Rail + Iron Sights
-    addPicatinnyRail(root, -0.08, 0.12 + hgLen * 0.7, 0.077);
-    if (!equippedAttachments.optic) {
-      const fBase = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.022, 0.014), metal);
-      fBase.position.set(0, 0.084, 0.12 + hgLen * 0.65);
-      const fPin = new THREE.Mesh(new THREE.BoxGeometry(0.0025, 0.012, 0.003), redDotGlow);
-      fPin.position.set(0, 0.095, 0.12 + hgLen * 0.65);
-      const rRing = new THREE.Mesh(new THREE.TorusGeometry(0.006, 0.0022, 6, 12), metal);
-      rRing.position.set(0, 0.095, -0.07);
-      root.add(fBase, fPin, rRing);
-    }
-
-    const attachNodes = mountAllSockets(root, def, equippedAttachments);
-    return { root, sightY: 0.095, attachNodes };
+    return { root, sightY, attachNodes };
   }
 
-  function mountAllSockets(root, def, equipped) {
+  function mountAllSockets(root, def, body, equipped, defaultReflex) {
     const nodes = {};
-    Object.entries(def.sockets).forEach(([slot, pos]) => {
+    const sockets = body?.sockets || def.sockets || {};
+    Object.entries(def.sockets).forEach(([slot, fallbackPos]) => {
+      const pos = sockets[slot] || fallbackPos;
       if (!pos) return;
       const g = new THREE.Group();
       g.position.set(pos[0], pos[1], pos[2]);
@@ -1061,46 +841,102 @@ const ModelBuilders = (() => {
       if (attId) {
         const mesh = buildAttachmentMesh(attId);
         if (mesh) g.add(mesh);
+      } else if (slot === 'mag' && body) {
+        const defMag = GunKit.buildDefaultMag(body);
+        if (defMag) g.add(defMag);
+      } else if (slot === 'optic' && defaultReflex) {
+        const defOpt = GunKit.buildOptic('reddot');
+        if (defOpt) g.add(defOpt);
       }
     });
     return nodes;
   }
 
-  // First-Person Viewmodel Procedural Arms + Tactical Fingerless Gloves
+  // First-Person Viewmodel Arms + Two-Tone Tactical Gloves (matching Reference Image 1)
+  // Note: vmHands is rotated Math.PI around Y in player.js so +Z points downrange (-Z in camera)
+  // and +X in authoring space becomes -X in camera space (shooter's LEFT support arm).
   function buildViewmodelHands() {
     const grp = new THREE.Group();
     grp.name = 'ViewmodelHands';
-    const sleeveMat = Assets.get('cloth');
 
-    const makeArm = (isRight) => {
-      const arm = new THREE.Group();
-      const side = isRight ? 1 : -1;
-      const forearm = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.044, 0.34, 12), sleeveMat);
-      forearm.rotation.x = Math.PI / 2;
-      forearm.position.set(side * 0.07, -0.09, -0.22);
-      forearm.rotation.y = side * -0.24;
-      forearm.rotation.z = side * 0.18;
+    // 1. LEFT SUPPORT ARM (+X in authoring space -> left side of handguard in FPP)
+    const leftArm = new THREE.Group();
+    const lSleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.048, 0.30, 14), sleeveBlueMat);
+    lSleeve.rotation.x = Math.PI / 2 - 0.36;
+    lSleeve.position.set(0.068, -0.068, 0.105);
+    lSleeve.rotation.y = -0.32;
 
-      const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.037, 0.037, 0.03, 12), gloveMat);
-      cuff.rotation.x = Math.PI / 2;
-      cuff.position.set(side * 0.025, -0.055, -0.07);
+    // Jacket sleeve folds + ribbed tactical cuff reaching right up to the wrist
+    const lFold1 = new THREE.Mesh(new THREE.TorusGeometry(0.037, 0.006, 8, 14), sleeveBlueMat);
+    lFold1.position.set(0.046, -0.038, 0.165);
+    lFold1.rotation.y = -0.32;
+    lFold1.rotation.x = -0.36;
+    const lFold2 = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.005, 8, 14), sleeveBlueMat);
+    lFold2.position.set(0.041, -0.028, 0.182);
+    lFold2.rotation.y = -0.30;
+    lFold2.rotation.x = -0.36;
+    const lCuff = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.035, 0.030, 12), cuffRibMat);
+    lCuff.rotation.x = Math.PI / 2 - 0.32;
+    lCuff.position.set(0.036, -0.020, 0.194);
+    lCuff.rotation.y = -0.26;
 
-      const palm = new THREE.Mesh(new RoundedBoxGeometry(0.048, 0.056, 0.068, 2, 0.01), gloveMat);
-      palm.position.set(isRight ? 0.0 : -0.01, isRight ? -0.05 : -0.03, isRight ? -0.065 : 0.20);
+    // Tactical wrist watch / mini-PDA on left wrist
+    const watchBody = new THREE.Mesh(new RoundedBoxGeometry(0.024, 0.009, 0.028, 2, 0.002), gloveDarkMat);
+    watchBody.position.set(0.046, -0.014, 0.188);
+    watchBody.rotation.z = -0.45;
+    const watchGlass = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.002, 0.022), wristScreen);
+    watchGlass.position.set(0.048, -0.010, 0.188);
+    watchGlass.rotation.z = -0.45;
 
-      const thumb = new THREE.Mesh(new RoundedBoxGeometry(0.018, 0.022, 0.038, 2, 0.005), skinMat);
-      thumb.position.set(isRight ? -0.018 : 0.018, isRight ? -0.028 : -0.01, isRight ? -0.055 : 0.21);
+    // Left glove back-of-hand (tan/olive leather) + carbon knuckle guard + thumb & fingers gripping M-LOK handguard
+    const lPalm = new THREE.Mesh(new RoundedBoxGeometry(0.032, 0.056, 0.078, 2, 0.008), gloveTanMat);
+    lPalm.position.set(0.028, 0.002, 0.222);
+    lPalm.rotation.z = -0.26;
+    lPalm.rotation.y = -0.10;
 
-      arm.add(forearm, cuff, palm, thumb);
-      if (!isRight) {
-        forearm.position.set(-0.085, -0.10, 0.02);
-        forearm.rotation.y = 0.34;
-        cuff.position.set(-0.025, -0.05, 0.15);
-      }
-      return arm;
-    };
+    const lKnuckle = new THREE.Mesh(new RoundedBoxGeometry(0.010, 0.044, 0.062, 2, 0.004), gloveDarkMat);
+    lKnuckle.position.set(0.016, -0.010, 0.218);
+    lKnuckle.rotation.z = -0.26;
 
-    grp.add(makeArm(false), makeArm(true));
+    // Thumb resting high along the left side of the handguard rail (exact match to Reference Image 1)
+    const lThumbBase = new THREE.Mesh(new RoundedBoxGeometry(0.020, 0.022, 0.042, 2, 0.005), gloveTanMat);
+    lThumbBase.position.set(0.026, 0.028, 0.212);
+    lThumbBase.rotation.x = -0.18;
+    lThumbBase.rotation.z = -0.35;
+    const lThumbTip = new THREE.Mesh(new RoundedBoxGeometry(0.016, 0.017, 0.032, 2, 0.004), gloveDarkMat);
+    lThumbTip.position.set(0.022, 0.034, 0.238);
+    lThumbTip.rotation.x = -0.08;
+
+    // Four curled fingers wrapping under the handguard bottom
+    for (let i = 0; i < 4; i++) {
+      const fz = 0.196 + i * 0.0165;
+      const finger = new THREE.Mesh(new RoundedBoxGeometry(0.034, 0.015, 0.014, 2, 0.003), i % 2 === 0 ? gloveDarkMat : gloveTanMat);
+      finger.position.set(0.006, -0.016, fz);
+      finger.rotation.z = 0.25;
+      leftArm.add(finger);
+    }
+
+    leftArm.add(lSleeve, lFold1, lFold2, lCuff, watchBody, watchGlass, lPalm, lKnuckle, lThumbBase, lThumbTip);
+
+    // 2. RIGHT TRIGGER ARM (-X in authoring space -> right side gripping pistol grip)
+    const rightArm = new THREE.Group();
+    const rSleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.046, 0.30, 12), sleeveBlueMat);
+    rSleeve.rotation.x = Math.PI / 2;
+    rSleeve.position.set(-0.055, -0.095, -0.21);
+    rSleeve.rotation.y = 0.22;
+    rSleeve.rotation.z = 0.16;
+
+    const rCuff = new THREE.Mesh(new THREE.CylinderGeometry(0.034, 0.036, 0.032, 12), cuffRibMat);
+    rCuff.rotation.x = Math.PI / 2;
+    rCuff.position.set(-0.022, -0.062, -0.095);
+
+    const rPalm = new THREE.Mesh(new RoundedBoxGeometry(0.040, 0.056, 0.064, 2, 0.008), gloveTanMat);
+    rPalm.position.set(-0.012, -0.048, -0.072);
+    const rKnuckle = new THREE.Mesh(new RoundedBoxGeometry(0.042, 0.022, 0.054, 2, 0.004), gloveDarkMat);
+    rKnuckle.position.set(-0.014, -0.032, -0.068);
+
+    rightArm.add(rSleeve, rCuff, rPalm, rKnuckle);
+    grp.add(leftArm, rightArm);
     return grp;
   }
 
@@ -1338,6 +1174,9 @@ const Ballistics = (() => {
   let maxParticles = 600;
   let shotCounter = 0;
   const lastDebug = { event: 'none', pos: new THREE.Vector3(), dist: 0, mat: '', tgt: '', dmg: 0, hitY: 0 };
+  const bDir = new THREE.Vector3();
+  const bHitPos = new THREE.Vector3();
+  const bNorm = new THREE.Vector3();
 
   function initFX(scene, presetCfg) {
     maxParticles = presetCfg.particles || 600;
@@ -1474,16 +1313,17 @@ const Ballistics = (() => {
         b.vel.multiplyScalar(Math.max(0, 1 - dragDecel * hDt));
         b.vel.y -= CONFIG.ballistics.gravity * hDt;
 
-        const segLen = b.vel.length() * hDt;
-        if (segLen < 0.001) { b.active = false; continue; }
-        const dir = Util.v1.copy(b.vel).divideScalar(Math.max(0.001, b.vel.length()));
+        const speed = b.vel.length();
+        const segLen = speed * hDt;
+        if (!Number.isFinite(speed) || speed < 0.001 || segLen < 0.001) { b.active = false; continue; }
+        bDir.copy(b.vel).divideScalar(speed);
 
         // Check entity targets first (spheres/boxes along ray)
         let hitTarget = null, hitTargetT = segLen, hitZone = 'chest';
         for (let ti = 0; ti < targets.length; ti++) {
           const tgt = targets[ti];
           if (!tgt.alive || tgt === b.owner) continue;
-          const res = tgt.rayHitTest(b.pos, dir, hitTargetT);
+          const res = tgt.rayHitTest(b.pos, bDir, hitTargetT);
           if (res && res.t < hitTargetT) {
             hitTargetT = res.t;
             hitTarget = tgt;
@@ -1491,29 +1331,29 @@ const Ballistics = (() => {
           }
         }
 
-        const worldHit = Physics.raycast(b.pos.x, b.pos.y, b.pos.z, dir.x, dir.y, dir.z, hitTargetT);
+        const worldHit = Physics.raycast(b.pos.x, b.pos.y, b.pos.z, bDir.x, bDir.y, bDir.z, hitTargetT);
         if (worldHit && worldHit.t <= hitTargetT) {
-          const hx = b.pos.x + dir.x * worldHit.t;
-          const hy = b.pos.y + dir.y * worldHit.t;
-          const hz = b.pos.z + dir.z * worldHit.t;
-          const hitPos = Util.v2.set(hx, hy, hz);
+          const hx = b.pos.x + bDir.x * worldHit.t;
+          const hy = b.pos.y + bDir.y * worldHit.t;
+          const hz = b.pos.z + bDir.z * worldHit.t;
+          bHitPos.set(hx, hy, hz);
           const matType = worldHit.collider?.mat || 'concrete';
-          AudioSys.playImpact(matType, hitPos);
+          AudioSys.playImpact(matType, bHitPos);
 
           if (matType !== 'water') {
-            spawnDecal(hitPos, worldHit.nx, worldHit.ny, worldHit.nz, matType);
+            spawnDecal(bHitPos, worldHit.nx, worldHit.ny, worldHit.nz, matType);
           }
           const spCol = matType === 'metal' ? 0xFFCC55 : matType === 'wood' ? 0x9C7248 : matType === 'water' ? 0xCBE8F2 : 0xB8B8B0;
           for (let p = 0; p < 4; p++) {
-            spawnParticle(hitPos, new THREE.Vector3(worldHit.nx * 3 + (Math.random() - 0.5) * 4, 2 + Math.random() * 3, worldHit.nz * 3 + (Math.random() - 0.5) * 4), spCol, 1.1, 0.35, 12);
+            spawnParticle(bHitPos, new THREE.Vector3(worldHit.nx * 3 + (Math.random() - 0.5) * 4, 2 + Math.random() * 3, worldHit.nz * 3 + (Math.random() - 0.5) * 4), spCol, 1.1, 0.35, 12);
           }
 
           // Breakable window glass shatter
           if (worldHit.collider?.glassRef) {
             worldHit.collider.glassRef.shatter();
             worldHit.collider.disabled = true;
-            lastDebug.event = 'glassShatter'; lastDebug.pos.copy(hitPos); lastDebug.mat = 'glass';
-            b.pos.copy(hitPos).addScaledVector(dir, 0.14);
+            lastDebug.event = 'glassShatter'; lastDebug.pos.copy(bHitPos); lastDebug.mat = 'glass';
+            b.pos.copy(bHitPos).addScaledVector(bDir, 0.14);
             b.vel.multiplyScalar(0.88);
             if (b.wantTracer) spawnTracer(b.prevPos, b.pos);
             continue;
@@ -1521,8 +1361,8 @@ const Ballistics = (() => {
 
           // Wood / Glass penetration (Sec 10.3)
           if (worldHit.collider?.penetrable && b.vel.length() > 140) {
-            lastDebug.event = 'penetrate'; lastDebug.pos.copy(hitPos); lastDebug.mat = matType;
-            b.pos.copy(hitPos).addScaledVector(dir, 0.28);
+            lastDebug.event = 'penetrate'; lastDebug.pos.copy(bHitPos); lastDebug.mat = matType;
+            b.pos.copy(bHitPos).addScaledVector(bDir, 0.28);
             b.vel.multiplyScalar(0.6);
             b.dmg *= 0.6;
             if (b.wantTracer) spawnTracer(b.prevPos, b.pos);
@@ -1530,29 +1370,29 @@ const Ballistics = (() => {
           }
 
           // Shallow ricochet (< 15 deg from surface plane) on metal/concrete
-          const cosIncidence = Math.abs(dir.x * worldHit.nx + dir.y * worldHit.ny + dir.z * worldHit.nz);
+          const cosIncidence = Math.abs(bDir.x * worldHit.nx + bDir.y * worldHit.ny + bDir.z * worldHit.nz);
           if (cosIncidence < 0.258 && (matType === 'metal' || matType === 'concrete') && b.vel.length() > 180) {
-            lastDebug.event = 'ricochet'; lastDebug.pos.copy(hitPos); lastDebug.mat = matType;
-            const dotN = dir.x * worldHit.nx + dir.y * worldHit.ny + dir.z * worldHit.nz;
-            b.vel.set(dir.x - 2 * dotN * worldHit.nx, dir.y - 2 * dotN * worldHit.ny, dir.z - 2 * dotN * worldHit.nz).multiplyScalar(spd * 0.65);
-            b.pos.copy(hitPos).addScaledVector(Util.v3.set(worldHit.nx, worldHit.ny, worldHit.nz), 0.05);
+            lastDebug.event = 'ricochet'; lastDebug.pos.copy(bHitPos); lastDebug.mat = matType;
+            const dotN = bDir.x * worldHit.nx + bDir.y * worldHit.ny + bDir.z * worldHit.nz;
+            b.vel.set(bDir.x - 2 * dotN * worldHit.nx, bDir.y - 2 * dotN * worldHit.ny, bDir.z - 2 * dotN * worldHit.nz).multiplyScalar(spd * 0.65);
+            b.pos.copy(bHitPos).addScaledVector(bNorm.set(worldHit.nx, worldHit.ny, worldHit.nz), 0.05);
             continue;
           }
 
-          lastDebug.event = 'worldStop'; lastDebug.pos.copy(hitPos); lastDebug.mat = matType; lastDebug.dist = b.dist + worldHit.t;
-          if (b.wantTracer) spawnTracer(b.prevPos, hitPos);
+          lastDebug.event = 'worldStop'; lastDebug.pos.copy(bHitPos); lastDebug.mat = matType; lastDebug.dist = b.dist + worldHit.t;
+          if (b.wantTracer) spawnTracer(b.prevPos, bHitPos);
           b.active = false;
           continue;
         }
 
         if (hitTarget) {
-          const hitPos = Util.v2.copy(b.pos).addScaledVector(dir, hitTargetT);
+          bHitPos.copy(b.pos).addScaledVector(bDir, hitTargetT);
           const totalDist = b.dist + hitTargetT;
           const mult = CONFIG.hitMult[hitZone] || 1.0;
           const finalDmg = b.dmg * evalFalloff(b.falloff, totalDist) * mult;
-          lastDebug.event = 'targetHit'; lastDebug.pos.copy(hitPos); lastDebug.tgt = hitTarget.name || ''; lastDebug.dmg = finalDmg; lastDebug.dist = totalDist; lastDebug.hitY = hitPos.y;
-          if (b.wantTracer) spawnTracer(b.prevPos, hitPos);
-          if (onHitTarget) onHitTarget(hitTarget, finalDmg, hitZone, totalDist, hitPos, dir, b.owner);
+          lastDebug.event = 'targetHit'; lastDebug.pos.copy(bHitPos); lastDebug.tgt = hitTarget.name || ''; lastDebug.dmg = finalDmg; lastDebug.dist = totalDist; lastDebug.hitY = bHitPos.y;
+          if (b.wantTracer) spawnTracer(b.prevPos, bHitPos);
+          if (onHitTarget) onHitTarget(hitTarget, finalDmg, hitZone, totalDist, bHitPos, bDir, b.owner);
           b.active = false;
           continue;
         }
