@@ -398,6 +398,40 @@ const Input = (() => {
   let lockActiveState = false;
   let onLockLost = null;
 
+  const touchState = {
+    active: false,
+    moveX: 0,
+    moveY: 0,
+    sprint: false,
+    fire: false,
+    fireJust: false,
+    ads: false,
+    jumpHeld: false,
+    jumpJust: false,
+    crouchJust: false,
+    reloadJust: false,
+    perspJust: false,
+    interactJust: false,
+    lastTouchMs: 0
+  };
+
+  function isTouchUi() {
+    return (typeof UI !== 'undefined' && UI.isTouchUiEnabled) ? UI.isTouchUiEnabled() : CONFIG.isMobile;
+  }
+
+  function resetTouchInputs() {
+    touchState.moveX = 0;
+    touchState.moveY = 0;
+    touchState.sprint = false;
+    touchState.fire = false;
+    touchState.fireJust = false;
+    touchState.jumpHeld = false;
+    document.getElementById('touch-fire')?.classList.remove('active');
+    document.getElementById('touch-joy-base')?.classList.remove('sprinting');
+    const knob = document.getElementById('touch-joy-knob');
+    if (knob) knob.style.transform = 'translate3d(0, 0, 0)';
+  }
+
   function init(canvas, callbacks = {}) {
     canvasEl = canvas;
     onLockLost = callbacks.onLockLost || null;
@@ -408,10 +442,11 @@ const Input = (() => {
       keys.add(e.code);
     });
     window.addEventListener('keyup', (e) => keys.delete(e.code));
-    window.addEventListener('blur', () => { keys.clear(); lmbDown = rmbDown = false; });
+    window.addEventListener('blur', () => { keys.clear(); lmbDown = rmbDown = false; resetTouchInputs(); });
 
     canvas.addEventListener('click', () => {
       AudioSys.ensureInit();
+      if (isTouchUi() || (performance.now() - touchState.lastTouchMs < 900)) return;
       const overlayOpen = UI.hasModalOpen || (typeof CheatUI !== 'undefined' && CheatUI.isOpen) || (typeof MapUI !== 'undefined' && MapUI.isOpen);
       if (lockActiveState && !pointerLocked && !overlayOpen) {
         if (!lmbDown) lmbJust = true;
@@ -439,7 +474,7 @@ const Input = (() => {
         } else {
           justPressed.add(code);
         }
-        if (lockActiveState && !pointerLocked) {
+        if (lockActiveState && !pointerLocked && !isTouchUi()) {
           try {
             const pr = canvas.requestPointerLock?.();
             if (pr && typeof pr.catch === 'function') pr.catch(() => {});
@@ -448,11 +483,223 @@ const Input = (() => {
       });
     });
 
+    // Tappable Heal Quickslots (7/8/9/0) & Minimap (M) for touch/mouse convenience
+    const qCodes = ['Digit7', 'Digit8', 'Digit9', 'Digit0'];
+    document.querySelectorAll('.quickslot-row .qslot').forEach((el, idx) => {
+      if (!qCodes[idx]) return;
+      el.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        AudioSys.ensureInit();
+        justPressed.add(qCodes[idx]);
+      });
+    });
+    document.querySelector('.minimap-wrap')?.addEventListener('click', (ev) => {
+      if (!lockActiveState) return;
+      ev.stopPropagation();
+      AudioSys.ensureInit();
+      justPressed.add(actionCode('map'));
+    });
+
+    // Mobile utility bar buttons (Bag, Cheat, Fullscreen, Pause)
+    document.getElementById('mbtn-bag')?.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      AudioSys.ensureInit();
+      justPressed.add(actionCode('inventory'));
+    });
+    document.getElementById('mbtn-cheat')?.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      AudioSys.ensureInit();
+      if (typeof CheatUI !== 'undefined') CheatUI.toggle?.();
+    });
+    document.getElementById('mbtn-full')?.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      AudioSys.ensureInit();
+      Render.toggleFullscreen?.();
+    });
+    document.getElementById('mbtn-pause')?.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      AudioSys.ensureInit();
+      resetTouchInputs();
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape', bubbles: true }));
+    });
+
+    // Virtual Joystick + Canvas Look Drag + Virtual Action Buttons (Pointer Events for multitouch + pen + Playwright)
+    const joyZone = document.getElementById('touch-joy-zone');
+    const joyBase = document.getElementById('touch-joy-base');
+    const joyKnob = document.getElementById('touch-joy-knob');
+    let joyPtrId = null;
+
+    function updateJoyFromPoint(clientX, clientY) {
+      if (!joyBase || !joyKnob) return;
+      const rect = joyBase.getBoundingClientRect();
+      const cx = rect.left + rect.width * 0.5;
+      const cy = rect.top + rect.height * 0.5;
+      const maxR = Math.max(24, rect.width * 0.44);
+      const dx = clientX - cx;
+      const dy = clientY - cy;
+      const dist = Math.hypot(dx, dy);
+      const scale = dist > maxR ? maxR / dist : 1;
+      const cxOff = dx * scale;
+      const cyOff = dy * scale;
+      joyKnob.style.transform = `translate3d(${cxOff.toFixed(1)}px, ${cyOff.toFixed(1)}px, 0)`;
+      touchState.moveX = cxOff / maxR;
+      touchState.moveY = cyOff / maxR;
+      touchState.sprint = dist > maxR * 0.76 && touchState.moveY < -0.35;
+      joyBase.classList.toggle('sprinting', touchState.sprint);
+    }
+
+    if (joyZone) {
+      joyZone.addEventListener('pointerdown', (e) => {
+        if (UI.hasModalOpen) return;
+        e.preventDefault();
+        e.stopPropagation();
+        AudioSys.ensureInit();
+        touchState.active = true;
+        touchState.lastTouchMs = performance.now();
+        joyPtrId = e.pointerId;
+        try { joyZone.setPointerCapture?.(e.pointerId); } catch {}
+        updateJoyFromPoint(e.clientX, e.clientY);
+      });
+      joyZone.addEventListener('pointermove', (e) => {
+        if (e.pointerId !== joyPtrId) return;
+        e.preventDefault();
+        touchState.lastTouchMs = performance.now();
+        updateJoyFromPoint(e.clientX, e.clientY);
+      });
+      const clearJoy = (e) => {
+        if (e.pointerId !== joyPtrId) return;
+        joyPtrId = null;
+        touchState.moveX = 0;
+        touchState.moveY = 0;
+        touchState.sprint = false;
+        joyBase?.classList.remove('sprinting');
+        if (joyKnob) joyKnob.style.transform = 'translate3d(0, 0, 0)';
+      };
+      joyZone.addEventListener('pointerup', clearJoy);
+      joyZone.addEventListener('pointercancel', clearJoy);
+    }
+
+    let lookPtrId = null, lookLastX = 0, lookLastY = 0;
+    canvas.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && !isTouchUi()) return;
+      const overlayOpen = UI.hasModalOpen || (typeof CheatUI !== 'undefined' && CheatUI.isOpen) || (typeof MapUI !== 'undefined' && MapUI.isOpen);
+      if (!lockActiveState || overlayOpen) return;
+      AudioSys.ensureInit();
+      if (CONFIG.isMobile && !document.fullscreenElement && !document.webkitFullscreenElement) {
+        Render.tryEnterFullscreen?.(true);
+      }
+      touchState.active = true;
+      touchState.lastTouchMs = performance.now();
+      if (lookPtrId === null) {
+        lookPtrId = e.pointerId;
+        lookLastX = e.clientX;
+        lookLastY = e.clientY;
+        try { canvas.setPointerCapture?.(e.pointerId); } catch {}
+      }
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== lookPtrId) return;
+      e.preventDefault();
+      touchState.lastTouchMs = performance.now();
+      const dx = e.clientX - lookLastX;
+      const dy = e.clientY - lookLastY;
+      lookLastX = e.clientX;
+      lookLastY = e.clientY;
+      mouseDx += dx * 1.45;
+      mouseDy += dy * 1.45;
+    });
+    const clearLook = (e) => { if (e.pointerId === lookPtrId) lookPtrId = null; };
+    canvas.addEventListener('pointerup', clearLook);
+    canvas.addEventListener('pointercancel', clearLook);
+
+    const fireBtn = document.getElementById('touch-fire');
+    let firePtrId = null, fireLastX = 0, fireLastY = 0;
+    if (fireBtn) {
+      fireBtn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        AudioSys.ensureInit();
+        touchState.active = true;
+        touchState.lastTouchMs = performance.now();
+        firePtrId = e.pointerId;
+        fireLastX = e.clientX;
+        fireLastY = e.clientY;
+        touchState.fire = true;
+        touchState.fireJust = true;
+        fireBtn.classList.add('active');
+        try { fireBtn.setPointerCapture?.(e.pointerId); } catch {}
+      });
+      fireBtn.addEventListener('pointermove', (e) => {
+        if (e.pointerId !== firePtrId) return;
+        e.preventDefault();
+        touchState.lastTouchMs = performance.now();
+        const dx = e.clientX - fireLastX;
+        const dy = e.clientY - fireLastY;
+        fireLastX = e.clientX;
+        fireLastY = e.clientY;
+        mouseDx += dx * 1.35;
+        mouseDy += dy * 1.35;
+      });
+      const clearFire = (e) => {
+        if (e.pointerId !== firePtrId) return;
+        firePtrId = null;
+        touchState.fire = false;
+        fireBtn.classList.remove('active');
+      };
+      fireBtn.addEventListener('pointerup', clearFire);
+      fireBtn.addEventListener('pointercancel', clearFire);
+    }
+
+    const adsBtn = document.getElementById('touch-ads');
+    if (adsBtn) {
+      adsBtn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        AudioSys.ensureInit();
+        touchState.active = true;
+        touchState.lastTouchMs = performance.now();
+        touchState.ads = !touchState.ads;
+        adsBtn.classList.toggle('active', touchState.ads);
+      });
+    }
+
+    const bindTouchPulse = (id, justKey, heldKey = null) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        AudioSys.ensureInit();
+        touchState.active = true;
+        touchState.lastTouchMs = performance.now();
+        touchState[justKey] = true;
+        if (heldKey) touchState[heldKey] = true;
+        btn.classList.add('active');
+      });
+      const release = (e) => {
+        if (heldKey) touchState[heldKey] = false;
+        btn.classList.remove('active');
+      };
+      btn.addEventListener('pointerup', release);
+      btn.addEventListener('pointercancel', release);
+    };
+    bindTouchPulse('touch-jump', 'jumpJust', 'jumpHeld');
+    bindTouchPulse('touch-crouch', 'crouchJust');
+    bindTouchPulse('touch-reload', 'reloadJust');
+    bindTouchPulse('touch-persp', 'perspJust');
+    bindTouchPulse('touch-interact', 'interactJust');
+
+    document.getElementById('hud-interact')?.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      AudioSys.ensureInit();
+      touchState.interactJust = true;
+    });
+
     document.addEventListener('pointerlockchange', () => {
       const wasLocked = pointerLocked;
       pointerLocked = document.pointerLockElement === canvasEl;
       const overlayOpen = UI.hasModalOpen || (typeof CheatUI !== 'undefined' && CheatUI.isOpen) || (typeof MapUI !== 'undefined' && MapUI.isOpen);
-      document.getElementById('pointer-banner')?.classList.toggle('hidden', !lockActiveState || pointerLocked || overlayOpen);
+      document.getElementById('pointer-banner')?.classList.toggle('hidden', isTouchUi() || !lockActiveState || pointerLocked || overlayOpen);
       if (wasLocked && !pointerLocked && lockActiveState && !overlayOpen && onLockLost) {
         onLockLost();
       }
@@ -465,8 +712,8 @@ const Input = (() => {
     });
 
     window.addEventListener('mousedown', (e) => {
-      if (UI.hasModalOpen) return;
-      if (e.target?.closest?.('.wslot-pill, #hud-weapon-slots, #match-status-pill, #cheat-overlay, #map-overlay, #modal-backdrop')) return;
+      if (UI.hasModalOpen || isTouchUi() || (performance.now() - touchState.lastTouchMs < 900)) return;
+      if (e.target?.closest?.('.wslot-pill, #hud-weapon-slots, .qslot, .minimap-wrap, #touch-controls, #mobile-util-row, #match-status-pill, #cheat-overlay, #map-overlay, #modal-backdrop')) return;
       if (e.button === 0) { if (!lmbDown) lmbJust = true; lmbDown = true; }
       if (e.button === 2) { if (!rmbDown) rmbJust = true; rmbDown = true; }
     });
@@ -482,8 +729,11 @@ const Input = (() => {
 
   function setGameplayActive(active) {
     lockActiveState = active;
-    document.getElementById('pointer-banner')?.classList.toggle('hidden', !active || pointerLocked || UI.hasModalOpen);
-    if (!active && pointerLocked) document.exitPointerLock?.();
+    document.getElementById('pointer-banner')?.classList.toggle('hidden', isTouchUi() || !active || pointerLocked || UI.hasModalOpen);
+    if (!active) {
+      resetTouchInputs();
+      if (pointerLocked) document.exitPointerLock?.();
+    }
   }
 
   function actionCode(act) { return UI.settings.keybinds?.[act] || CONFIG.defaultKeybinds[act]; }
@@ -615,10 +865,26 @@ const Input = (() => {
     lmbJust = false; rmbJust = false;
     return res;
   }
-  function endFrame() { justPressed.clear(); }
+  function setTouchInteract(visible, label = 'AMBIL') {
+    const btn = document.getElementById('touch-interact');
+    if (!btn) return;
+    btn.classList.toggle('hidden', !visible);
+    if (visible && label) btn.textContent = label;
+  }
+
+  function endFrame() {
+    justPressed.clear();
+    touchState.fireJust = false;
+    touchState.jumpJust = false;
+    touchState.crouchJust = false;
+    touchState.reloadJust = false;
+    touchState.perspJust = false;
+    touchState.interactJust = false;
+  }
 
   return {
-    init, setGameplayActive, isDown, isCodeDown, wasPressed, wasCodePressed, pollGamepad, consumeFrame, endFrame,
+    init, setGameplayActive, isDown, isCodeDown, wasPressed, wasCodePressed, pollGamepad, consumeFrame, endFrame, resetTouchInputs, setTouchInteract,
+    get touch() { return touchState; },
     get lmbDown() { return lmbDown; },
     get rmbDown() { return rmbDown; },
     get pointerLocked() { return pointerLocked; },

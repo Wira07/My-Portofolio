@@ -59,7 +59,9 @@
 html, body {
   width: 100%;
   height: 100%;
+  height: 100dvh;
   overflow: hidden;
+  overscroll-behavior: none;
   background: #08090B;
   color: var(--text-main);
   font-family: var(--font-sans);
@@ -67,12 +69,17 @@ html, body {
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #game-root {
   position: fixed;
   inset: 0;
+  width: 100%;
+  height: 100dvh;
   overflow: hidden;
+  touch-action: none;
 }
 
 #gl-canvas {
@@ -80,6 +87,7 @@ html, body {
   width: 100%;
   height: 100%;
   outline: none;
+  touch-action: none;
 }
 
 /* Colorblind filter classes */
@@ -118,6 +126,7 @@ body.cb-tritanopia #game-root { filter: url(#cb-tritanopia-filter); }
 }
 
 .tac-btn {
+  touch-action: manipulation;
   appearance: none;
   display: inline-flex;
   align-items: center;
@@ -1181,6 +1190,550 @@ table.tac-table tbody tr:hover td { background: rgba(255, 255, 255, 0.025); }
   background: rgba(79, 216, 245, 0.16);
   border-color: rgba(79, 216, 245, 0.5);
   color: #8CE9FF;
+}
+
+/* ==========================================================================
+   MOBILE / TABLET VIRTUAL TOUCH CONTROLS & RESPONSIVE HUD
+   ========================================================================== */
+.mobile-only { display: none; }
+body.is-mobile .mobile-only { display: inline-flex; }
+body.is-mobile .ios-pwa-hint.mobile-only { display: block; }
+
+.ios-pwa-hint {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--accent-line);
+  background: rgba(242, 183, 5, 0.12);
+  border-radius: var(--radius);
+  font-size: 11px;
+  color: #FFE48F;
+  text-align: center;
+}
+
+.mobile-util-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+.mobile-util-btn {
+  appearance: none;
+  border: 1px solid var(--border-strong);
+  background: rgba(12, 15, 20, 0.78);
+  color: var(--text-main);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  min-width: 30px;
+  min-height: 28px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.mobile-util-btn.accent {
+  border-color: rgba(79, 216, 245, 0.55);
+  color: #8CE9FF;
+  background: rgba(16, 38, 48, 0.78);
+}
+.mobile-util-btn:active {
+  transform: scale(0.95);
+  background: rgba(242, 183, 5, 0.25);
+}
+
+/* Clickable weapon slots on desktop & touch */
+#hud-weapon-slots { pointer-events: auto; }
+.wslot-pill { cursor: pointer; touch-action: manipulation; }
+
+/* Virtual Touch Layer */
+.touch-controls {
+  position: fixed;
+  inset: 0;
+  z-index: 24;
+  pointer-events: none;
+  touch-action: none;
+}
+
+.touch-joy-zone {
+  position: fixed;
+  left: max(12px, env(safe-area-inset-left));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  width: 128px;
+  height: 128px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  touch-action: none;
+}
+.touch-joy-base {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: rgba(12, 15, 20, 0.42);
+  border: 1.5px solid rgba(255, 255, 255, 0.24);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.touch-joy-base.sprinting {
+  border-color: var(--accent);
+  box-shadow: 0 0 14px rgba(242, 183, 5, 0.35);
+}
+.touch-joy-knob {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.55), rgba(242, 183, 5, 0.45));
+  border: 1.5px solid rgba(255, 255, 255, 0.65);
+  transform: translate3d(0, 0, 0);
+  pointer-events: none;
+}
+
+.touch-right-cluster {
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  width: 196px;
+  height: 184px;
+  pointer-events: none;
+}
+.touch-btn {
+  appearance: none;
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.32);
+  background: rgba(12, 15, 20, 0.58);
+  color: #F4F7FA;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: pointer;
+}
+.touch-btn.active,
+.touch-btn:active {
+  background: rgba(242, 183, 5, 0.38);
+  border-color: var(--accent);
+  color: #FFF;
+  transform: scale(0.95);
+}
+.touch-btn.fire {
+  right: 6px;
+  bottom: 8px;
+  width: 68px;
+  height: 68px;
+  font-size: 11px;
+  background: rgba(229, 72, 77, 0.45);
+  border-color: rgba(255, 130, 135, 0.72);
+}
+.touch-btn.fire.active,
+.touch-btn.fire:active {
+  background: rgba(242, 92, 5, 0.78);
+  border-color: #FFD166;
+}
+.touch-btn.ads {
+  right: 84px;
+  bottom: 8px;
+  width: 48px;
+  height: 48px;
+  font-size: 10px;
+}
+.touch-btn.ads.active {
+  background: rgba(79, 216, 245, 0.35);
+  border-color: var(--cyan);
+}
+.touch-btn.jump {
+  right: 6px;
+  bottom: 88px;
+  width: 46px;
+  height: 46px;
+  font-size: 16px;
+}
+.touch-btn.crouch {
+  right: 78px;
+  bottom: 80px;
+  width: 42px;
+  height: 42px;
+  font-size: 10px;
+}
+.touch-btn.reload {
+  right: 136px;
+  bottom: 64px;
+  width: 40px;
+  height: 40px;
+  font-size: 13px;
+}
+.touch-btn.persp {
+  right: 60px;
+  bottom: 132px;
+  width: 38px;
+  height: 38px;
+  font-size: 12px;
+}
+.touch-btn.interact {
+  right: 108px;
+  bottom: 130px;
+  width: auto;
+  min-width: 52px;
+  height: 36px;
+  padding: 0 11px;
+  border-radius: 18px;
+  background: rgba(242, 183, 5, 0.32);
+  border-color: var(--accent);
+  color: #FFE48F;
+  font-size: 10px;
+}
+
+/* Disable costly CSS backdrop blur on mobile compositors */
+body.is-mobile .tac-panel,
+body.is-mobile .tac-modal,
+body.is-mobile .modal-backdrop,
+body.is-mobile #map-overlay {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+body.is-mobile .tac-modal {
+  background: rgba(14, 17, 22, 0.96);
+}
+
+/* Responsive layout for phones, iPhones, and tablets */
+@media (pointer: coarse), (max-width: 960px), (max-height: 540px) {
+  .mobile-only { display: inline-flex; }
+  .ios-pwa-hint.mobile-only { display: block; }
+  .tac-panel, .tac-modal, .modal-backdrop, #map-overlay {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .tac-modal { background: rgba(14, 17, 22, 0.96); }
+
+  /* Main Menu: scrollable grid so no button overflows on portrait or landscape */
+  #screen-menu {
+    background: linear-gradient(180deg, rgba(8, 10, 12, 0.88) 0%, rgba(8, 10, 12, 0.72) 55%, rgba(8, 10, 12, 0.9) 100%);
+    padding: max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+  .menu-top-bar { flex-wrap: wrap; align-items: center; gap: 10px; }
+  .brand-kicker { font-size: 10px; margin-bottom: 4px; }
+  .brand-title { font-size: clamp(22px, 5.2vw, 34px); letter-spacing: 0.1em; }
+  .brand-title::after { margin-top: 8px; width: 32px; }
+  .brand-sub { font-size: 11px; margin-top: 6px; max-width: 100%; }
+  .menu-status-pill { padding: 5px 10px; font-size: 11px; gap: 8px; }
+  .menu-body { flex-direction: column; align-items: stretch; gap: 10px; }
+  .menu-nav {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+    gap: 7px;
+  }
+  .menu-nav .tac-btn { padding: 10px 12px; font-size: 11.5px; }
+  .menu-nav .tac-btn.primary { padding: 11px 12px; font-size: 12.5px; }
+  .menu-bench-controls { flex-wrap: wrap; padding: 8px 10px; gap: 6px; font-size: 11px; }
+  .menu-footer { flex-wrap: wrap; gap: 6px; padding-top: 10px; font-size: 10px; }
+
+  /* Loading & Modals */
+  #screen-loading { padding: 16px; }
+  .loading-box { padding: 18px 18px; width: min(500px, 95vw); }
+  .modal-backdrop { padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); }
+  .modal-window, .cheat-window { width: 96vw; max-height: 92dvh; }
+  .modal-header { padding: 10px 14px; }
+  .modal-title { font-size: 13px; }
+  .modal-content { padding: 12px 14px; }
+  .modal-footer { padding: 10px 14px; flex-wrap: wrap; gap: 6px; }
+  .tab-bar { padding: 0 10px; }
+  .tab-btn { padding: 9px 10px; font-size: 11px; white-space: nowrap; }
+  .setup-grid, .settings-list { grid-template-columns: 1fr; gap: 8px; }
+  .setting-row { flex-wrap: wrap; gap: 8px; padding: 9px 6px; }
+  .setting-ctrl { min-width: 0; width: 100%; justify-content: flex-start; }
+  .inv-col { max-height: 44dvh; }
+  #map-overlay { padding: 8px; }
+  .bigmap-frame { width: 96vw; height: 88dvh; }
+  .bigmap-bar { flex-wrap: wrap; padding: 8px 10px; gap: 6px; }
+
+  /* HUD Layout: Strictly non-overlapping across Phone Portrait, Landscape & Tablet */
+  .hud-corner-tl {
+    top: max(6px, env(safe-area-inset-top));
+    left: max(8px, env(safe-area-inset-left));
+    gap: 3px;
+  }
+  .minimap-wrap {
+    width: 76px;
+    height: 76px;
+    pointer-events: auto;
+    touch-action: manipulation;
+    cursor: pointer;
+  }
+  .minimap-zoom-tag { display: none; }
+  .minimap-meta {
+    padding: 2px 5px;
+    font-size: 9px;
+    max-width: 96px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .hud-top-center {
+    top: max(6px, env(safe-area-inset-top));
+    gap: 3px;
+  }
+  .compass-bar {
+    width: clamp(128px, 34vw, 220px);
+    height: 20px;
+  }
+  .zone-pill {
+    padding: 2px 7px;
+    font-size: 10px;
+    gap: 5px;
+  }
+
+  .hud-corner-tr {
+    top: max(6px, env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
+    gap: 4px;
+  }
+  .counter-cell { padding: 3px 7px; font-size: 10px; gap: 4px; }
+  .counter-val { font-size: 13px; }
+  #hud-pad-badge:not(.connected) { display: none; }
+  .kill-feed { max-width: 145px; }
+  .kf-entry { padding: 2px 6px; font-size: 9.5px; }
+
+  /* Move quickslots cleanly under minimap so bottom-left stays open for Joystick */
+  .hud-corner-bl {
+    top: calc(106px + env(safe-area-inset-top));
+    left: max(8px, env(safe-area-inset-left));
+    bottom: auto;
+  }
+  .quickslot-row {
+    display: grid;
+    grid-template-columns: repeat(2, 42px);
+    gap: 4px;
+  }
+  .qslot {
+    width: 42px;
+    height: 36px;
+    padding: 2px 3px;
+    font-size: 8px;
+    gap: 0;
+    pointer-events: auto;
+    touch-action: manipulation;
+    cursor: pointer;
+  }
+  .qslot > span:nth-child(2) {
+    max-width: 38px;
+    font-size: 7.5px;
+    line-height: 1.05;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Move Weapon Card to Top-Right below utility buttons, clear of bottom fire cluster */
+  .hud-corner-br {
+    top: calc(68px + env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: auto;
+  }
+  .weapon-card {
+    min-width: 0;
+    width: clamp(128px, 24vw, 168px);
+    padding: 5px 8px;
+    gap: 2px;
+  }
+  #hud-weapon-sil { display: none !important; }
+  .weapon-name { font-size: 9.5px; letter-spacing: 0.05em; }
+  .fire-mode-badge { font-size: 8.5px; padding: 1px 4px; }
+  .ammo-mag { font-size: 18px; }
+  .ammo-res { font-size: 10.5px; }
+  #hud-zeroing { font-size: 9.5px !important; }
+
+  /* Center-bottom Vitals & Clickable Weapon Slots */
+  .hud-bottom-center {
+    bottom: max(6px, env(safe-area-inset-bottom));
+    gap: 3px;
+  }
+  .vitals-panel {
+    width: clamp(190px, 46vw, 248px);
+    padding: 5px 9px;
+  }
+  .boost-seg-row { margin-bottom: 4px; height: 2.5px; }
+  .hp-track { height: 6px; }
+  .vitals-sub { margin-top: 4px; font-size: 9.5px; }
+  .armor-badge { padding: 1px 4px; font-size: 9px; gap: 2px; }
+
+  #hud-weapon-slots {
+    position: fixed;
+    bottom: calc(52px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 0;
+    gap: 3px;
+    z-index: 25;
+  }
+  .wslot-pill {
+    padding: 3px 6px;
+    font-size: 9px;
+    white-space: nowrap;
+  }
+
+  /* Center banners above crosshair & clear of compass/zone */
+  #hud-alert-banner {
+    top: calc(50px + env(safe-area-inset-top));
+    font-size: 10px;
+    padding: 4px 10px;
+    max-width: min(82vw, 380px);
+    text-align: center;
+  }
+  #match-status-pill {
+    top: calc(78px + env(safe-area-inset-top)) !important;
+    bottom: auto !important;
+    font-size: 10px !important;
+    padding: 4px 10px !important;
+    max-width: min(84vw, 380px);
+  }
+  #hud-vehicle-pill {
+    top: calc(52px + env(safe-area-inset-top));
+    bottom: auto;
+    font-size: 10px;
+    padding: 4px 9px;
+    max-width: 88vw;
+  }
+  #hud-interact {
+    bottom: calc(96px + env(safe-area-inset-bottom));
+    font-size: 10.5px;
+    padding: 5px 10px;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+  #hud-cast-bar {
+    bottom: calc(92px + env(safe-area-inset-bottom));
+    width: 185px;
+  }
+  #hud-status-pills {
+    top: calc(122px + env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: auto;
+    max-width: 145px;
+  }
+  #hud-subtitles {
+    bottom: calc(128px + env(safe-area-inset-bottom));
+    max-width: 78vw;
+  }
+  .pointer-banner { display: none !important; }
+  #fps-counter { top: 4px !important; left: 50% !important; transform: translateX(-50%); right: auto !important; font-size: 9px !important; padding: 1px 6px !important; }
+}
+
+/* Portrait Phones: keep vitals & weapon slots at bottom edge, lift joystick & action buttons above them */
+@media (max-width: 640px) and (orientation: portrait) {
+  .minimap-wrap { width: 70px; height: 70px; }
+  .hud-corner-bl { top: calc(100px + env(safe-area-inset-top)); }
+  .hud-top-center {
+    left: 47%;
+    width: clamp(114px, 41vw, 152px);
+  }
+  .compass-bar { width: 100%; height: 18px; }
+  .zone-pill {
+    max-width: 152px;
+    padding: 2px 5px;
+    font-size: 9px;
+    gap: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .counter-cell { padding: 3px 5px; font-size: 9.5px; }
+  .counter-val { font-size: 12px; }
+  .mobile-util-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+  .mobile-util-btn {
+    padding: 4px 7px;
+    min-width: 34px;
+    min-height: 26px;
+    font-size: 9px;
+  }
+  .hud-corner-br {
+    top: calc(98px + env(safe-area-inset-top));
+  }
+  .weapon-card { width: 126px; padding: 4px 7px; }
+  #hud-alert-banner {
+    top: calc(144px + env(safe-area-inset-top));
+    max-width: min(88vw, 340px);
+  }
+  #match-status-pill {
+    top: calc(146px + env(safe-area-inset-top)) !important;
+    max-width: min(88vw, 340px);
+  }
+  .touch-joy-zone {
+    left: max(8px, env(safe-area-inset-left));
+    bottom: calc(86px + env(safe-area-inset-bottom));
+    width: 120px;
+    height: 120px;
+  }
+  .touch-joy-base { width: 102px; height: 102px; }
+  .touch-joy-knob { width: 42px; height: 42px; }
+  .touch-right-cluster {
+    right: max(8px, env(safe-area-inset-right));
+    bottom: calc(86px + env(safe-area-inset-bottom));
+    width: 184px;
+    height: 174px;
+  }
+  .touch-btn.fire { width: 64px; height: 64px; right: 4px; bottom: 8px; }
+  .touch-btn.ads { width: 46px; height: 46px; right: 78px; bottom: 8px; }
+  .touch-btn.jump { width: 44px; height: 44px; right: 6px; bottom: 82px; }
+  .touch-btn.crouch { width: 40px; height: 40px; right: 74px; bottom: 76px; }
+  .touch-btn.reload { width: 38px; height: 38px; right: 128px; bottom: 60px; }
+  .touch-btn.persp { width: 36px; height: 36px; right: 56px; bottom: 124px; }
+  .touch-btn.interact { right: 100px; bottom: 124px; }
+  .vitals-panel { width: clamp(210px, 66vw, 270px); }
+  #hud-interact { bottom: calc(266px + env(safe-area-inset-bottom)); }
+  #hud-cast-bar { bottom: calc(230px + env(safe-area-inset-bottom)); }
+}
+
+/* Short Landscape Phones: hide killfeed clutter & scale down controls neatly */
+@media (max-height: 440px) {
+  .kill-feed { display: none; }
+  .minimap-wrap { width: 68px; height: 68px; }
+  .hud-corner-bl { top: calc(96px + env(safe-area-inset-top)); }
+  .hud-corner-br { top: calc(64px + env(safe-area-inset-top)); }
+  .touch-joy-zone { width: 112px; height: 112px; left: max(8px, env(safe-area-inset-left)); bottom: max(6px, env(safe-area-inset-bottom)); }
+  .touch-joy-base { width: 96px; height: 96px; }
+  .touch-joy-knob { width: 40px; height: 40px; }
+  .touch-right-cluster { width: 170px; height: 158px; right: max(8px, env(safe-area-inset-right)); bottom: max(6px, env(safe-area-inset-bottom)); }
+  .touch-btn.fire { width: 60px; height: 60px; right: 4px; bottom: 6px; }
+  .touch-btn.ads { width: 44px; height: 44px; right: 74px; bottom: 6px; }
+  .touch-btn.jump { width: 42px; height: 42px; right: 4px; bottom: 74px; }
+  .touch-btn.crouch { width: 38px; height: 38px; right: 68px; bottom: 70px; }
+  .touch-btn.reload { width: 36px; height: 36px; right: 116px; bottom: 54px; }
+  .touch-btn.persp { width: 36px; height: 36px; right: 50px; bottom: 114px; }
+  .touch-btn.interact { right: 96px; bottom: 114px; }
+  .wslot-pill { padding: 2.5px 5px; font-size: 8.5px; }
+}
+
+/* Tablets (>= 700px wide & >= 550px tall): slightly larger readable HUD */
+@media (pointer: coarse) and (min-width: 700px) and (min-height: 550px) {
+  .minimap-wrap { width: 118px; height: 118px; }
+  .hud-corner-bl { top: calc(154px + env(safe-area-inset-top)); }
+  .quickslot-row { grid-template-columns: repeat(4, 44px); }
+  .qslot { width: 44px; height: 44px; font-size: 9.5px; }
+  .compass-bar { width: clamp(220px, 34vw, 320px); height: 24px; }
+  .weapon-card { width: 190px; padding: 8px 10px; }
+  .vitals-panel { width: 280px; padding: 7px 10px; }
+  .touch-joy-zone { width: 146px; height: 146px; }
+  .touch-joy-base { width: 126px; height: 126px; }
 }
 
 /* ---------- Aksesibilitas ---------- */

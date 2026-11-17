@@ -2,9 +2,16 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rajawali Royale">
+<meta name="theme-color" content="#08090B">
 <title>RAJAWALI ROYALE — 3D Tactical Battle Royale</title>
-<link rel="icon" href="data:,">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="css/style.css">
 <script type="importmap">
 {
@@ -62,6 +69,7 @@
         <span id="menu-preset-badge" class="tabular label-uc" style="color:var(--accent)">MEDIUM</span>
         <span>|</span>
         <span id="menu-webgl-status" class="tabular">WebGL2 Siap</span>
+        <button id="btn-menu-fullscreen" class="tac-btn sm mobile-only" type="button" title="Layar Penuh">&#x26F6; FULL</button>
       </div>
     </div>
 
@@ -110,9 +118,10 @@
     </div>
 
     <footer class="menu-footer">
-      <div style="display:flex;align-items:center;gap:12px;">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <span class="rating-badge">16+</span>
         <span>Konten kekerasan fiksi bersenjata. Tanpa gore. Semua aset 3D, tekstur PBR, dan audio disintesis procedural di browser.</span>
+        <span id="ios-pwa-hint" class="hidden" style="color:#F3BA1F;font-weight:600;">iPhone/iPad: Ketuk Bagikan &rarr; &ldquo;Tambah ke Layar Utama&rdquo; agar langsung Fullscreen tanpa bar Safari.</span>
       </div>
       <div class="tabular">v1.0.0 — Build WebGL2</div>
     </footer>
@@ -169,6 +178,12 @@
         <div class="counter-cell"><span class="label-uc" style="font-size:11px;color:var(--text-dim);">KILL</span><span id="hud-kills" class="counter-val" style="color:var(--text-main);">0</span></div>
       </div>
       <div id="hud-pad-badge" class="tac-panel hud-pad-badge tabular">STIK SIAP • [START/F4] CHEAT</div>
+      <div id="mobile-util-row" class="mobile-util-row hidden">
+        <button id="mbtn-bag" class="mobile-util-btn" type="button">TAS</button>
+        <button id="mbtn-cheat" class="mobile-util-btn accent" type="button">CHEAT</button>
+        <button id="mbtn-full" class="mobile-util-btn" type="button">&#x26F6;</button>
+        <button id="mbtn-pause" class="mobile-util-btn" type="button">II</button>
+      </div>
       <div id="hud-kill-feed" class="kill-feed"></div>
     </div>
 
@@ -260,6 +275,24 @@
           <span><span id="hud-ammo-mag" class="ammo-mag">0</span> <span class="ammo-res">/ <span id="hud-ammo-res">0</span></span></span>
           <span id="hud-zeroing" style="font-size:11px;color:var(--text-dim);">100m</span>
         </div>
+      </div>
+    </div>
+
+    <!-- MOBILE / TABLET VIRTUAL TOUCH CONTROLS (shown automatically on touch devices) -->
+    <div id="touch-controls" class="touch-controls hidden">
+      <div id="touch-joy-zone" class="touch-joy-zone" aria-label="Joystick Gerak">
+        <div id="touch-joy-base" class="touch-joy-base">
+          <div id="touch-joy-knob" class="touch-joy-knob"></div>
+        </div>
+      </div>
+      <div class="touch-right-cluster">
+        <button id="touch-fire" class="touch-btn fire" type="button" aria-label="Tembak">TEMBAK</button>
+        <button id="touch-ads" class="touch-btn ads" type="button" aria-label="Bidik">BIDIK</button>
+        <button id="touch-jump" class="touch-btn jump" type="button" aria-label="Lompat">&#x2191;</button>
+        <button id="touch-crouch" class="touch-btn crouch" type="button" aria-label="Jongkok">DUK</button>
+        <button id="touch-reload" class="touch-btn reload" type="button" aria-label="Reload">R</button>
+        <button id="touch-persp" class="touch-btn persp" type="button" aria-label="FPP TPP">V</button>
+        <button id="touch-interact" class="touch-btn interact hidden" type="button" aria-label="Interaksi">F</button>
       </div>
     </div>
   </div>

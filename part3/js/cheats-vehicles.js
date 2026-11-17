@@ -378,9 +378,12 @@ const VehiclesSys = (() => {
     const v = activeVehicle;
     if (!v) return;
     const cheatOpen = typeof CheatUI !== 'undefined' && CheatUI.isOpen;
+    const touch = Input.touch;
+    Input.setTouchInteract?.(true, 'TURUN');
 
-    // Exit check: F key OR Stik Square / Circle (when cheat panel closed)
-    if (!cheatOpen && (Input.wasPressed('interact') || gp?.reloadJust || gp?.crouchJust)) {
+    // Exit check: F key OR Stik Square / Circle OR Touch Interact (when cheat panel closed)
+    if (!cheatOpen && (Input.wasPressed('interact') || gp?.reloadJust || gp?.crouchJust || touch?.interactJust)) {
+      Input.setTouchInteract?.(false);
       dismount();
       return;
     }
@@ -389,12 +392,15 @@ const VehiclesSys = (() => {
     const brakeKey = Input.isDown('backward') ? 1 : 0;
     const padGas = !cheatOpen && gp ? (gp.fire ? 1 : Math.max(0, -gp.moveY)) : 0;
     const padBrake = !cheatOpen && gp ? (gp.ads ? 1 : Math.max(0, gp.moveY)) : 0;
-    const throttle = Util.clamp(Math.max(gasKey, padGas), 0, 1);
-    const reverse = Util.clamp(Math.max(brakeKey, padBrake), 0, 1);
-    const boost = !cheatOpen && (Input.isDown('sprint') || !!gp?.sprint);
+    const touchGas = !cheatOpen && touch ? Math.max(touch.fire ? 1 : 0, Math.max(0, -touch.moveY)) : 0;
+    const touchBrake = !cheatOpen && touch ? Math.max(touch.ads ? 1 : 0, Math.max(0, touch.moveY)) : 0;
+    const throttle = Util.clamp(Math.max(gasKey, padGas, touchGas), 0, 1);
+    const reverse = Util.clamp(Math.max(brakeKey, padBrake, touchBrake), 0, 1);
+    const boost = !cheatOpen && (Input.isDown('sprint') || !!gp?.sprint || !!touch?.sprint);
 
     let steerIn = (Input.isDown('left') ? 1 : 0) - (Input.isDown('right') ? 1 : 0);
     if (!cheatOpen && gp) steerIn -= gp.moveX;
+    if (!cheatOpen && touch) steerIn -= touch.moveX;
     steerIn = Util.clamp(steerIn, -1, 1);
 
     const top = boost ? v.boostSpeed : v.maxSpeed;

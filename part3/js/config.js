@@ -1,9 +1,24 @@
 // ════════════════════════════════════════════════════════════════════════════
 // CONFIG — Single source of truth (Lampiran A + Section Tables)
 // ════════════════════════════════════════════════════════════════════════════
+const _uaStr = (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent : '';
+const _hasTouchInput = (typeof window !== 'undefined') && (('ontouchstart' in window) || ((navigator?.maxTouchPoints || 0) > 0));
+const _isCoarsePtr = (typeof window !== 'undefined' && window.matchMedia) ? window.matchMedia('(pointer: coarse)').matches : false;
+const _isIOSDev = /iPad|iPhone|iPod/.test(_uaStr) || (_uaStr.includes('Mac') && _hasTouchInput && (navigator?.maxTouchPoints || 0) > 1);
+const _isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(_uaStr);
+const _isMobileDevice = Boolean(_isMobileUA || _isIOSDev || (_hasTouchInput && (_isCoarsePtr || Math.min(window.innerWidth || 1280, window.innerHeight || 720) <= 920)));
+const _isStandaloneApp = (typeof window !== 'undefined') && (
+  Boolean(window.matchMedia && (window.matchMedia('(display-mode: fullscreen)').matches || window.matchMedia('(display-mode: standalone)').matches))
+  || Boolean(window.navigator?.standalone)
+);
+
 const CONFIG = {
   version: '1.0.0',
   seedDefault: 20261114,
+  isMobile: _isMobileDevice,
+  isIOS: _isIOSDev,
+  isStandalone: _isStandaloneApp,
+  hasTouch: _hasTouchInput,
   storageKeys: {
     settings: 'rajawali_settings_v1',
     stats: 'rajawali_stats_v1'
@@ -18,7 +33,7 @@ const CONFIG = {
     maxHeight: 95,
     collisionCell: 8
   },
-  sim: { fixedDt: 1 / 60, maxSubsteps: 5, ballisticDt: 1 / 120, aiHz: 10, aiBudgetMs: 1.5 },
+  sim: { fixedDt: 1 / 60, maxSubsteps: 5, ballisticDt: 1 / 120, aiHz: _isMobileDevice ? 6 : 10, aiBudgetMs: _isMobileDevice ? 0.9 : 1.5 },
   player: {
     hp: 100, radius: 0.35,
     height: { stand: 1.80, crouch: 1.30, prone: 0.60 },
@@ -62,10 +77,10 @@ const CONFIG = {
   },
   audio: { master: 0.8, sfx: 1.0, ambient: 0.6, ui: 0.6, music: 0.4, speedOfSound: 343 },
   quality: {
-    low:    { label: 'Low',    viewDist: 350,  cascades: 1, shadowSize: 1024, grassDist: 0,   trees: 8000,  bloom: false, fxaa: false, particles: 200,  texRes: 512,  dynRes: true,  aniso: 2 },
-    medium: { label: 'Medium', viewDist: 550,  cascades: 2, shadowSize: 1536, grassDist: 40,  trees: 18000, bloom: true,  fxaa: true,  particles: 600,  texRes: 512,  dynRes: true,  aniso: 4 },
-    high:   { label: 'High',   viewDist: 800,  cascades: 3, shadowSize: 2048, grassDist: 70,  trees: 28000, bloom: true,  fxaa: true,  particles: 1200, texRes: 1024, dynRes: false, aniso: 8 },
-    ultra:  { label: 'Ultra',  viewDist: 1100, cascades: 4, shadowSize: 2048, grassDist: 100, trees: 38000, bloom: true,  fxaa: true,  particles: 2000, texRes: 1024, dynRes: false, aniso: 16 }
+    low:    { label: 'Low',    viewDist: _isMobileDevice ? 360 : 350, cascades: 1, shadowSize: _isMobileDevice ? 512 : 1024, grassDist: 0,  trees: _isMobileDevice ? 4200 : 8000, bloom: false, fxaa: false, particles: _isMobileDevice ? 120 : 200, texRes: _isMobileDevice ? 256 : 512, dynRes: true, aniso: _isMobileDevice ? 1 : 2, maxDpr: _isMobileDevice ? 1.0 : 1.5 },
+    medium: { label: 'Medium', viewDist: 550, cascades: _isMobileDevice ? 1 : 2, shadowSize: _isMobileDevice ? 768 : 1536, grassDist: _isMobileDevice ? 18 : 40, trees: _isMobileDevice ? 9000 : 18000, bloom: !_isMobileDevice, fxaa: !_isMobileDevice, particles: _isMobileDevice ? 260 : 600, texRes: _isMobileDevice ? 256 : 512, dynRes: true, aniso: _isMobileDevice ? 2 : 4, maxDpr: _isMobileDevice ? 1.25 : 2.0 },
+    high:   { label: 'High',   viewDist: 800, cascades: 3, shadowSize: 2048, grassDist: 70,  trees: 28000, bloom: true,  fxaa: true,  particles: 1200, texRes: 1024, dynRes: false, aniso: 8,  maxDpr: 2.0 },
+    ultra:  { label: 'Ultra',  viewDist: 1100, cascades: 4, shadowSize: 2048, grassDist: 100, trees: 38000, bloom: true,  fxaa: true,  particles: 2000, texRes: 1024, dynRes: false, aniso: 16, maxDpr: 2.0 }
   },
   timeOfDay: {
     pagi:  { label: 'Pagi',  elevation: 22,  azimuth: 115, exposure: 1.00, sunColor: 0xFFE3B8, sunInt: 2.9, hemiSky: 0x90C5EE, hemiGnd: 0x566048, hemiInt: 0.92, fogColor: 0x99BED9, fogDensity: 0.00038, skyTop: 0x1D4E89, skyBot: 0xE6B98A, night: false },
@@ -135,7 +150,23 @@ const CONFIG = {
     uiScale: 100,
     reduceShake: false,
     subtitles: true,
+    touchControls: 'auto',
     keybinds: null // populated on clone
+  },
+  mobileDefaults: {
+    preset: 'low',
+    resScale: 0.72,
+    viewDist: 360,
+    shadowCascades: 1,
+    grassDist: 0,
+    bloom: false,
+    fpsCap: 60,
+    showFps: false,
+    sensitivity: 1.15,
+    adsHold: false,
+    crouchToggle: true,
+    autoSprint: true,
+    touchControls: 'auto'
   }
 };
 CONFIG.defaultSettings.keybinds = { ...CONFIG.defaultKeybinds };

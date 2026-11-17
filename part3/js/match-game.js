@@ -623,11 +623,12 @@ const MatchSys = (() => {
       Throwables.updatePlayerThrow(dt, inp);
       updateZoneHud();
       const cheatOpen = typeof CheatUI !== 'undefined' && CheatUI.isOpen;
-      if (lobbyTimer <= 0 || Input.wasCodePressed('Space') || (!cheatOpen && Input.pollGamepad()?.jumpJust)) enterPlane();
+      if (lobbyTimer <= 0 || Input.wasCodePressed('Space') || (!cheatOpen && Input.pollGamepad()?.jumpJust) || Input.touch?.jumpJust) enterPlane();
       return;
     }
 
     if (phase === 'PLANE') {
+      Input.setTouchInteract?.(true, 'TERJUN');
       planeProgress += dt * (62 / Math.max(100, planeStart.distanceTo(planeEnd)));
       planePos.lerpVectors(planeStart, planeEnd, Util.clamp(planeProgress, 0, 1));
       if (planeMesh) {
@@ -653,7 +654,7 @@ const MatchSys = (() => {
       if (MapUI.isOpen) MapUI.drawBigMap(zObj, getPlaneInfo(), airdrop ? { x: airdrop.x, z: airdrop.z } : null, redZone);
       updateZoneHud();
       const cheatOpen = typeof CheatUI !== 'undefined' && CheatUI.isOpen;
-      if (Input.wasCodePressed('KeyF') || Input.wasCodePressed('Space') || (!cheatOpen && (gpP?.jumpJust || gpP?.reloadJust)) || planeProgress >= 0.88) {
+      if (Input.wasCodePressed('KeyF') || Input.wasCodePressed('Space') || (!cheatOpen && (gpP?.jumpJust || gpP?.reloadJust)) || Input.touch?.jumpJust || Input.touch?.interactJust || planeProgress >= 0.88) {
         ejectFromPlane();
       }
       return;
@@ -662,12 +663,13 @@ const MatchSys = (() => {
     if (phase === 'FREEFALL' || phase === 'PARACHUTE') {
       const isChute = phase === 'PARACHUTE';
       const gpF = Input.pollGamepad();
+      const touchF = Input.touch;
       Player.yaw -= ((inp.dx || 0) * 0.0022) + (gpF ? gpF.lookX * 2.2 * dt : 0);
       Player.pitch = Util.clamp(Player.pitch - (inp.dy || 0) * 0.002 - (gpF ? gpF.lookY * 1.7 * dt : 0), -1.1, 0.55);
       const diveKey = Input.isCodeDown('KeyW') ? 1 : (Input.isCodeDown('KeyS') ? -0.4 : 0.25);
-      const dive = Util.clamp(diveKey + (gpF && Math.abs(gpF.moveY) > 0.12 ? -gpF.moveY * 0.9 : 0), -0.5, 1.15);
+      const dive = Util.clamp(diveKey + (gpF && Math.abs(gpF.moveY) > 0.12 ? -gpF.moveY * 0.9 : 0) + (touchF && Math.abs(touchF.moveY) > 0.12 ? -touchF.moveY * 0.9 : 0), -0.5, 1.15);
       const strafeKey = (Input.isCodeDown('KeyD') ? 1 : 0) - (Input.isCodeDown('KeyA') ? 1 : 0);
-      const strafe = Util.clamp(strafeKey + (gpF ? gpF.moveX : 0), -1, 1);
+      const strafe = Util.clamp(strafeKey + (gpF ? gpF.moveX : 0) + (touchF ? touchF.moveX : 0), -1, 1);
       const vFall = isChute ? 7.4 : (dive > 0.5 ? 74 : 52);
       const hSpeed = isChute ? 17.5 : 28;
       const sinY = Math.sin(Player.yaw), cosY = Math.cos(Player.yaw);
@@ -710,9 +712,13 @@ const MatchSys = (() => {
       if (MapUI.isOpen) MapUI.drawBigMap(zObj, null, null, null);
       AI.update(dt, elapsed, Player.playerTarget, Throwables.smokes, zObj);
 
-      if (!isChute && (agl <= 120 || (agl < 480 && (Input.wasCodePressed('Space') || (!(typeof CheatUI !== 'undefined' && CheatUI.isOpen) && Input.pollGamepad()?.jumpJust))))) {
+      if (!isChute) Input.setTouchInteract?.(agl < 480, 'PARASUT');
+      else Input.setTouchInteract?.(false);
+
+      if (!isChute && (agl <= 120 || (agl < 480 && (Input.wasCodePressed('Space') || Input.touch?.jumpJust || Input.touch?.interactJust || (!(typeof CheatUI !== 'undefined' && CheatUI.isOpen) && Input.pollGamepad()?.jumpJust))))) {
         openParachute();
       } else if (isChute && agl <= 0.85) {
+        Input.setTouchInteract?.(false);
         Player.pos.y = groundY;
         touchdown();
       }
@@ -997,10 +1003,13 @@ const Game = (() => {
     if (zsEl) zsEl.textContent = isCity ? 'Mode Kota' : 'Range';
     const hpEl = document.getElementById('hud-hit-popup');
     if (hpEl) { hpEl.style.opacity = '0'; hpEl.textContent = ''; }
+    const isTouch = typeof UI !== 'undefined' && UI.isTouchUiEnabled?.();
     UI.showAlertBanner(
-      isCity
-        ? 'Kota Piccadilly: 4 Bot AI & Rak Senjata Urban siap! Tekan TAB untuk Senjata / Bintang START untuk Cheat'
-        : 'Klik layar untuk mengunci bidikan • Tekan TAB untuk kustomisasi 11 senjata & attachment',
+      isTouch
+        ? (isCity ? 'Kota Piccadilly siap! Joystick kiri gerak, geser layar bidik, ketuk 2:BASOKA & TEMBAK!' : 'Joystick kiri untuk bergerak, geser layar untuk membidik, ketuk TEMBAK!')
+        : (isCity
+          ? 'Kota Piccadilly: 4 Bot AI & Rak Senjata Urban siap! Tekan TAB untuk Senjata / Bintang START untuk Cheat'
+          : 'Klik layar untuk mengunci bidikan • Tekan TAB untuk kustomisasi 11 senjata & attachment'),
       5.0
     );
   }

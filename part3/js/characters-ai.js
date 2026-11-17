@@ -925,12 +925,15 @@ const AI = (() => {
     const pPos = Player.pos;
     const nBots = bots.length;
 
+    const nearMax = CONFIG.isMobile ? 240 : 340;
+    const aiStep = CONFIG.isMobile ? 5 : 3;
+
     for (let i = 0; i < nBots; i++) {
       const bot = bots[i];
       if (!bot.alive) continue;
 
       const distToCam = Math.hypot(bot.pos.x - pPos.x, bot.pos.z - pPos.z);
-      const isNear = distToCam < 340;
+      const isNear = distToCam < nearMax;
       bot.rig.root.visible = isNear;
 
       // Skydiving / Parachute descent phase
@@ -988,9 +991,9 @@ const AI = (() => {
         continue;
       }
 
-      // Staggered 10Hz AI Decision Slice
+      // Staggered AI Decision Slice
       if (bot.fireCd > 0) bot.fireCd -= dt;
-      if (i % 3 === tickFrame % 3) {
+      if (i % aiStep === tickFrame % aiStep) {
         // Decision Evaluation (~10Hz)
         if (zones?.white && Math.hypot(bot.pos.x - zones.white.x, bot.pos.z - zones.white.z) > zones.white.r * 0.92) {
           bot.state = 'FLEE_ZONE';

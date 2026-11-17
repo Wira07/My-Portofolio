@@ -3553,7 +3553,14 @@ const WorldFlora = (() => {
     const forestAt = (x, z) => VK.noise3(x * 0.0065 + seedOff, 0.5, z * 0.0065) * 0.65 + VK.noise3(x * 0.021, 3.7 + seedOff, z * 0.021) * 0.35;
 
     // Pohon & semak berkelompok: hutan lebat ↔ padang terbuka
-    for (let i = 0; i < 9000; i++) {
+    const isMob = CONFIG.isMobile;
+    const treeIters = isMob ? 4200 : 9000;
+    const capKelapa = isMob ? 130 : 260;
+    const capPinus = isMob ? 200 : 400;
+    const capJati = isMob ? 170 : 340;
+    const capMangga = isMob ? 120 : 240;
+    const capSemak = isMob ? 550 : 1100;
+    for (let i = 0; i < treeIters; i++) {
       const x = (rng() - 0.5) * 1420;
       const z = (rng() - 0.5) * 1420;
       const h = World.getHeight(x, z);
@@ -3566,21 +3573,22 @@ const WorldFlora = (() => {
       const fd = VK.smooth(0.36, 0.62, forestAt(x, z));
       const pTree = 0.10 + fd * 0.9;
       const scale = 0.82 + rng() * 0.45;
-      if (h < 7.0 && pools.kelapa.length < 260) {
+      if (h < 7.0 && pools.kelapa.length < capKelapa) {
         if (rng() < 0.35 + fd * 0.4) pools.kelapa.push(mk(x, h - 0.15, z, scale));
-      } else if (h >= 28 && pools.pinus.length < 400) {
+      } else if (h >= 28 && pools.pinus.length < capPinus) {
         if (rng() < pTree) pools.pinus.push(mk(x, h - 0.15, z, scale));
-      } else if (h >= 5 && h < 42 && rng() < 0.30 && pools.jati.length < 340 && rng() < pTree) {
+      } else if (h >= 5 && h < 42 && rng() < 0.30 && pools.jati.length < capJati && rng() < pTree) {
         pools.jati.push(mk(x, h - 0.15, z, scale));
-      } else if (h >= 4 && h < 28 && rng() < 0.28 && pools.mangga.length < 240 && rng() < pTree) {
+      } else if (h >= 4 && h < 28 && rng() < 0.28 && pools.mangga.length < capMangga && rng() < pTree) {
         pools.mangga.push(mk(x, h - 0.15, z, scale));
-      } else if (h >= 2.2 && pools.semak.length < 1100 && rng() < 0.30 + (1 - fd) * 0.30) {
+      } else if (h >= 2.2 && pools.semak.length < capSemak && rng() < 0.30 + (1 - fd) * 0.30) {
         pools.semak.push(mk(x, h - 0.1, z, 0.75 + rng() * 0.6));
       }
     }
     await Util.nextFrame();
 
-    for (let i = 0; i < 900 && pools.rocks.length < 240; i++) {
+    const capRocks = isMob ? 120 : 240;
+    for (let i = 0; i < (isMob ? 450 : 900) && pools.rocks.length < capRocks; i++) {
       const x = (rng() - 0.5) * 1420, z = (rng() - 0.5) * 1420;
       const h = World.getHeight(x, z);
       if (h < 0.5) continue;
@@ -3623,7 +3631,9 @@ const WorldFlora = (() => {
     // Buluh/ilalang air di tepi sungai & danau
     const sl = CONFIG.world.seaLevel;
     const lakeNear = (x, z) => Math.hypot(x - 240, z + 220) < 92 || Math.hypot(x + 260, z - 280) < 72;
-    for (let t = 0; t < 6000 && pools.reeds.length < 900; t++) {
+    const reedIters = isMob ? 2600 : 6000;
+    const capReeds = isMob ? 420 : 900;
+    for (let t = 0; t < reedIters && pools.reeds.length < capReeds; t++) {
       const x = (rng() - 0.5) * 1300, z = (rng() - 0.5) * 1300;
       if (!(World.getRiverDistFast(x, z) < 34 || lakeNear(x, z))) continue;
       const h = World.getHeight(x, z);

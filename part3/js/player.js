@@ -779,7 +779,9 @@ const Player = (() => {
 
   function update(dt, elapsed, inp) {
     const gp = Input.pollGamepad();
+    const touch = Input.touch;
     if (!alive) {
+      Input.setTouchInteract?.(false);
       const canAutoRevive = typeof Game !== 'undefined' && (
         Game.state === 'PRACTICE' ||
         (Game.state === 'MATCH' && typeof MatchSys !== 'undefined' && MatchSys.phase === 'LOBBY_ISLAND')
@@ -826,7 +828,7 @@ const Player = (() => {
         if (gp) { dx += gp.lookX * 19 * (dt * 60); dy += gp.lookY * 14 * (dt * 60); }
         yaw -= dx * sens;
         pitch = Util.clamp(pitch - dy * sens * invY, -0.75, 0.95);
-        if (Input.wasPressed('perspective') || gp?.perspJust) isTpp = !isTpp;
+        if (Input.wasPressed('perspective') || gp?.perspJust || touch?.perspJust) isTpp = !isTpp;
         if (Input.wasPressed('flashlight') || gp?.r3Just || gp?.dpadRightJust) Render.toggleFlashlight?.();
       }
       VehiclesSys.updatePlayerDriving(dt, gp, { yaw, pitch, isTpp });
@@ -871,8 +873,8 @@ const Player = (() => {
       freeLookPitch = Util.damp(freeLookPitch, 0, 14, dt);
     }
 
-    // 2. Stance & Vault / Jump / Gamepad Shortcuts
-    if (Input.wasPressed('crouch')) stance = stance === 'crouch' ? 'stand' : 'crouch';
+    // 2. Stance & Vault / Jump / Gamepad / Touch Shortcuts
+    if (Input.wasPressed('crouch') || touch?.crouchJust) stance = stance === 'crouch' ? 'stand' : 'crouch';
     if (Input.wasPressed('prone')) stance = stance === 'prone' ? 'stand' : 'prone';
     if (gp && !cheatOpen) {
       if (gp.crouchHeld) {
@@ -899,10 +901,10 @@ const Player = (() => {
         else useConsumable('boost');
       }
     }
-    if (Input.wasPressed('perspective') || (gp?.perspJust && !cheatOpen)) isTpp = !isTpp;
+    if (Input.wasPressed('perspective') || (gp?.perspJust && !cheatOpen) || touch?.perspJust) isTpp = !isTpp;
     if (Input.wasPressed('flashlight') || ((gp?.r3Just || gp?.dpadRightJust) && !cheatOpen)) Render.toggleFlashlight?.();
     if (Input.wasPressed('inspect')) inspectTimer = 1.6;
-    if (Input.wasPressed('reload')) startReload();
+    if (Input.wasPressed('reload') || touch?.reloadJust) startReload();
     if (Input.wasPressed('fireMode')) {
       const sl = slots[activeSlot], def = WEAPONS_DB[sl.id];
       const nxt = (def.modes.indexOf(sl.mode) + 1) % def.modes.length;
@@ -937,10 +939,11 @@ const Player = (() => {
     let fwdIn = (Input.isDown('forward') ? 1 : 0) - (Input.isDown('backward') ? 1 : 0);
     let strIn = (Input.isDown('right') ? 1 : 0) - (Input.isDown('left') ? 1 : 0);
     if (gp) { fwdIn -= gp.moveY; strIn += gp.moveX; }
+    if (touch) { fwdIn -= touch.moveY; strIn += touch.moveX; }
     const inLen = Math.hypot(fwdIn, strIn);
     if (inLen > 1) { fwdIn /= inLen; strIn /= inLen; }
 
-    const wantsSprint = (Input.isDown('sprint') || gp?.sprint || UI.settings.autoSprint) && fwdIn > 0.2 && adsLerp < 0.2 && stance === 'stand' && !castState.active;
+    const wantsSprint = (Input.isDown('sprint') || gp?.sprint || touch?.sprint || UI.settings.autoSprint) && fwdIn > 0.2 && adsLerp < 0.2 && stance === 'stand' && !castState.active;
     const curDef = WEAPONS_DB[slots[activeSlot].id];
     const groundY = World.getHeight(pos.x, pos.z);
     const waterDepth = Math.max(0, CONFIG.world.seaLevel - pos.y);
@@ -966,7 +969,7 @@ const Player = (() => {
     vel.z = Util.damp(vel.z, moveDirZ * maxSpd, accel, dt);
 
     // Jump & Vault Check
-    if ((Input.wasPressed('jump') || (gp?.jumpJust && !cheatOpen)) && grounded && waterDepth < 1.1) {
+    if ((Input.wasPressed('jump') || (gp?.jumpJust && !cheatOpen) || touch?.jumpJust) && grounded && waterDepth < 1.1) {
       // Check low obstacle vault ray
       const vRay = Physics.raycast(pos.x, pos.y + 0.65, pos.z, -sinY, 0, -cosY, 1.35);
       if (vRay && vRay.collider?.maxY && (vRay.collider.maxY - pos.y) <= CONFIG.player.vaultMaxH) {
@@ -1030,7 +1033,7 @@ const Player = (() => {
 
     // 5. Firing, Reload, Bolt, ADS
     const sl = slots[activeSlot];
-    const aiming = Input.rmbDown || (gp?.ads);
+    const aiming = Input.rmbDown || (gp?.ads) || (!cheatOpen && !!touch?.ads);
     const optAtt = sl.att.optic ? ATTACHMENTS_DB[sl.att.optic] : null;
     const adsRate = 1 / Math.max(0.08, curDef.ads.time / (optAtt?.adsSpeed || 1));
     adsLerp = Util.damp(adsLerp, aiming && reloadTimer <= 0 && !wantsSprint ? 1 : 0, adsRate * 1.8, dt);
@@ -1062,10 +1065,12 @@ const Player = (() => {
     recoilKickPitch = Util.damp(recoilKickPitch, 0, 12, dt);
     recoilKickYaw = Util.damp(recoilKickYaw, 0, 12, dt);
 
-    const canMouseShoot = Input.pointerLocked || (!cheatOpen && !UI.hasModalOpen && !(typeof MapUI !== 'undefined' && MapUI.isOpen));
+    const isTouchMode = typeof UI !== 'undefined' && UI.isTouchUiEnabled?.();
+    const canMouseShoot = Input.pointerLocked || (!isTouchMode && !cheatOpen && !UI.hasModalOpen && !(typeof MapUI !== 'undefined' && MapUI.isOpen));
     const mouseFire = canMouseShoot && (sl.mode === 'auto' ? (Input.lmbDown || inp.lmbJust) : inp.lmbJust);
+    const touchFire = !cheatOpen && !!touch && (sl.mode === 'auto' ? touch.fire : touch.fireJust);
     const padFire = !cheatOpen && !!gp && (sl.mode === 'auto' ? gp.fire : gp.fireJust);
-    if ((mouseFire || padFire) && fireCd <= 0) {
+    if ((mouseFire || padFire || touchFire) && fireCd <= 0) {
       if (castState.active) cancelCast();
       triggerShot();
     }
@@ -1077,7 +1082,7 @@ const Player = (() => {
     if (Input.wasPressed('healBoost')) useConsumable('boost');
 
     if (castState.active) {
-      if (Input.isDown('sprint') || !grounded) cancelCast();
+      if (Input.isDown('sprint') || touch?.sprint || !grounded) cancelCast();
       else {
         castState.timer -= dt;
         const cb = document.getElementById('hud-cast-bar');
@@ -1219,10 +1224,16 @@ const Player = (() => {
 
     const intEl = document.getElementById('hud-interact');
     intEl.classList.toggle('hidden', !interactPromptTarget);
+    const touchLbl = interactPromptTarget
+      ? (interactPromptTarget.kind === 'vehicle' ? 'NAIK' :
+        interactPromptTarget.kind === 'door' ? (interactPromptTarget.data?.isOpen ? 'TUTUP' : 'BUKA') :
+        interactPromptTarget.kind === 'crate' ? 'PETI' : 'AMBIL')
+      : '';
+    Input.setTouchInteract?.(!!interactPromptTarget, touchLbl);
     const padSquare = !cheatOpen && !!gp?.reloadJust;
     if (interactPromptTarget) {
       document.getElementById('hud-interact-text').textContent = interactPromptTarget.label;
-      if (Input.wasPressed('interact') || padSquare) {
+      if (Input.wasPressed('interact') || padSquare || touch?.interactJust) {
         if (interactPromptTarget.kind === 'vehicle') VehiclesSys.boardVehicle(interactPromptTarget.data);
         else if (interactPromptTarget.kind === 'rack') equipWeaponInSlot(interactPromptTarget.data.weaponId);
         else if (interactPromptTarget.kind === 'door') interactPromptTarget.data.toggle(true);

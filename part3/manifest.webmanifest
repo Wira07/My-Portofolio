@@ -1,0 +1,20 @@
+{
+  "name": "RAJAWALI ROYALE — 3D Tactical Shooter",
+  "short_name": "Rajawali",
+  "description": "Game Battle Royale & Arena Latihan 3D Pulau Rajawali dengan Basoka & Kota Piccadilly",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "background_color": "#08090B",
+  "theme_color": "#08090B",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

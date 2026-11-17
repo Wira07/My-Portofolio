@@ -8,10 +8,13 @@ const Render = (() => {
   let sky = null, sunLight = null, hemiLight = null, csm = null, stars = null;
   let pmremGen = null, envRT = null;
   let studioGroup = null;
-  let currentQuality = CONFIG.quality.medium;
+  let currentQuality = CONFIG.isMobile ? CONFIG.quality.low : CONFIG.quality.medium;
   let currentTod = 'siang';
   let currentWeather = 'cerah';
-  let resScale = 1.0;
+  let resScale = CONFIG.isMobile ? CONFIG.mobileDefaults.resScale : 1.0;
+  let dynScale = 1.0;
+  let dynTimer = 0;
+  let dynFrames = 0;
   let lastSceneStats = { calls: 0, triangles: 0 };
   const muzzleLights = [];
 
@@ -93,7 +96,7 @@ const Render = (() => {
     }
 
     renderer = new THREE.WebGLRenderer({ canvas, context: gl, antialias: false, powerPreference: 'high-performance' });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, currentQuality.maxDpr || 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -244,15 +247,15 @@ const Render = (() => {
 
     // Cascaded Shadow Maps (CSM)
     csm = new CSM({
-      maxFar: 320,
-      cascades: 2,
+      maxFar: CONFIG.isMobile ? 180 : 320,
+      cascades: currentQuality.cascades || (CONFIG.isMobile ? 1 : 2),
       mode: 'practical',
       parent: scene,
-      shadowMapSize: 1536,
+      shadowMapSize: currentQuality.shadowSize || (CONFIG.isMobile ? 512 : 1536),
       lightDirection: new THREE.Vector3(-0.5, -0.8, -0.4).normalize(),
       camera
     });
-    csm.fade = true;
+    csm.fade = !CONFIG.isMobile && (currentQuality.cascades || 2) > 1;
 
     // Post Processing Pipeline + Viewmodel Overlay Pass
     composer = new EffectComposer(renderer);
@@ -375,9 +378,12 @@ const Render = (() => {
 
   function applySettings(settings) {
     currentQuality = CONFIG.quality[settings.preset] || CONFIG.quality.medium;
-    resScale = settings.resScale || 1.0;
+    resScale = settings.resScale || (CONFIG.isMobile ? CONFIG.mobileDefaults.resScale : 1.0);
+    dynScale = 1.0;
+    dynTimer = 0;
+    dynFrames = 0;
     camera.fov = settings.fov || 75;
-    camera.far = Math.max(2200, (settings.viewDist || currentQuality.viewDist) + 400);
+    camera.far = Math.max(CONFIG.isMobile ? 1400 : 2200, (settings.viewDist || currentQuality.viewDist) + (CONFIG.isMobile ? 260 : 400));
     camera.updateProjectionMatrix();
 
     bloomPass.enabled = !!settings.bloom && currentQuality.bloom;
@@ -427,7 +433,8 @@ const Render = (() => {
     if (!renderer || !camera || !composer) return;
     const w = Math.max(1, window.innerWidth);
     const h = Math.max(1, window.innerHeight);
-    const effScale = resScale * Math.min(window.devicePixelRatio || 1, 2);
+    const maxDpr = currentQuality.maxDpr || 2;
+    const effScale = Math.max(0.5, resScale * dynScale * Math.min(window.devicePixelRatio || 1, maxDpr));
     renderer.setPixelRatio(effScale);
     renderer.setSize(w, h);
     composer.setPixelRatio(effScale);
@@ -442,6 +449,31 @@ const Render = (() => {
       fxaaPass.material.uniforms['resolution'].value.set(1 / (w * effScale), 1 / (h * effScale));
     }
     if (csm) csm.updateFrustums();
+  }
+
+  async function tryEnterFullscreen(preferLandscape = true) {
+    try {
+      const root = document.documentElement;
+      const req = root.requestFullscreen || root.webkitRequestFullscreen || root.mozRequestFullScreen || root.msRequestFullscreen;
+      if (req && !document.fullscreenElement && !document.webkitFullscreenElement) {
+        await req.call(root, { navigationUI: 'hide' }).catch(() => req.call(root));
+      }
+      if (preferLandscape && window.screen?.orientation?.lock) {
+        await window.screen.orientation.lock('landscape').catch(() => {});
+      }
+    } catch {}
+  }
+
+  async function toggleFullscreen() {
+    try {
+      const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+      if (fsEl) {
+        const exitFn = document.exitFullscreen || document.webkitExitFullscreen;
+        if (exitFn) await exitFn.call(document).catch(() => {});
+      } else {
+        await tryEnterFullscreen(CONFIG.isMobile);
+      }
+    } catch {}
   }
 
   function renderFrame(elapsedTime, dt = 0.016) {
@@ -556,9 +588,41 @@ const Render = (() => {
         }
       }
     }
-    if (colorPass) colorPass.uniforms.uTime.value = elapsedTime % 100.0;
+    if (currentQuality.dynRes && dt > 0 && dt < 0.25) {
+      dynTimer += dt;
+      dynFrames++;
+      if (dynTimer >= 2.0) {
+        const avgFps = dynFrames / dynTimer;
+        let nextDyn = dynScale;
+        if (avgFps < 28 && dynScale > 0.72) nextDyn = Math.max(0.72, dynScale - 0.08);
+        else if (avgFps > 52 && dynScale < 1.0) nextDyn = Math.min(1.0, dynScale + 0.05);
+        dynTimer = 0;
+        dynFrames = 0;
+        if (Math.abs(nextDyn - dynScale) > 0.02) {
+          dynScale = nextDyn;
+          onResize();
+        }
+      }
+    }
+    const needComposer = bloomPass.enabled || fxaaPass.enabled || ((colorPass?.uniforms?.uFlash?.value || 0) > 0.01);
     renderer.info.reset();
-    composer.render();
+    if (!needComposer) {
+      renderer.setRenderTarget(null);
+      renderer.clear();
+      renderer.render(scene, camera);
+      if (vmEnabled) {
+        const prevAuto = renderer.autoClear;
+        renderer.autoClear = false;
+        renderer.clearDepth();
+        renderer.render(vmScene, vmCamera);
+        renderer.autoClear = prevAuto;
+      }
+      lastSceneStats.calls = renderer.info.render.calls;
+      lastSceneStats.triangles = renderer.info.render.triangles;
+    } else {
+      if (colorPass) colorPass.uniforms.uTime.value = elapsedTime % 100.0;
+      composer.render();
+    }
   }
 
   function spawnMuzzleLight(pos) {
@@ -595,6 +659,7 @@ const Render = (() => {
 
   return {
     init, applyAtmosphere, applySettings, buildStudioShowcase, setStudioVisible, onResize, renderFrame, spawnMuzzleLight, spawnBlastLight,
+    tryEnterFullscreen, toggleFullscreen,
     setViewmodelEnabled(v) { vmEnabled = !!v; },
     setFlashIntensity(v) { if (colorPass) colorPass.uniforms.uFlash.value = v; },
     toggleFlashlight() { if (init._flashlight) init._flashlight.enabled = !init._flashlight.enabled; },
@@ -614,7 +679,16 @@ const Render = (() => {
 // UI — Menus, Settings (6 tabs + Remap + Persistence), HowTo, Stats, HUD, Map
 // ════════════════════════════════════════════════════════════════════════════
 const UI = (() => {
-  let settings = Util.loadStorage(CONFIG.storageKeys.settings, CONFIG.defaultSettings);
+  const _hasSavedSettings = (() => {
+    try { return !!localStorage.getItem(CONFIG.storageKeys.settings); } catch { return false; }
+  })();
+  const _defaultForDevice = CONFIG.isMobile
+    ? { ...CONFIG.defaultSettings, ...CONFIG.mobileDefaults, keybinds: { ...CONFIG.defaultKeybinds } }
+    : CONFIG.defaultSettings;
+  let settings = Util.loadStorage(CONFIG.storageKeys.settings, _defaultForDevice);
+  if (!_hasSavedSettings && CONFIG.isMobile) {
+    Object.assign(settings, CONFIG.mobileDefaults);
+  }
   let stats = Util.loadStorage(CONFIG.storageKeys.stats, {
     matches: 0, wins: 0, kills: 0, deaths: 0, headshots: 0, damage: 0, bestRank: 99, longestKill: 0, history: []
   });
@@ -626,8 +700,18 @@ const UI = (() => {
   let alertTimerId = null;
   let matchConfig = { participants: 40, difficulty: 'regular', tod: 'siang', weather: 'cerah', perspective: 'free', mapArea: 'island', seed: CONFIG.seedDefault, mode: 'br' };
 
+  function isTouchUiEnabled() {
+    if (settings.touchControls === 'on') return true;
+    if (settings.touchControls === 'off') return false;
+    return !!CONFIG.isMobile;
+  }
+
   function applySettingsToDom() {
+    const touchOn = isTouchUiEnabled();
     document.documentElement.style.setProperty('--ui-scale', String((settings.uiScale || 100) / 100));
+    document.body.classList.toggle('is-mobile', touchOn);
+    document.getElementById('touch-controls')?.classList.toggle('hidden', !touchOn);
+    document.getElementById('mobile-util-row')?.classList.toggle('hidden', !touchOn);
     document.body.classList.remove('cb-protanopia', 'cb-deuteranopia', 'cb-tritanopia');
     if (settings.colorblind && settings.colorblind !== 'none') {
       document.body.classList.add(`cb-${settings.colorblind}`);
@@ -635,6 +719,8 @@ const UI = (() => {
     const badge = document.getElementById('menu-preset-badge');
     if (badge) badge.textContent = (settings.preset || 'medium').toUpperCase();
     document.getElementById('hud-fps-inline')?.classList.toggle('hidden', !settings.showFps);
+    const iosHint = document.getElementById('ios-pwa-hint');
+    if (iosHint) iosHint.classList.toggle('hidden', !(CONFIG.isIOS && !CONFIG.isStandalone));
   }
 
   function saveSettings() {
@@ -788,6 +874,7 @@ const UI = (() => {
       bGo.textContent = isPractice ? 'Masuk Arena Latihan' : 'Mulai Pertandingan';
       bGo.onclick = () => {
         AudioSys.playUiTone('alert');
+        if (CONFIG.isMobile) Render.tryEnterFullscreen(true);
         closeModal();
         if (onStartMatchCallback) onStartMatchCallback({ ...matchConfig });
       };
@@ -923,6 +1010,7 @@ const UI = (() => {
         addSelectRow(body, 'Warna Crosshair', 'Pilih kontras warna reticle tengah.', 'crosshairColor', [['#EDEFF1','Putih'],['#F2B705','Kuning Amber'],['#7AF59A','Hijau Taktis']]);
         addToggleRow(body, 'Auto Pickup', 'Ambil amunisi & perban kompatibel secara otomatis.', 'autoPickup');
         addToggleRow(body, 'Default Perspektif TPP', 'Mulai pertandingan dalam sudut pandang orang ketiga.', 'defaultTpp');
+        addSelectRow(body, 'Kontrol Sentuh (HP/Tablet)', 'Tampilkan joystick dan tombol aksi di layar sentuh.', 'touchControls', [['auto','Otomatis'],['on','Selalu Aktif'],['off','Nonaktif']]);
       } else if (activeSettingsTab === 'aksesibilitas') {
         addSelectRow(body, 'Filter Buta Warna', 'Kalibrasi spektrum warna layar.', 'colorblind',
           [['none','Normal'],['protanopia','Protanopia'],['deuteranopia','Deuteranopia'],['tritanopia','Tritanopia']]);
@@ -1052,10 +1140,26 @@ const UI = (() => {
     onCloseModalCallback = callbacks.onCloseModal || null;
     applySettingsToDom();
 
-    document.getElementById('btn-menu-play').onclick = () => { AudioSys.playUiTone('click'); showMatchSetupModal('br', 'island'); };
-    document.getElementById('btn-menu-play-city').onclick = () => { AudioSys.playUiTone('click'); showMatchSetupModal('br', 'city'); };
-    document.getElementById('btn-menu-practice').onclick = () => { AudioSys.playUiTone('click'); showMatchSetupModal('practice', 'island'); };
-    document.getElementById('btn-menu-practice-city').onclick = () => { AudioSys.playUiTone('click'); showMatchSetupModal('practice', 'city'); };
+    const fsBtn = document.getElementById('btn-menu-fullscreen');
+    if (fsBtn) {
+      fsBtn.onclick = () => {
+        AudioSys.playUiTone('click');
+        Render.toggleFullscreen();
+      };
+    }
+    if (CONFIG.isMobile) {
+      const menuEl = document.getElementById('screen-menu');
+      const autoFsOnce = () => {
+        Render.tryEnterFullscreen(true);
+        menuEl?.removeEventListener('pointerup', autoFsOnce);
+      };
+      menuEl?.addEventListener('pointerup', autoFsOnce, { once: true, passive: true });
+    }
+
+    document.getElementById('btn-menu-play').onclick = () => { AudioSys.playUiTone('click'); if (CONFIG.isMobile) Render.tryEnterFullscreen(true); showMatchSetupModal('br', 'island'); };
+    document.getElementById('btn-menu-play-city').onclick = () => { AudioSys.playUiTone('click'); if (CONFIG.isMobile) Render.tryEnterFullscreen(true); showMatchSetupModal('br', 'city'); };
+    document.getElementById('btn-menu-practice').onclick = () => { AudioSys.playUiTone('click'); if (CONFIG.isMobile) Render.tryEnterFullscreen(true); showMatchSetupModal('practice', 'island'); };
+    document.getElementById('btn-menu-practice-city').onclick = () => { AudioSys.playUiTone('click'); if (CONFIG.isMobile) Render.tryEnterFullscreen(true); showMatchSetupModal('practice', 'city'); };
     document.getElementById('btn-menu-settings').onclick = () => { AudioSys.playUiTone('click'); showSettingsModal(); };
     document.getElementById('btn-menu-howto').onclick = () => { AudioSys.playUiTone('click'); showHowToPlayModal(); };
     document.getElementById('btn-menu-stats').onclick = () => { AudioSys.playUiTone('click'); showStatsModal(); };
@@ -1312,7 +1416,7 @@ const UI = (() => {
   }
 
   return {
-    init, showLoading, hideLoading, showModal, closeModal, showAlertBanner,
+    init, showLoading, hideLoading, showModal, closeModal, showAlertBanner, isTouchUiEnabled,
     showMatchSetupModal, showSettingsModal, showHowToPlayModal, showStatsModal,
     showPauseModal, showArsenalModal, showInventoryModal,
     recordMatchStats, showMatchResultModal,
