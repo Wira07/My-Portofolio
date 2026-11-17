@@ -15,6 +15,7 @@ const Render = (() => {
   let dynScale = 1.0;
   let dynTimer = 0;
   let dynFrames = 0;
+  let dynLastWallMs = 0;
   let lastSceneStats = { calls: 0, triangles: 0 };
   const muzzleLights = [];
 
@@ -588,21 +589,31 @@ const Render = (() => {
         }
       }
     }
-    if (currentQuality.dynRes && dt > 0 && dt < 0.25) {
-      dynTimer += dt;
-      dynFrames++;
-      if (dynTimer >= 2.0) {
-        const avgFps = dynFrames / dynTimer;
-        let nextDyn = dynScale;
-        if (avgFps < 28 && dynScale > 0.72) nextDyn = Math.max(0.72, dynScale - 0.08);
-        else if (avgFps > 52 && dynScale < 1.0) nextDyn = Math.min(1.0, dynScale + 0.05);
-        dynTimer = 0;
-        dynFrames = 0;
-        if (Math.abs(nextDyn - dynScale) > 0.02) {
-          dynScale = nextDyn;
-          onResize();
+    const inMatch = typeof Game !== 'undefined' && (Game.state === 'PRACTICE' || Game.state === 'MATCH');
+    if (currentQuality.dynRes && inMatch) {
+      const nowMs = performance.now();
+      const wallDt = dynLastWallMs > 0 ? Math.min(0.5, (nowMs - dynLastWallMs) * 0.001) : 0;
+      dynLastWallMs = nowMs;
+      if (wallDt > 0) {
+        dynTimer += wallDt;
+        dynFrames++;
+        if (dynTimer >= 3.0 && dynFrames >= 6) {
+          const avgFps = dynFrames / dynTimer;
+          let nextDyn = dynScale;
+          if (avgFps < 24 && dynScale > 0.72) nextDyn = 0.72;
+          else if (avgFps > 54 && dynScale < 1.0) nextDyn = Math.min(1.0, dynScale + 0.08);
+          dynTimer = 0;
+          dynFrames = 0;
+          if (Math.abs(nextDyn - dynScale) > 0.02) {
+            dynScale = nextDyn;
+            onResize();
+          }
         }
       }
+    } else {
+      dynLastWallMs = 0;
+      dynTimer = 0;
+      dynFrames = 0;
     }
     const needComposer = bloomPass.enabled || fxaaPass.enabled || ((colorPass?.uniforms?.uFlash?.value || 0) > 0.01);
     renderer.info.reset();

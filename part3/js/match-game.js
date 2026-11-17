@@ -1093,7 +1093,7 @@ const Game = (() => {
   }
 
   return {
-    boot, exitToMenu, startMatchFlow,
+    boot, exitToMenu, startMatchFlow, triggerPause,
     toggleStudioCamera() { setCameraMode(camMode === 'studio' ? 'island' : 'studio'); },
     teleportCam,
     get state() { return state; },

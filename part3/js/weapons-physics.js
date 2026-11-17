@@ -520,7 +520,11 @@ const Input = (() => {
       ev.stopPropagation();
       AudioSys.ensureInit();
       resetTouchInputs();
-      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape', bubbles: true }));
+      if (typeof CheatUI !== 'undefined' && CheatUI.isOpen) CheatUI.close();
+      else if (typeof MapUI !== 'undefined' && MapUI.isOpen) MapUI.closeBigMap();
+      else if (typeof UI !== 'undefined' && UI.hasModalOpen) UI.closeModal();
+      else if (typeof Game !== 'undefined' && Game.triggerPause) Game.triggerPause();
+      else window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape', key: 'Escape', bubbles: true }));
     });
 
     // Virtual Joystick + Canvas Look Drag + Virtual Action Buttons (Pointer Events for multitouch + pen + Playwright)
