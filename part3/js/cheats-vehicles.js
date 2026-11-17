@@ -522,6 +522,13 @@ const CheatUI = (() => {
 
   const ITEMS = [
     {
+      id: 'equip_bazooka',
+      title: '🚀 Pilih Basoka RPG-7 (Penghancur Rumah & Kota)',
+      desc: 'Langsung pakai Basoka tanpa ambil! Tembak rumah/gedung agar hancur berlubang [Tombol 2 / B].',
+      badge: () => (Player.activeWeapon?.id === 'bazooka' ? 'AKTIF' : 'PAKAI'),
+      action: () => { Player.equipWeaponInSlot('bazooka', 1); AudioSys.playUiTone('alert'); close(); }
+    },
+    {
       id: 'chidori_fire',
       title: '⚡ Keluarkan Bom Chidori',
       desc: 'Tembakkan bola petir Chidori meledak ke arah bidikan (AoE 18m).',
@@ -616,6 +623,12 @@ const CheatUI = (() => {
   function close() {
     open = false;
     document.getElementById('cheat-overlay')?.classList.add('hidden');
+    if (typeof Game !== 'undefined' && (Game.state === 'PRACTICE' || Game.state === 'MATCH') && !UI.hasModalOpen && !(typeof MapUI !== 'undefined' && MapUI.isOpen)) {
+      try {
+        const pr = document.getElementById('gl-canvas')?.requestPointerLock?.();
+        if (pr && typeof pr.catch === 'function') pr.catch(() => {});
+      } catch (_) {}
+    }
   }
 
   function toggle() {

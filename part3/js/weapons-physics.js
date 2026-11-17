@@ -376,7 +376,7 @@ const Throwables = (() => {
   }
 
   return {
-    SPECS, initScene, clearAll, update, updatePlayerThrow, throwGrenade, detonateArtillery, updateArcPreview, detonate,
+    SPECS, initScene, clearAll, update, updatePlayerThrow, throwGrenade, detonateArtillery, updateArcPreview, detonate, spawnBlastFlash,
     get smokes() { return smokes; },
     get activeGrenades() { return activeGrenades; },
     get inGrenadeMode() { return grenadeMode; },
@@ -414,11 +414,38 @@ const Input = (() => {
       AudioSys.ensureInit();
       const overlayOpen = UI.hasModalOpen || (typeof CheatUI !== 'undefined' && CheatUI.isOpen) || (typeof MapUI !== 'undefined' && MapUI.isOpen);
       if (lockActiveState && !pointerLocked && !overlayOpen) {
+        if (!lmbDown) lmbJust = true;
+        lmbDown = true;
         try {
           const pr = canvas.requestPointerLock?.();
           if (pr && typeof pr.catch === 'function') pr.catch(() => {});
         } catch (_) {}
       }
+    });
+
+    // Make HUD weapon slot pills (#ws-1..#ws-5) directly clickable (especially 2: BASOKA)
+    const slotKeyCodes = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5'];
+    slotKeyCodes.forEach((code, idx) => {
+      const el = document.getElementById(`ws-${idx + 1}`);
+      if (!el) return;
+      el.style.pointerEvents = 'auto';
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        AudioSys.ensureInit();
+        slotKeyCodes.forEach(c => justPressed.delete(c));
+        if (idx < 4 && typeof Player !== 'undefined' && Player.selectSlot) {
+          Player.selectSlot(idx);
+        } else {
+          justPressed.add(code);
+        }
+        if (lockActiveState && !pointerLocked) {
+          try {
+            const pr = canvas.requestPointerLock?.();
+            if (pr && typeof pr.catch === 'function') pr.catch(() => {});
+          } catch (_) {}
+        }
+      });
     });
 
     document.addEventListener('pointerlockchange', () => {
@@ -439,6 +466,7 @@ const Input = (() => {
 
     window.addEventListener('mousedown', (e) => {
       if (UI.hasModalOpen) return;
+      if (e.target?.closest?.('.wslot-pill, #hud-weapon-slots, #match-status-pill, #cheat-overlay, #map-overlay, #modal-backdrop')) return;
       if (e.button === 0) { if (!lmbDown) lmbJust = true; lmbDown = true; }
       if (e.button === 2) { if (!rmbDown) rmbJust = true; rmbDown = true; }
     });
@@ -616,7 +644,7 @@ const WEAPONS_DB = (() => {
 
   const list = {
     akm: {
-      id: 'akm', name: 'AKM', class: 'AR', ammo: '762', damage: 48, rpm: 600, muzzleVel: 715, drag: 0.0007,
+      id: 'akm', name: 'AKM', class: 'AR', ammo: '762', damage: 48, rpm: 820, muzzleVel: 715, drag: 0.0007,
       mag: 30, magExt: 40, reload: { tactical: 2.2, empty: 2.9 }, modes: ['auto', 'single'],
       falloff: [[0,1.0],[50,1.0],[150,0.94],[300,0.85],[500,0.72]],
       recoil: { pitch: [0.72, 0.42], yaw: 0.25, recovery: 5.5, pattern: genPattern(30, 0.78, 0.34, 11) },
@@ -626,17 +654,17 @@ const WEAPONS_DB = (() => {
       slots: { optic: true, muzzle: true, grip: false, mag: true, stock: false }, style: 'ak'
     },
     m416: {
-      id: 'm416', name: 'M416', class: 'AR', ammo: '556', damage: 40, rpm: 670, muzzleVel: 780, drag: 0.0009,
-      mag: 30, magExt: 40, reload: { tactical: 2.1, empty: 2.75 }, modes: ['auto', 'single'],
-      falloff: [[0,1.0],[50,1.0],[150,0.95],[300,0.86],[500,0.74]],
-      recoil: { pitch: [0.55, 0.35], yaw: 0.18, recovery: 6.2, pattern: genPattern(30, 0.56, 0.20, 22) },
-      spread: { base: 0.46, ads: 0.18, move: 1.5, jump: 2.8, crouch: 0.72, prone: 0.52 },
-      ads: { time: 0.20, fov: 55 }, heavy: false, sound: 'ar_556', pellets: 1,
+      id: 'm416', name: 'M416', class: 'AR', ammo: '556', damage: 42, rpm: 1200, muzzleVel: 820, drag: 0.0007,
+      mag: 50, magExt: 75, reload: { tactical: 1.6, empty: 2.1 }, modes: ['auto', 'single'],
+      falloff: [[0,1.0],[50,1.0],[150,0.95],[300,0.88],[500,0.78]],
+      recoil: { pitch: [0.22, 0.14], yaw: 0.07, recovery: 9.5, pattern: genPattern(50, 0.24, 0.09, 22) },
+      spread: { base: 0.32, ads: 0.09, move: 1.1, jump: 2.2, crouch: 0.65, prone: 0.45 },
+      ads: { time: 0.18, fov: 55 }, heavy: false, sound: 'ar_556', pellets: 1,
       sockets: { optic: [0, 0.086, 0.03], muzzle: [0, 0.025, 0.50], grip: [0, -0.03, 0.24], mag: [0, -0.07, 0.07], stock: [0, 0.015, -0.22], eject: [0.025, 0.052, 0.04] },
       slots: { optic: true, muzzle: true, grip: true, mag: true, stock: true }, style: 'ar'
     },
     scarl: {
-      id: 'scarl', name: 'SCAR-L', class: 'AR', ammo: '556', damage: 41, rpm: 620, muzzleVel: 770, drag: 0.0009,
+      id: 'scarl', name: 'SCAR-L', class: 'AR', ammo: '556', damage: 41, rpm: 880, muzzleVel: 770, drag: 0.0009,
       mag: 30, magExt: 40, reload: { tactical: 2.15, empty: 2.8 }, modes: ['auto', 'single'],
       falloff: [[0,1.0],[50,1.0],[150,0.94],[300,0.85],[500,0.73]],
       recoil: { pitch: [0.52, 0.32], yaw: 0.16, recovery: 6.5, pattern: genPattern(30, 0.52, 0.18, 33) },
@@ -646,7 +674,7 @@ const WEAPONS_DB = (() => {
       slots: { optic: true, muzzle: true, grip: true, mag: true, stock: false }, style: 'scar'
     },
     ump45: {
-      id: 'ump45', name: 'UMP45', class: 'SMG', ammo: '45', damage: 39, rpm: 650, muzzleVel: 400, drag: 0.0022,
+      id: 'ump45', name: 'UMP45', class: 'SMG', ammo: '45', damage: 39, rpm: 900, muzzleVel: 400, drag: 0.0022,
       mag: 25, magExt: 35, reload: { tactical: 1.9, empty: 2.5 }, modes: ['auto', 'burst', 'single'],
       falloff: [[0,1.0],[40,0.96],[100,0.80],[200,0.62],[350,0.45]],
       recoil: { pitch: [0.38, 0.22], yaw: 0.12, recovery: 7.5, pattern: genPattern(30, 0.36, 0.14, 44) },
@@ -656,7 +684,7 @@ const WEAPONS_DB = (() => {
       slots: { optic: true, muzzle: true, grip: true, mag: true, stock: false }, style: 'smg'
     },
     vector: {
-      id: 'vector', name: 'Vector', class: 'SMG', ammo: '45', damage: 31, rpm: 1090, muzzleVel: 360, drag: 0.0022,
+      id: 'vector', name: 'Vector', class: 'SMG', ammo: '45', damage: 31, rpm: 1380, muzzleVel: 360, drag: 0.0022,
       mag: 19, magExt: 33, reload: { tactical: 1.75, empty: 2.25 }, modes: ['auto', 'burst', 'single'],
       falloff: [[0,1.0],[35,0.94],[80,0.74],[180,0.52]],
       recoil: { pitch: [0.28, 0.18], yaw: 0.10, recovery: 8.2, pattern: genPattern(30, 0.26, 0.11, 55) },
@@ -714,6 +742,16 @@ const WEAPONS_DB = (() => {
       ads: { time: 0.13, fov: 62 }, heavy: false, sound: 'pistol_9', pellets: 1,
       sockets: { optic: [0, 0.068, 0.03], muzzle: [0, 0.028, 0.20], grip: [0, -0.005, 0.14], mag: [0, -0.065, -0.02], stock: null, eject: [0.015, 0.042, 0.03] },
       slots: { optic: true, muzzle: true, grip: true, mag: true, stock: false }, style: 'pistol'
+    },
+    bazooka: {
+      id: 'bazooka', name: 'BAZOOKA RPG-7', class: 'Launcher', ammo: 'rocket', damage: 280, rpm: 240, muzzleVel: 210, drag: 0.0001,
+      mag: 20, magExt: 30, reload: { tactical: 0.8, empty: 1.0 }, modes: ['auto', 'single'], isRocket: true, blastRadius: 8.5,
+      falloff: [[0,1.0],[600,1.0]],
+      recoil: { pitch: [1.1, 0.45], yaw: 0.12, recovery: 6.5, pattern: [[0, 1.0]] },
+      spread: { base: 0.10, ads: 0.02, move: 0.25, jump: 0.6, crouch: 0.5, prone: 0.3 },
+      ads: { time: 0.18, fov: 52 }, heavy: false, sound: 'sr', pellets: 1,
+      sockets: { optic: [0, 0.088, 0.03], muzzle: [0, 0.042, 0.65], grip: null, mag: null, stock: null, eject: null },
+      slots: { optic: true, muzzle: false, grip: false, mag: false, stock: false }, style: 'bazooka'
     },
     pan: {
       id: 'pan', name: 'Panci Baja', class: 'Melee', ammo: 'none', damage: 60, rpm: 95, muzzleVel: 20, drag: 0,
@@ -798,8 +836,8 @@ const ModelBuilders = (() => {
     const body = GunKit.getBody(def);
     root.add(GunKit.instantiate(body.geos));
 
-    // Modern tactical rifles/SMGs display the factory boxy reflex optic by default (matching Reference Image 1)
-    const defaultReflex = !equippedAttachments.optic && (style === 'ar' || style === 'scar' || style === 'smg' || style === 'vector');
+    // Modern tactical rifles/SMGs/Bazooka display the factory boxy reflex optic by default (matching Reference Image 1)
+    const defaultReflex = !equippedAttachments.optic && (style === 'ar' || style === 'scar' || style === 'smg' || style === 'vector' || style === 'bazooka');
     const effOptic = equippedAttachments.optic || (defaultReflex ? 'reddot' : null);
 
     // Backup Iron Sights (folded flat behind optic when an optic is mounted, deployed when bare)
@@ -1149,7 +1187,34 @@ const Physics = (() => {
     return maxFloorY;
   }
 
-  return { clear, clearTag, addCollider, queryAABB, raycast, resolveCapsuleXZ };
+  function carveExplosionHole(center, radius) {
+    const r = Math.max(1.2, radius);
+    for (let i = 0; i < colliders.length; i++) {
+      const b = colliders[i];
+      if (b.disabled) continue;
+      const cx = Util.clamp(center.x, b.minX, b.maxX);
+      const cy = Util.clamp(center.y, b.minY, b.maxY);
+      const cz = Util.clamp(center.z, b.minZ, b.maxZ);
+      const dist = Math.hypot(center.x - cx, center.y - cy, center.z - cz);
+      if (dist > r) continue;
+      if (b.glassRef) {
+        b.glassRef.shatter();
+        b.disabled = true;
+      } else if (b.doorRef) {
+        b.doorRef.isOpen = true;
+        b.doorRef.animT = 1;
+        b.disabled = true;
+      } else if (b.tag === 'world') {
+        const midX = (b.minX + b.maxX) * 0.5;
+        const midZ = (b.minZ + b.maxZ) * 0.5;
+        const gH = World.getHeight(midX, midZ);
+        // Keep foundation floors beneath terrain safe so player doesn't fall under world
+        if (b.maxY > gH + 0.45) b.disabled = true;
+      }
+    }
+  }
+
+  return { clear, clearTag, addCollider, queryAABB, raycast, resolveCapsuleXZ, carveExplosionHole };
 })();
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1159,7 +1224,8 @@ const Ballistics = (() => {
   const MAX_BULLETS = 256;
   const bulletPool = Array.from({ length: MAX_BULLETS }, () => ({
     active: false, pos: new THREE.Vector3(), vel: new THREE.Vector3(), prevPos: new THREE.Vector3(),
-    dmg: 40, drag: 0.0009, ammo: '556', life: 0, dist: 0, falloff: null, owner: null, isSuppressed: false
+    dmg: 40, drag: 0.0009, ammo: '556', life: 0, dist: 0, falloff: null, owner: null, isSuppressed: false,
+    isRocket: false, blastRadius: 0, mesh: null
   }));
 
   const MAX_TRACERS = 64;
@@ -1167,6 +1233,7 @@ const Ballistics = (() => {
   const MAX_DECALS = 256;
   const decals = [];
   let decalIdx = 0;
+  const rocketMeshes = [];
 
   let particles = null;
   let particleStates = [];
@@ -1190,6 +1257,28 @@ const Ballistics = (() => {
       line.frustumCulled = false;
       scene.add(line);
       tracers.push({ line, life: 0 });
+    }
+
+    rocketMeshes.forEach(m => scene.remove(m));
+    rocketMeshes.length = 0;
+    const rBodyMat = new THREE.MeshStandardMaterial({ color: 0x52613A, roughness: 0.45, metalness: 0.35 });
+    const rFlameMat = new THREE.MeshBasicMaterial({ color: 0xFF8822 });
+    const rHeadGeo = new THREE.ConeGeometry(0.06, 0.24, 10);
+    rHeadGeo.rotateX(Math.PI * 0.5);
+    const rShaftGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.28, 8);
+    rShaftGeo.rotateX(Math.PI * 0.5);
+    const rFlameGeo = new THREE.ConeGeometry(0.05, 0.24, 8);
+    rFlameGeo.rotateX(-Math.PI * 0.5);
+    for (let i = 0; i < 24; i++) {
+      const rg = new THREE.Group();
+      const head = new THREE.Mesh(rHeadGeo, rBodyMat); head.position.z = 0.14;
+      const shaft = new THREE.Mesh(rShaftGeo, rBodyMat); shaft.position.z = -0.08;
+      const flame = new THREE.Mesh(rFlameGeo, rFlameMat); flame.position.z = -0.32;
+      rg.add(head, shaft, flame);
+      rg.visible = false;
+      rg.userData.inUse = false;
+      scene.add(rg);
+      rocketMeshes.push(rg);
     }
 
     decals.forEach(d => scene.remove(d.mesh));
@@ -1280,6 +1369,22 @@ const Ballistics = (() => {
         b.owner = opts.owner || null;
         b.isSuppressed = !!opts.suppressed;
         b.wantTracer = showTracer;
+        b.isRocket = !!weaponDef.isRocket;
+        b.blastRadius = weaponDef.blastRadius || 8.5;
+        b.mesh = null;
+        if (b.isRocket) {
+          for (let r = 0; r < rocketMeshes.length; r++) {
+            if (!rocketMeshes[r].userData.inUse) {
+              const rm = rocketMeshes[r];
+              rm.userData.inUse = true;
+              rm.position.copy(origin);
+              rm.lookAt(origin.x + dir.x, origin.y + dir.y, origin.z + dir.z);
+              rm.visible = true;
+              b.mesh = rm;
+              break;
+            }
+          }
+        }
         return;
       }
     }
@@ -1296,6 +1401,15 @@ const Ballistics = (() => {
     return falloff[falloff.length - 1][1];
   }
 
+  function releaseRocketMesh(b) {
+    if (b.mesh) {
+      b.mesh.visible = false;
+      b.mesh.userData.inUse = false;
+      b.mesh = null;
+    }
+    b.isRocket = false;
+  }
+
   function step(dt, targets, onHitTarget) {
     const subDt = CONFIG.ballistics.ballisticDt || (1 / 120);
     const steps = Math.max(1, Math.round(dt / subDt));
@@ -1307,15 +1421,15 @@ const Ballistics = (() => {
         if (!b.active) continue;
         b.prevPos.copy(b.pos);
 
-        // Quadratic air drag + gravity 9.81 m/s²
+        // Quadratic air drag + gravity 9.81 m/s² (rockets have low drop / self-propelled feel)
         const spd = b.vel.length();
         const dragDecel = b.drag * spd;
         b.vel.multiplyScalar(Math.max(0, 1 - dragDecel * hDt));
-        b.vel.y -= CONFIG.ballistics.gravity * hDt;
+        b.vel.y -= CONFIG.ballistics.gravity * (b.isRocket ? 0.15 : 1.0) * hDt;
 
         const speed = b.vel.length();
         const segLen = speed * hDt;
-        if (!Number.isFinite(speed) || speed < 0.001 || segLen < 0.001) { b.active = false; continue; }
+        if (!Number.isFinite(speed) || speed < 0.001 || segLen < 0.001) { releaseRocketMesh(b); b.active = false; continue; }
         bDir.copy(b.vel).divideScalar(speed);
 
         // Check entity targets first (spheres/boxes along ray)
@@ -1337,6 +1451,14 @@ const Ballistics = (() => {
           const hy = b.pos.y + bDir.y * worldHit.t;
           const hz = b.pos.z + bDir.z * worldHit.t;
           bHitPos.set(hx, hy, hz);
+          if (b.isRocket) {
+            bNorm.set(worldHit.nx, worldHit.ny, worldHit.nz);
+            lastDebug.event = 'rocketDetonate'; lastDebug.pos.copy(bHitPos); lastDebug.mat = worldHit.collider?.mat || 'concrete'; lastDebug.dist = b.dist + worldHit.t;
+            WorldBuildings.detonateRocket?.(bHitPos.clone(), bNorm.clone(), b.blastRadius || 8.5, b.owner, targets, onHitTarget);
+            releaseRocketMesh(b);
+            b.active = false;
+            continue;
+          }
           const matType = worldHit.collider?.mat || 'concrete';
           AudioSys.playImpact(matType, bHitPos);
 
@@ -1387,6 +1509,14 @@ const Ballistics = (() => {
 
         if (hitTarget) {
           bHitPos.copy(b.pos).addScaledVector(bDir, hitTargetT);
+          if (b.isRocket) {
+            bNorm.copy(bDir).negate();
+            lastDebug.event = 'rocketDetonate'; lastDebug.pos.copy(bHitPos); lastDebug.tgt = hitTarget.name || ''; lastDebug.dist = b.dist + hitTargetT;
+            WorldBuildings.detonateRocket?.(bHitPos.clone(), bNorm.clone(), b.blastRadius || 8.5, b.owner, targets, onHitTarget);
+            releaseRocketMesh(b);
+            b.active = false;
+            continue;
+          }
           const totalDist = b.dist + hitTargetT;
           const mult = CONFIG.hitMult[hitZone] || 1.0;
           const finalDmg = b.dmg * evalFalloff(b.falloff, totalDist) * mult;
@@ -1400,9 +1530,20 @@ const Ballistics = (() => {
         b.pos.addScaledVector(b.vel, hDt);
         b.dist += segLen;
         b.life -= hDt;
+        if (b.isRocket) {
+          if (b.mesh) {
+            b.mesh.position.copy(b.pos);
+            b.mesh.lookAt(b.pos.x + bDir.x, b.pos.y + bDir.y, b.pos.z + bDir.z);
+          }
+          if (s === steps - 1) {
+            spawnParticle(b.pos, new THREE.Vector3(-bDir.x * 3 + (Math.random() - 0.5) * 1.2, 0.8 + Math.random(), -bDir.z * 3 + (Math.random() - 0.5) * 1.2), 0xCCCCCC, 3.2, 0.55, 0.5);
+            spawnParticle(b.pos, new THREE.Vector3(-bDir.x * 2, (Math.random() - 0.5), -bDir.z * 2), 0xFF7722, 2.2, 0.16, 0.0);
+          }
+        }
         if (b.wantTracer && s === steps - 1) spawnTracer(b.prevPos, b.pos);
         if (b.life <= 0 || b.dist > CONFIG.ballistics.maxDist) {
           lastDebug.event = 'expired'; lastDebug.pos.copy(b.pos); lastDebug.dist = b.dist;
+          releaseRocketMesh(b);
           b.active = false;
         }
       }

@@ -92,7 +92,7 @@ const Debug = (() => {
     assert('oceanEdgeSubmerged', seaH < 0, `h=${seaH.toFixed(2)}`);
     assert('zonePhases==8', CONFIG.zone.length === 8 && CONFIG.zone[0].r0 === 780 && CONFIG.zone[7].r1 === 0);
     assert('hitboxMultHead', CONFIG.hitMult.head === 2.35 && CONFIG.hitMult.leg === 0.8);
-    assert('weaponsCatalog==11', Object.keys(WEAPONS_DB).length === 11, `n=${Object.keys(WEAPONS_DB).length}`);
+    assert('weaponsCatalog>=11', Object.keys(WEAPONS_DB).length >= 11, `n=${Object.keys(WEAPONS_DB).length}`);
     assert('attachmentsCatalog>=20', Object.keys(ATTACHMENTS_DB).length >= 20, `n=${Object.keys(ATTACHMENTS_DB).length}`);
     const z100 = Ballistics.computeZeroPitch(780, 0.0009, 100);
     const z300 = Ballistics.computeZeroPitch(780, 0.0009, 300);

@@ -854,6 +854,12 @@ const Assets = (() => {
     materials.redSignal = new THREE.MeshStandardMaterial({
       name: 'redSignal', color: 0xFF4242, emissive: 0xFF2828, emissiveIntensity: 1.6, roughness: 0.25
     });
+    materials.hollywoodWhite = new THREE.MeshStandardMaterial({
+      name: 'hollywoodWhite', color: 0xFFFFFF, emissive: 0xDCE8F8, emissiveIntensity: 0.42, roughness: 0.32, metalness: 0.06
+    });
+    materials.charredScorch = new THREE.MeshStandardMaterial({
+      name: 'charredScorch', color: 0x141210, emissive: 0x240C04, emissiveIntensity: 0.25, roughness: 0.95, metalness: 0.05, side: THREE.DoubleSide
+    });
   }
 
   function buildFoliageMaterial(aniso) {

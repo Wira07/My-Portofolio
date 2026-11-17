@@ -298,6 +298,8 @@ const World = (() => {
 
   let group = null;
   let terrainChunks = [];
+  const craters = [];
+  const dirtyTerrainChunks = new Set();
   let terrainMat = null;
   let waterMesh = null;
   let poiMarkers = null;
@@ -310,6 +312,7 @@ const World = (() => {
 
   const ROAD_SEGMENTS = [
     [[-440, 540], [-110, 280]],
+    [[-110, 326], [-110, 280]],
     [[-110, 280], [100, 610]],
     [[-110, 280], [160, 90]],
     [[160, 90], [430, 420]],
@@ -408,6 +411,8 @@ const World = (() => {
 
   async function buildHeightCache(seed, onProgress) {
     currentSeed = seed;
+    craters.length = 0;
+    dirtyTerrainChunks.clear();
     for (let j = 0; j < HM_RES; j++) {
       const z = -HALF + (j / (HM_RES - 1)) * SIZE;
       for (let i = 0; i < HM_RES; i++) {
@@ -458,7 +463,23 @@ const World = (() => {
 
   function getHeight(x, z) {
     if (Math.abs(x) > HALF || Math.abs(z) > HALF) return -14.0;
-    return SMOOTH_TERRAIN ? sampleCubic(heightCache, x, z) : sampleCache(heightCache, x, z);
+    let h = SMOOTH_TERRAIN ? sampleCubic(heightCache, x, z) : sampleCache(heightCache, x, z);
+    for (let i = 0; i < craters.length; i++) {
+      const c = craters[i];
+      const dx = x - c.x, dz = z - c.z;
+      const d2 = dx * dx + dz * dz;
+      const rMax = c.r * 1.4;
+      if (d2 < rMax * rMax) {
+        const d = Math.sqrt(d2);
+        if (d < c.r) {
+          const t = 1 - (d / c.r) * (d / c.r);
+          h -= c.depth * t * t;
+        }
+        const rimT = (d - c.r * 0.94) / (c.r * 0.24);
+        h += c.depth * 0.24 * Math.exp(-rimT * rimT);
+      }
+    }
+    return h < -15 ? -15 : h;
   }
 
   function getNormal(x, z, out = new THREE.Vector3()) {
@@ -508,10 +529,26 @@ const World = (() => {
         const isBeach = Util.smoothstep(4.0, -0.5, wy);
         const isRock = Util.smoothstep(0.18, 0.45, slope) + Util.smoothstep(52, 78, wy) * 0.45;
         const isRoad = 1.0 - Util.smoothstep(2.6, 5.4, roadD);
-        const sSand = isBeach;
-        const sRock = Util.clamp(isRock, 0, 1);
-        const sDirt = Util.clamp(isRoad + Util.smoothstep(0.08, 0.22, slope) * 0.5, 0, 1);
-        const sGrass = Math.max(0.05, 1.0 - Math.max(sSand, sRock, sDirt));
+        let sSand = isBeach;
+        let sRock = Util.clamp(isRock, 0, 1);
+        let sDirt = Util.clamp(isRoad + Util.smoothstep(0.08, 0.22, slope) * 0.5, 0, 1);
+        let sGrass = Math.max(0.05, 1.0 - Math.max(sSand, sRock, sDirt));
+        let craterAO = 1.0;
+        for (let ci = 0; ci < craters.length; ci++) {
+          const c = craters[ci];
+          const cdx = wx - c.x, cdz = wz - c.z;
+          const cd2 = cdx * cdx + cdz * cdz;
+          const crOuter = c.r * 1.38;
+          if (cd2 < crOuter * crOuter) {
+            const cd = Math.sqrt(cd2);
+            const blend = Util.clamp(1.0 - (cd - c.r * 0.62) / (c.r * 0.76), 0, 1);
+            sGrass *= (1.0 - blend);
+            sSand *= (1.0 - blend);
+            sDirt = Util.lerp(sDirt, 0.62, blend);
+            sRock = Util.lerp(sRock, 0.38, blend);
+            craterAO = Math.min(craterAO, Util.lerp(1.0, 0.28, blend));
+          }
+        }
         const invSum = 1.0 / (sSand + sGrass + sDirt + sRock + 1e-5);
         d.splat[idx * 4] = sSand * invSum;
         d.splat[idx * 4 + 1] = sGrass * invSum;
@@ -519,9 +556,9 @@ const World = (() => {
         d.splat[idx * 4 + 3] = sRock * invSum;
 
         // misc: x=inti jalan, y=AO cekungan, z=kelembapan dekat sungai
-        const cav = (getHeight(wx - 6, wz) + getHeight(wx + 6, wz) + getHeight(wx, wz - 6) + getHeight(wx, wz + 6)) * 0.25 - wy;
+        const cav = (sampleCache(heightCache, wx - 6, wz) + sampleCache(heightCache, wx + 6, wz) + sampleCache(heightCache, wx, wz - 6) + sampleCache(heightCache, wx, wz + 6)) * 0.25 - wy;
         d.misc[idx * 4] = 1.0 - Util.smoothstep(1.8, 4.8, roadD);
-        d.misc[idx * 4 + 1] = Util.clamp(1.0 - cav * 0.12, 0.62, 1.06);
+        d.misc[idx * 4 + 1] = Util.clamp(1.0 - cav * 0.12, 0.62, 1.06) * craterAO;
         d.misc[idx * 4 + 2] = 1.0 - Util.smoothstep(4, 55, riverD);
         d.misc[idx * 4 + 3] = 0;
       }
@@ -581,6 +618,68 @@ const World = (() => {
     geo.computeBoundingSphere();
     geo.computeBoundingBox();
     return geo;
+  }
+
+  function rebuildChunk(ch) {
+    const data = computeChunkData(ch.userData.cx, ch.userData.cz);
+    const strides = [1, 2, 4];
+    for (let lv = 0; lv < ch.levels.length && lv < strides.length; lv++) {
+      const mesh = ch.levels[lv].object;
+      const oldGeo = mesh.geometry;
+      mesh.geometry = buildGeoFromData(data, strides[lv]);
+      if (oldGeo) oldGeo.dispose();
+    }
+  }
+
+  function rebuildChunksInBox(minX, maxX, minZ, maxZ) {
+    for (let i = 0; i < terrainChunks.length; i++) {
+      const ch = terrainChunks[i];
+      if (ch.userData.centerX + CHUNK * 0.5 >= minX && ch.userData.centerX - CHUNK * 0.5 <= maxX &&
+          ch.userData.centerZ + CHUNK * 0.5 >= minZ && ch.userData.centerZ - CHUNK * 0.5 <= maxZ) {
+        rebuildChunk(ch);
+      }
+    }
+  }
+
+  function stampRoadPath(x0, z0, x1, z1, halfWidth = 2.4) {
+    const pad = halfWidth + 8;
+    const minX = Math.min(x0, x1) - pad, maxX = Math.max(x0, x1) + pad;
+    const minZ = Math.min(z0, z1) - pad, maxZ = Math.max(z0, z1) + pad;
+    const iMin = Math.max(0, Math.floor(((minX + HALF) / SIZE) * (HM_RES - 1)));
+    const iMax = Math.min(HM_RES - 1, Math.ceil(((maxX + HALF) / SIZE) * (HM_RES - 1)));
+    const jMin = Math.max(0, Math.floor(((minZ + HALF) / SIZE) * (HM_RES - 1)));
+    const jMax = Math.min(HM_RES - 1, Math.ceil(((maxZ + HALF) / SIZE) * (HM_RES - 1)));
+    for (let j = jMin; j <= jMax; j++) {
+      const wz = -HALF + (j / (HM_RES - 1)) * SIZE;
+      for (let i = iMin; i <= iMax; i++) {
+        const wx = -HALF + (i / (HM_RES - 1)) * SIZE;
+        const d = Math.sqrt(Util.distToSegmentSq(wx, wz, x0, z0, x1, z1));
+        const rIdx = j * HM_RES + i;
+        roadDistCache[rIdx] = Math.min(roadDistCache[rIdx], Math.max(0, d - halfWidth * 0.35));
+      }
+    }
+    for (let k = 0; k < terrainChunks.length; k++) {
+      const ch = terrainChunks[k];
+      if (ch.userData.centerX + CHUNK * 0.5 >= minX && ch.userData.centerX - CHUNK * 0.5 <= maxX &&
+          ch.userData.centerZ + CHUNK * 0.5 >= minZ && ch.userData.centerZ - CHUNK * 0.5 <= maxZ) {
+        dirtyTerrainChunks.add(k);
+      }
+    }
+  }
+
+  function flushDirtyTerrain() {
+    if (!dirtyTerrainChunks.size) return;
+    dirtyTerrainChunks.forEach((idx) => {
+      if (terrainChunks[idx]) rebuildChunk(terrainChunks[idx]);
+    });
+    dirtyTerrainChunks.clear();
+  }
+
+  function carveTerrainCrater(x, z, radius = 5.4, depth = 2.65) {
+    craters.push({ x, z, r: radius, depth });
+    const rPad = radius * 1.65 + 2.5;
+    rebuildChunksInBox(x - rPad, x + rPad, z - rPad, z + rPad);
+    if (typeof WorldFlora !== 'undefined' && WorldFlora.refreshGrass) WorldFlora.refreshGrass();
   }
 
   function createTerrainMaterial() {
@@ -936,6 +1035,8 @@ const World = (() => {
     if (depthTex) { depthTex.dispose(); depthTex = null; }
     scene.remove(group);
     terrainChunks = [];
+    craters.length = 0;
+    dirtyTerrainChunks.clear();
     group = null;
   }
 
@@ -965,8 +1066,12 @@ const World = (() => {
     setTimeOfDay,
     isShootRangeCorridor,
     isUrbanPlaza,
+    carveTerrainCrater,
+    stampRoadPath,
+    flushDirtyTerrain,
     RIVER_PTS,
     ROAD_SEGMENTS,
+    get craters() { return craters; },
     get chunks() { return terrainChunks.length; },
     get seed() { return currentSeed; }
   };
@@ -1367,13 +1472,7 @@ const WorldBuildings = (() => {
       }
     }
 
-    // Anak tangga masuk teras depan / ruko
-    const nSteps = arch === 'ruko2f' ? 5 : 3;
-    const stepBaseW = arch === 'ruko2f' ? 4.2 : 2.3;
-    const stepStartZ = arch === 'ruko2f' ? d * 0.5 + 1.05 : d * 0.5 + 1.85;
-    for (let st = 1; st <= nSteps; st++) {
-      P(0, -st * 0.22, stepStartZ + st * 0.34, stepBaseW + st * 0.18, 0.22, 0.38, 'limestone');
-    }
+    // Kotak tangga putih kapur di rumput dihapus & diganti jalan aspal di placeBuilding
 
     if (arch === 'house1f') {
       skirtFace(1, 0, 1.9); skirtFace(-1, 0, 1.9);
@@ -1492,9 +1591,35 @@ const WorldBuildings = (() => {
     const plinthH = baseY - (minH - 2.0);
     const bId = footprints.length;
 
-    // Ground-anchored concrete foundation slab + ground-anchored step apron on entrance
+    // Ground-anchored concrete foundation slab + natural asphalt front road/walkway path (jalan)
     addBuildingPart(bx, baseY, bz, rotIdx, 0, -plinthH * 0.5, 0, w + 0.3, plinthH, d + 0.3, 'concrete');
-    addBuildingPart(bx, baseY, bz, rotIdx, 0, -plinthH * 0.5, d * 0.5 + 0.55, 2.2, plinthH, 1.1, 'concrete');
+    if (arch !== 'tower') {
+      const angR = rotIdx * Math.PI * 0.5;
+      const cosR = Math.round(Math.cos(angR));
+      const sinR = Math.round(Math.sin(angR));
+      const roadW = arch === 'factory' ? 4.4 : arch === 'ruko2f' ? 4.0 : 3.2;
+      const segLen = 2.0;
+      const startZ = (arch === 'house1f' || arch === 'house2f') ? d * 0.5 + 1.55 : d * 0.5 + 0.25;
+      for (let sIdx = 0; sIdx < 4; sIdx++) {
+        const zA = startZ + sIdx * segLen;
+        const zB = zA + segLen;
+        const xA = bx + zA * sinR, pzA = bz + zA * cosR;
+        const xB = bx + zB * sinR, pzB = bz + zB * cosR;
+        const yA = (sIdx === 0 && (arch === 'house1f' || arch === 'house2f' || arch === 'ruko2f'))
+          ? Math.max(baseY - 0.12, World.getHeight(xA, pzA))
+          : World.getHeight(xA, pzA);
+        const yB = World.getHeight(xB, pzB);
+        const midX = (xA + xB) * 0.5, midZ = (pzA + pzB) * 0.5, midY = (yA + yB) * 0.5;
+        const dy = yB - yA;
+        const pitchAngle = -Math.atan2(dy, segLen);
+        const segHyp = Math.hypot(segLen, dy) + 0.12;
+        pushGeo(midX, midZ, 'asphalt', makeBoxRaw(roadW, 0.20, segHyp, midX, midY - 0.08, midZ, pitchAngle, angR, 0));
+      }
+      if (World.stampRoadPath) {
+        const z0 = startZ - 0.3, z1 = startZ + segLen * 4 + 1.5;
+        World.stampRoadPath(bx + z0 * sinR, bz + z0 * cosR, bx + z1 * sinR, bz + z1 * cosR, roadW * 0.65);
+      }
+    }
 
     const wallMat = (arch === 'bunker' || arch === 'factory') ? 'concrete' : rng() > 0.42 ? 'plasterWarm' : 'brick';
     const wallH = 3.2;
@@ -2208,6 +2333,11 @@ const WorldBuildings = (() => {
       buildSpecialLandmark(p.id, p.x, p.z);
     }
 
+    // Giant Hollywood-style "CREATED GAME BY WIRA" landmarks overlooking Range, City & Pelabuhan
+    buildHollywoodSign(-110, Math.max(World.getHeight(-110, -38) + 12, 46), -38, 0, 1.65);
+    buildHollywoodSign(156, Math.max(World.getHeight(156, -52) + 14, 54), -52, 0, 1.40);
+    buildHollywoodSign(-435, Math.max(World.getHeight(-435, 390) + 14, 30), 390, 0, 1.35);
+
     // 2. Build 5 River Bridges at main island road-river crossings
     const bridgeSpecs = [
       [-285, -188, -Math.PI * 0.25],
@@ -2241,6 +2371,9 @@ const WorldBuildings = (() => {
       placedRural++;
     }
 
+    World.flushDirtyTerrain?.();
+    getExplosionTextures();
+
     // 4. Merge each (200x200 cell, material) bucket via BufferGeometryUtils.mergeGeometries
     let mergedDrawCalls = 0;
     for (const [key, geos] of buckets.entries()) {
@@ -2263,6 +2396,703 @@ const WorldBuildings = (() => {
     return { drawCalls: mergedDrawCalls, buildings: footprints.length, doors: doors.length, pads: lootPads.length };
   }
 
+  // ════════════════════════════════════════════════════════════════════════════
+  // HOLLYWOOD-STYLE 3D LANDMARK SIGN ("CREATED GAME BY WIRA")
+  // ════════════════════════════════════════════════════════════════════════════
+  const SIGN_GLYPHS = {
+    C: [[0,0,1,4.5],[0,3.7,2.4,0.8],[0,0,2.4,0.8]],
+    R: [[0,0,0.8,4.5],[0,3.7,2.2,0.8],[0,1.9,2.2,0.8],[1.7,2.0,0.8,2.4],[1.1,0,0.8,2.1]],
+    E: [[0,0,0.8,4.5],[0,3.7,2.4,0.8],[0,1.9,2.0,0.8],[0,0,2.4,0.8]],
+    A: [[0,0,0.8,4.5],[1.8,0,0.8,4.5],[0,3.7,2.6,0.8],[0,1.8,2.6,0.8]],
+    T: [[0,3.7,2.8,0.8],[1.0,0,0.8,4.5]],
+    D: [[0,0,0.8,4.5],[0,3.7,2.1,0.8],[0,0,2.1,0.8],[1.7,0.4,0.8,3.7]],
+    G: [[0,0,0.8,4.5],[0,3.7,2.5,0.8],[0,0,2.5,0.8],[1.7,0,0.8,2.2],[1.1,1.7,1.4,0.75]],
+    M: [[0,0,0.8,4.5],[2.4,0,0.8,4.5],[1.2,1.6,0.8,2.9],[0.5,3.4,1.0,1.0],[1.7,3.4,1.0,1.0]],
+    B: [[0,0,0.8,4.5],[0,3.7,2.1,0.8],[0,1.9,2.0,0.8],[0,0,2.1,0.8],[1.7,2.1,0.8,2.2],[1.7,0,0.8,2.1]],
+    Y: [[0,2.2,0.8,2.3],[1.8,2.2,0.8,2.3],[0.4,1.9,1.8,0.8],[0.9,0,0.8,2.1]],
+    W: [[0,0,0.8,4.5],[2.4,0,0.8,4.5],[1.2,0,0.8,3.0],[0.6,0,0.9,1.0],[1.7,0,0.9,1.0]],
+    I: [[0.4,0,0.85,4.5],[0,3.7,1.65,0.75],[0,0,1.65,0.75]]
+  };
+
+  function buildHollywoodSign(cx, baseY, cz, yaw = 0, scale = 1.0) {
+    const ca = Math.cos(yaw), sa = Math.sin(yaw);
+    const L2W = (lx, ly, lz) => [cx + lx * ca + lz * sa, baseY + ly, cz - lx * sa + lz * ca];
+
+    const addLine = (text, yOff, sMult) => {
+      const s = scale * sMult;
+      const charAdv = 3.75 * s;
+      const startX = -((text.length - 1) * charAdv + 2.6 * s) * 0.5;
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const strokes = SIGN_GLYPHS[ch];
+        if (!strokes) continue;
+        const ox = startX + i * charAdv;
+        for (let k = 0; k < strokes.length; k++) {
+          const [sx, sy, sw, sh] = strokes[k];
+          const [wx, wy, wz] = L2W(ox + (sx + sw * 0.5) * s, yOff + (sy + sh * 0.5) * s, 0);
+          pushGeo(wx, wz, 'hollywoodWhite', makeBoxRaw(sw * s, sh * s, 0.9 * s, wx, wy, wz, 0, yaw, 0));
+        }
+        // Steel rear scaffolding tower + ground anchor strut behind each letter
+        const [bx, by, bz] = L2W(ox + 1.2 * s, yOff - 1.5 * s, -1.2 * s);
+        const legH = Math.max(8 * s, (baseY + yOff + 3.5 * s) - World.getHeight(bx, bz));
+        pushGeo(bx, bz, 'darkIron', makeBoxRaw(0.38 * s, legH, 0.38 * s, bx, (baseY + yOff + 3.5 * s) - legH * 0.5, bz, 0, yaw, 0));
+        const [rx, ry, rz] = L2W(ox + 1.2 * s, yOff + 1.8 * s, -2.0 * s);
+        pushGeo(rx, rz, 'darkIron', makeBoxRaw(0.28 * s, 4.2 * s, 0.28 * s, rx, ry, rz, 0.45, yaw, 0));
+        // Warm upward floodlight bar at letter base
+        const [fx, fy, fz] = L2W(ox + 1.2 * s, yOff - 0.5 * s, 1.15 * s);
+        pushGeo(fx, fz, 'warmGlow', makeBoxRaw(1.8 * s, 0.25 * s, 0.35 * s, fx, fy, fz, 0, yaw, 0));
+      }
+    };
+
+    // Main hillside truss frame + floodlit sign face
+    addLine('CREATED GAME', 9.2 * scale, 0.92);
+    addLine('BY WIRA', 1.2 * scale, 1.15);
+  }
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // BAZOOKA DESTRUCTION — Real 3D Holes, Terrain Craters, Volumetric Fire & 3D Lightning
+  // ════════════════════════════════════════════════════════════════════════════
+  const activeExplosions = [];
+  const LIGHTNING_SEGS = 10;
+  let cachedExpTex = null;
+  let sharedBreachBoxGeo = null;
+  let sharedBreachRodGeo = null;
+  const _expU = new THREE.Vector3();
+  const _expV = new THREE.Vector3();
+  const _expT = new THREE.Vector3();
+  const _expUp = new THREE.Vector3();
+
+  function getExplosionTextures() {
+    if (cachedExpTex) return cachedExpTex;
+    const makeNoiseTex = (size, octaves, colorFn) => {
+      const c = document.createElement('canvas');
+      c.width = size; c.height = size;
+      const ctx = c.getContext('2d');
+      const img = ctx.createImageData(size, size);
+      const d = img.data;
+      const half = size * 0.5;
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const dx = (x - half) / half;
+          const dy = (y - half) / half;
+          const r = Math.hypot(dx, dy);
+          if (r >= 1.0) continue;
+          const nx = x / size, ny = y / size;
+          let f = 0, amp = 0.55, freq = 4.2;
+          for (let o = 0; o < octaves; o++) {
+            const v1 = Math.sin(nx * freq * Math.PI * 2 + o * 1.7) * Math.cos(ny * freq * Math.PI * 2 - o * 2.3);
+            const v2 = Math.sin((nx * 0.7 + ny * 0.7) * freq * 3.14 + o);
+            const v3 = VK.noise3 ? VK.noise3(nx * freq * 1.4, o * 3.7, ny * freq * 1.4) * 2 - 1 : (v1 + v2) * 0.5;
+            f += v3 * amp;
+            freq *= 2.05; amp *= 0.5;
+          }
+          const falloff = Math.pow(Math.max(0, 1 - r), 1.45);
+          const turb = Util.clamp(falloff * (0.72 + f * 0.65), 0, 1);
+          const [cr, cg, cb, ca] = colorFn(r, turb, f);
+          const p = (y * size + x) * 4;
+          d[p] = cr; d[p + 1] = cg; d[p + 2] = cb; d[p + 3] = ca;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      const tex = new THREE.CanvasTexture(c);
+      tex.needsUpdate = true;
+      return tex;
+    };
+
+    const fireTex = makeNoiseTex(96, 4, (r, turb, f) => {
+      const heat = Util.clamp(turb * 1.25 - r * 0.25, 0, 1);
+      const cr = Math.min(255, Math.round(255 * Math.pow(heat, 0.35)));
+      const cg = Math.min(255, Math.round(255 * Math.pow(heat, 1.35) * 0.92));
+      const cb = Math.min(255, Math.round(255 * Math.pow(heat, 3.2) * 0.85));
+      const ca = Math.min(255, Math.round(255 * Math.pow(turb, 1.1)));
+      return [cr, cg, cb, ca];
+    });
+    const smokeTex = makeNoiseTex(96, 4, (r, turb, f) => {
+      const shade = Util.clamp(0.45 + f * 0.35 + (1 - r) * 0.25, 0.15, 0.95);
+      const base = Math.round(42 * shade);
+      const ca = Math.min(255, Math.round(235 * Math.pow(turb, 0.95)));
+      return [base + 4, base + 2, base, ca];
+    });
+    const flashTex = makeNoiseTex(64, 2, (r, turb) => {
+      const core = Math.pow(Math.max(0, 1 - r), 2.2);
+      const glow = Math.pow(Math.max(0, 1 - r), 1.15);
+      return [255, Math.round(215 + 40 * core), Math.round(110 + 145 * core), Math.round(255 * glow)];
+    });
+    cachedExpTex = { fireTex, smokeTex, flashTex };
+    return cachedExpTex;
+  }
+
+  function generateBoltPath(bolt, ptsOut) {
+    _expUp.set(Math.abs(bolt.dir.y) < 0.88 ? 0 : 1, Math.abs(bolt.dir.y) < 0.88 ? 1 : 0, 0);
+    _expU.crossVectors(_expUp, bolt.dir).normalize();
+    _expV.crossVectors(bolt.dir, _expU).normalize();
+    let prev = null;
+    for (let s = 0; s <= LIGHTNING_SEGS; s++) {
+      const t = s / LIGHTNING_SEGS;
+      const env = Math.sin(t * Math.PI);
+      const j = bolt.jitter * env;
+      const pu = (Math.random() - 0.5) * 2 * j;
+      const pv = (Math.random() - 0.5) * 2 * j;
+      const px = bolt.origin.x + bolt.dir.x * (bolt.len * t) + _expU.x * pu + _expV.x * pv;
+      const py = bolt.origin.y + bolt.dir.y * (bolt.len * t) + _expU.y * pu + _expV.y * pv;
+      const pz = bolt.origin.z + bolt.dir.z * (bolt.len * t) + _expU.z * pu + _expV.z * pv;
+      ptsOut[s].set(px, py, pz);
+      prev = ptsOut[s];
+    }
+    return prev;
+  }
+
+  function writeRibbonQuadSeg(arr, offset, p0, p1, w) {
+    _expT.subVectors(p1, p0);
+    const len = _expT.length();
+    if (len < 1e-5) { _expT.set(0, 1, 0); } else { _expT.divideScalar(len); }
+    _expUp.set(Math.abs(_expT.y) < 0.9 ? 0 : 1, Math.abs(_expT.y) < 0.9 ? 1 : 0, 0);
+    _expU.crossVectors(_expUp, _expT).normalize().multiplyScalar(w);
+    _expV.crossVectors(_expT, _expU).normalize().multiplyScalar(w);
+
+    const writeTri = (ax, ay, az, bx, by, bz, cx, cy, cz) => {
+      arr[offset++] = ax; arr[offset++] = ay; arr[offset++] = az;
+      arr[offset++] = bx; arr[offset++] = by; arr[offset++] = bz;
+      arr[offset++] = cx; arr[offset++] = cy; arr[offset++] = cz;
+    };
+    // Cross-quad 1 (along _expU)
+    const a1x = p0.x - _expU.x, a1y = p0.y - _expU.y, a1z = p0.z - _expU.z;
+    const b1x = p0.x + _expU.x, b1y = p0.y + _expU.y, b1z = p0.z + _expU.z;
+    const c1x = p1.x + _expU.x, c1y = p1.y + _expU.y, c1z = p1.z + _expU.z;
+    const d1x = p1.x - _expU.x, d1y = p1.y - _expU.y, d1z = p1.z - _expU.z;
+    writeTri(a1x, a1y, a1z, b1x, b1y, b1z, c1x, c1y, c1z);
+    writeTri(a1x, a1y, a1z, c1x, c1y, c1z, d1x, d1y, d1z);
+    // Cross-quad 2 (along _expV)
+    const a2x = p0.x - _expV.x, a2y = p0.y - _expV.y, a2z = p0.z - _expV.z;
+    const b2x = p0.x + _expV.x, b2y = p0.y + _expV.y, b2z = p0.z + _expV.z;
+    const c2x = p1.x + _expV.x, c2y = p1.y + _expV.y, c2z = p1.z + _expV.z;
+    const d2x = p1.x - _expV.x, d2y = p1.y - _expV.y, d2z = p1.z - _expV.z;
+    writeTri(a2x, a2y, a2z, b2x, b2y, b2z, c2x, c2y, c2z);
+    writeTri(a2x, a2y, a2z, c2x, c2y, c2z, d2x, d2y, d2z);
+    return offset;
+  }
+
+  function updateExplosionLightning(exp) {
+    let offCore = 0, offHalo = 0;
+    const tmpPts = exp.tmpPts;
+    const branchBase = exp.primaryCount;
+    for (let bi = 0; bi < exp.bolts.length; bi++) {
+      const b = exp.bolts[bi];
+      if (b.parentIdx >= 0 && exp.forkOrigins[b.parentIdx]) {
+        b.origin.copy(exp.forkOrigins[b.parentIdx]);
+      }
+      generateBoltPath(b, tmpPts);
+      if (bi < branchBase && exp.forkOrigins[bi]) {
+        exp.forkOrigins[bi].copy(tmpPts[4]);
+      }
+      for (let s = 0; s < LIGHTNING_SEGS; s++) {
+        const taper = 1.0 - (s / LIGHTNING_SEGS) * 0.72;
+        const wC = b.baseWidth * taper;
+        const wH = wC * 3.1;
+        offCore = writeRibbonQuadSeg(exp.coreArr, offCore, tmpPts[s], tmpPts[s + 1], wC);
+        offHalo = writeRibbonQuadSeg(exp.haloArr, offHalo, tmpPts[s], tmpPts[s + 1], wH);
+      }
+    }
+    exp.coreGeo.attributes.position.needsUpdate = true;
+    exp.haloGeo.attributes.position.needsUpdate = true;
+  }
+
+  function carveMeshHole(mesh, hitPos, holeR, groundFloorY, allowGroundCarve = false) {
+    const geo = mesh?.geometry;
+    if (!geo || geo.index || !geo.attributes?.position) return false;
+    if (!geo.boundingSphere) geo.computeBoundingSphere();
+    if (geo.boundingSphere && geo.boundingSphere.center.distanceTo(hitPos) > geo.boundingSphere.radius + holeR + 1.5) return false;
+    if (!geo.boundingBox) geo.computeBoundingBox();
+    if (geo.boundingBox && geo.boundingBox.distanceToPoint(hitPos) > holeR + 0.6) return false;
+
+    const posAttr = geo.attributes.position;
+    const normAttr = geo.attributes.normal || null;
+    const uvAttr = geo.attributes.uv || null;
+    const colAttr = geo.attributes.color || null;
+    const posArr = posAttr.array;
+    const normArr = normAttr ? normAttr.array : null;
+    const uvArr = uvAttr ? uvAttr.array : null;
+    const colArr = colAttr ? colAttr.array : null;
+    const colSize = colAttr ? colAttr.itemSize : 0;
+
+    const outPos = [];
+    const outNorm = normArr ? [] : null;
+    const outUv = uvArr ? [] : null;
+    const outCol = colArr ? [] : null;
+    let carved = false;
+    const checkR = holeR + 1.2;
+    const hxMin = hitPos.x - checkR, hxMax = hitPos.x + checkR;
+    const hyMin = hitPos.y - checkR, hyMax = hitPos.y + checkR;
+    const hzMin = hitPos.z - checkR, hzMax = hitPos.z + checkR;
+
+    const pushVert = (v) => {
+      outPos.push(v[0], v[1], v[2]);
+      if (outNorm) outNorm.push(v[3], v[4], v[5]);
+      if (outUv) outUv.push(v[6], v[7]);
+      if (outCol) {
+        outCol.push(v[8], v[9], v[10]);
+        if (colSize === 4) outCol.push(v[11]);
+      }
+    };
+    const lerpVert = (a, b) => {
+      const m = [
+        (a[0] + b[0]) * 0.5, (a[1] + b[1]) * 0.5, (a[2] + b[2]) * 0.5,
+        (a[3] + b[3]) * 0.5, (a[4] + b[4]) * 0.5, (a[5] + b[5]) * 0.5,
+        (a[6] + b[6]) * 0.5, (a[7] + b[7]) * 0.5
+      ];
+      if (outCol) {
+        m.push((a[8] + b[8]) * 0.5, (a[9] + b[9]) * 0.5, (a[10] + b[10]) * 0.5);
+        if (colSize === 4) m.push((a[11] + b[11]) * 0.5);
+      }
+      return m;
+    };
+
+    const emitTri = (a, b, c, depth) => {
+      const minX = Math.min(a[0], b[0], c[0]), maxX = Math.max(a[0], b[0], c[0]);
+      const minY = Math.min(a[1], b[1], c[1]), maxY = Math.max(a[1], b[1], c[1]);
+      const minZ = Math.min(a[2], b[2], c[2]), maxZ = Math.max(a[2], b[2], c[2]);
+      if (maxX < hxMin || minX > hxMax ||
+          maxY < hyMin || minY > hyMax ||
+          maxZ < hzMin || minZ > hzMax) {
+        pushVert(a); pushVert(b); pushVert(c);
+        return;
+      }
+
+      const d01 = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+      const d12 = Math.hypot(b[0] - c[0], b[1] - c[1], b[2] - c[2]);
+      const d20 = Math.hypot(c[0] - a[0], c[1] - a[1], c[2] - a[2]);
+      const maxEdge = Math.max(d01, d12, d20);
+
+      if (maxEdge > 1.35 && depth < 4) {
+        const m01 = lerpVert(a, b);
+        const m12 = lerpVert(b, c);
+        const m20 = lerpVert(c, a);
+        emitTri(a, m01, m20, depth + 1);
+        emitTri(m01, b, m12, depth + 1);
+        emitTri(m20, m12, c, depth + 1);
+        emitTri(m01, m12, m20, depth + 1);
+        return;
+      }
+
+      const cx = (a[0] + b[0] + c[0]) / 3;
+      const cy = (a[1] + b[1] + c[1]) / 3;
+      const cz = (a[2] + b[2] + c[2]) / 3;
+      const nyAbs = Math.abs((a[4] + b[4] + c[4]) / 3);
+      const isGroundSlab = (nyAbs > 0.72 && cy < groundFloorY + 0.30);
+      const dist = Math.hypot(cx - hitPos.x, cy - hitPos.y, cz - hitPos.z);
+
+      if ((allowGroundCarve || (!isGroundSlab && cy > groundFloorY)) && dist < holeR) {
+        carved = true;
+        return;
+      }
+      pushVert(a); pushVert(b); pushVert(c);
+    };
+
+    const readV = (vi) => {
+      const p = vi * 3, u = vi * 2;
+      const v = [
+        posArr[p], posArr[p + 1], posArr[p + 2],
+        normArr ? normArr[p] : 0, normArr ? normArr[p + 1] : 1, normArr ? normArr[p + 2] : 0,
+        uvArr ? uvArr[u] : 0, uvArr ? uvArr[u + 1] : 0
+      ];
+      if (colArr) {
+        const k = vi * colSize;
+        v.push(colArr[k], colArr[k + 1], colArr[k + 2]);
+        if (colSize === 4) v.push(colArr[k + 3]);
+      }
+      return v;
+    };
+
+    const pushRawTri = (vi0, vi1, vi2) => {
+      const p0 = vi0 * 3, p1 = vi1 * 3, p2 = vi2 * 3;
+      outPos.push(
+        posArr[p0], posArr[p0 + 1], posArr[p0 + 2],
+        posArr[p1], posArr[p1 + 1], posArr[p1 + 2],
+        posArr[p2], posArr[p2 + 1], posArr[p2 + 2]
+      );
+      if (outNorm) {
+        outNorm.push(
+          normArr[p0], normArr[p0 + 1], normArr[p0 + 2],
+          normArr[p1], normArr[p1 + 1], normArr[p1 + 2],
+          normArr[p2], normArr[p2 + 1], normArr[p2 + 2]
+        );
+      }
+      if (outUv) {
+        const u0 = vi0 * 2, u1 = vi1 * 2, u2 = vi2 * 2;
+        outUv.push(uvArr[u0], uvArr[u0 + 1], uvArr[u1], uvArr[u1 + 1], uvArr[u2], uvArr[u2 + 1]);
+      }
+      if (outCol) {
+        const c0 = vi0 * colSize, c1 = vi1 * colSize, c2 = vi2 * colSize;
+        for (const ck of [c0, c1, c2]) {
+          outCol.push(colArr[ck], colArr[ck + 1], colArr[ck + 2]);
+          if (colSize === 4) outCol.push(colArr[ck + 3]);
+        }
+      }
+    };
+
+    const vCount = posAttr.count;
+    for (let i = 0; i + 2 < vCount; i += 3) {
+      const p0 = i * 3, p1 = p0 + 3, p2 = p0 + 6;
+      const ax = posArr[p0], bx = posArr[p1], cx = posArr[p2];
+      if ((ax < hxMin && bx < hxMin && cx < hxMin) || (ax > hxMax && bx > hxMax && cx > hxMax)) { pushRawTri(i, i + 1, i + 2); continue; }
+      const ay = posArr[p0 + 1], by = posArr[p1 + 1], cy = posArr[p2 + 1];
+      if ((ay < hyMin && by < hyMin && cy < hyMin) || (ay > hyMax && by > hyMax && cy > hyMax)) { pushRawTri(i, i + 1, i + 2); continue; }
+      const az = posArr[p0 + 2], bz = posArr[p1 + 2], cz = posArr[p2 + 2];
+      if ((az < hzMin && bz < hzMin && cz < hzMin) || (az > hzMax && bz > hzMax && cz > hzMax)) { pushRawTri(i, i + 1, i + 2); continue; }
+      emitTri(readV(i), readV(i + 1), readV(i + 2), 0);
+    }
+
+    if (!carved) return false;
+    const ng = new THREE.BufferGeometry();
+    ng.setAttribute('position', new THREE.Float32BufferAttribute(outPos, 3));
+    if (outNorm) ng.setAttribute('normal', new THREE.Float32BufferAttribute(outNorm, 3));
+    if (outUv) ng.setAttribute('uv', new THREE.Float32BufferAttribute(outUv, 2));
+    if (outCol) ng.setAttribute('color', new THREE.Float32BufferAttribute(outCol, colSize));
+    ng.computeBoundingSphere();
+    ng.computeBoundingBox();
+    mesh.geometry = ng;
+    geo.dispose();
+    return true;
+  }
+
+  function spawnRealisticExplosionFX(hitPos) {
+    if (!rootGroup) return;
+    while (activeExplosions.length >= 3) {
+      disposeExplosion(activeExplosions.shift());
+    }
+    const tex = getExplosionTextures();
+    const expGrp = new THREE.Group();
+    expGrp.position.copy(hitPos);
+    expGrp.userData.isBreachDebris = true;
+
+    const ringGeo = new THREE.TorusGeometry(1, 0.085, 8, 36);
+    ringGeo.rotateX(Math.PI * 0.5);
+
+    // Use pooled blast light so NUM_POINT_LIGHTS never changes & forces synchronous shader recompilation
+    Render.spawnBlastLight?.(hitPos, 0xFF922E, 32, 52, 1.45);
+
+    // 0. Intense Initial Plasma Flash Sprite (0..0.32s)
+    const flashMat = new THREE.SpriteMaterial({
+      map: tex.flashTex, color: 0xFFF8D6, transparent: true, opacity: 1.0,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    const flashSprite = new THREE.Sprite(flashMat);
+    flashSprite.position.set(0, 1.0, 0);
+    flashSprite.scale.setScalar(1.8);
+    expGrp.add(flashSprite);
+
+    // 1. 8 Well-Spaced Volumetric Turbulent Fireball Sprites (crisp fire without heavy overdraw)
+    const fireTints = [0xFFFFFF, 0xFFE699, 0xFFAA33, 0xFF6B1A, 0xFF4500];
+    const fireLobes = [];
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + (i % 2) * 0.3;
+      const rad = i < 2 ? 0.35 + i * 0.25 : (1.1 + (i % 3) * 0.6);
+      const isAdditive = i < 4;
+      const mat = new THREE.SpriteMaterial({
+        map: tex.fireTex,
+        color: fireTints[i < 2 ? 0 : (1 + (i % (fireTints.length - 1)))],
+        transparent: true,
+        opacity: isAdditive ? 0.92 : 0.88,
+        blending: isAdditive ? THREE.AdditiveBlending : THREE.NormalBlending,
+        rotation: (i * 0.91) % (Math.PI * 2),
+        depthWrite: false
+      });
+      const sp = new THREE.Sprite(mat);
+      const oy = 0.55 + (i % 4) * 0.75;
+      sp.position.set(Math.cos(a) * rad, oy, Math.sin(a) * rad);
+      sp.scale.setScalar(1.0);
+      expGrp.add(sp);
+      fireLobes.push({
+        mesh: sp, mat,
+        isAdditive,
+        maxScale: 2.8 + (i % 4) * 0.45,
+        riseSpeed: 2.0 + (i % 4) * 0.95,
+        rotSpeed: (i % 2 === 0 ? 1 : -1) * (0.45 + (i % 3) * 0.2),
+        radialDrift: new THREE.Vector3(Math.cos(a) * (0.75 + (i % 3) * 0.45), 0, Math.sin(a) * (0.75 + (i % 3) * 0.45)),
+        delay: i < 3 ? 0 : (i - 2) * 0.02
+      });
+    }
+
+    // 2. 8 Rising Cauliflower Mushroom Smoke Plumes
+    const smokeLobes = [];
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + 0.2;
+      const rr = i < 3 ? 0.7 + i * 0.35 : 1.7 + (i % 3) * 0.65;
+      const mat = new THREE.SpriteMaterial({
+        map: tex.smokeTex,
+        color: i < 2 ? 0x6B4535 : (i % 2 === 0 ? 0x26211E : 0x352F2B),
+        transparent: true,
+        opacity: 0.0,
+        rotation: (i * 1.13) % (Math.PI * 2),
+        depthWrite: false
+      });
+      const sp = new THREE.Sprite(mat);
+      sp.position.set(Math.cos(a) * rr * 0.45, 1.0 + i * 0.45, Math.sin(a) * rr * 0.45);
+      expGrp.add(sp);
+      smokeLobes.push({
+        mesh: sp, mat,
+        baseX: Math.cos(a) * rr,
+        baseZ: Math.sin(a) * rr,
+        startY: 1.0 + (i % 4) * 0.7,
+        riseSpeed: 2.5 + (i % 4) * 0.65,
+        rotSpeed: (i % 2 === 0 ? -1 : 1) * (0.28 + (i % 3) * 0.14),
+        maxScale: 3.2 + (i % 4) * 0.55
+      });
+    }
+
+    // 3. 6 Lingering Crater/Breach Flame Sprites burning in the hole/crater
+    const lingeringFlames = [];
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + 0.2;
+      const d = i < 2 ? 0.5 + i * 0.35 : 1.5 + (i % 3) * 0.75;
+      const fx = Math.cos(a) * d, fz = Math.sin(a) * d;
+      const ghLocal = World.getHeight(hitPos.x + fx, hitPos.z + fz) - hitPos.y;
+      const mat = new THREE.SpriteMaterial({
+        map: tex.fireTex,
+        color: i % 2 === 0 ? 0xFF9422 : 0xFFD24D,
+        transparent: true, opacity: 0.85,
+        blending: THREE.AdditiveBlending,
+        rotation: (i * 0.9) % (Math.PI * 2),
+        depthWrite: false
+      });
+      const sp = new THREE.Sprite(mat);
+      sp.position.set(fx, Math.max(-3.0, Math.min(2.2, ghLocal + 0.55)), fz);
+      sp.scale.set(1.1, 1.5, 1);
+      expGrp.add(sp);
+      lingeringFlames.push({ mesh: sp, mat, phase: i * 1.37, baseScale: 1.15 + (i % 3) * 0.32 });
+    }
+
+    // 4. Supersonic expanding shockwave torus ring
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xFFE3A8, transparent: true, opacity: 0.85,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    const shockRing = new THREE.Mesh(ringGeo, ringMat);
+    shockRing.position.set(0, 0.45, 0);
+    expGrp.add(shockRing);
+
+    // 5. 14 Primary + 10 Forked Razor-Sharp 3D Lightning Bolts (petir)
+    const primaryCount = 14;
+    const forkCount = 10;
+    const bolts = [];
+    const forkOrigins = Array.from({ length: primaryCount }, () => new THREE.Vector3());
+    for (let i = 0; i < primaryCount; i++) {
+      const az = (i / primaryCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.22;
+      const el = i < 4 ? (-0.05 + (i % 2) * 0.12) : (0.28 + (i % 4) * 0.24);
+      const dir = new THREE.Vector3(Math.cos(az) * Math.cos(el), Math.sin(el), Math.sin(az) * Math.cos(el)).normalize();
+      bolts.push({
+        origin: new THREE.Vector3(0, i < 4 ? 0.5 : 1.1, 0),
+        dir, len: i < 4 ? (6.5 + i * 0.8) : (10.0 + (i % 4) * 1.9),
+        jitter: i < 4 ? 0.85 : 1.25,
+        baseWidth: 0.032, parentIdx: -1
+      });
+    }
+    for (let fi = 0; fi < forkCount; fi++) {
+      const parent = bolts[fi];
+      const forkDir = parent.dir.clone()
+        .add(new THREE.Vector3((Math.random() - 0.5) * 0.9, 0.22 + Math.random() * 0.55, (Math.random() - 0.5) * 0.9))
+        .normalize();
+      bolts.push({
+        origin: new THREE.Vector3(0, 1.5, 0),
+        dir: forkDir, len: 5.2 + (fi % 3) * 1.3, jitter: 0.80,
+        baseWidth: 0.020, parentIdx: fi
+      });
+    }
+
+    const totalFloats = bolts.length * LIGHTNING_SEGS * 36;
+    const coreArr = new Float32Array(totalFloats);
+    const haloArr = new Float32Array(totalFloats);
+    const coreGeo = new THREE.BufferGeometry();
+    coreGeo.setAttribute('position', new THREE.BufferAttribute(coreArr, 3));
+    const haloGeo = new THREE.BufferGeometry();
+    haloGeo.setAttribute('position', new THREE.BufferAttribute(haloArr, 3));
+    const coreMat = new THREE.MeshBasicMaterial({
+      color: 0xFFFFFF, side: THREE.DoubleSide, transparent: true, opacity: 0.98,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    const haloMat = new THREE.MeshBasicMaterial({
+      color: 0x38E8FF, side: THREE.DoubleSide, transparent: true, opacity: 0.36,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    const lightningCoreMesh = new THREE.Mesh(coreGeo, coreMat);
+    const lightningHaloMesh = new THREE.Mesh(haloGeo, haloMat);
+    lightningCoreMesh.frustumCulled = false;
+    lightningHaloMesh.frustumCulled = false;
+    expGrp.add(lightningHaloMesh, lightningCoreMesh);
+
+    const exp = {
+      group: expGrp,
+      age: 0,
+      maxAge: 4.0,
+      boltTimer: 0,
+      flashSprite,
+      flashMat,
+      fireLobes,
+      smokeLobes,
+      lingeringFlames,
+      shockRing,
+      ringMat,
+      bolts,
+      primaryCount,
+      forkOrigins,
+      tmpPts: Array.from({ length: LIGHTNING_SEGS + 1 }, () => new THREE.Vector3()),
+      coreArr, haloArr, coreGeo, haloGeo, coreMat, haloMat,
+      sharedUnitGeos: [ringGeo]
+    };
+    updateExplosionLightning(exp);
+    rootGroup.add(expGrp);
+    activeExplosions.push(exp);
+    return exp;
+  }
+
+  function detonateRocket(hitPos, hitNormal, radius = 8.5, owner = 'player', targets = [], onHitTarget = null) {
+    const holeR = 3.2;
+    const preHitGroundH = World.getHeight(hitPos.x, hitPos.z);
+    const groundFloorY = preHitGroundH + 0.25;
+    const isGroundHit = ((hitNormal && hitNormal.y > 0.55) && hitPos.y <= preHitGroundH + 1.5) || hitPos.y <= preHitGroundH + 0.55;
+    let holeCarved = false;
+    let craterCarved = false;
+
+    if (isGroundHit && World.carveTerrainCrater) {
+      World.carveTerrainCrater(hitPos.x, hitPos.z, Math.max(5.4, radius * 0.65), 2.65);
+      craterCarved = true;
+    }
+
+    const tryCarveRoot = (container) => {
+      if (!container) return;
+      container.traverse((o) => {
+        if (o.isMesh && o.geometry && !o.geometry.index && !o.userData.isBreachDebris) {
+          if (carveMeshHole(o, hitPos, holeR, groundFloorY, isGroundHit)) holeCarved = true;
+        }
+      });
+    };
+    tryCarveRoot(rootGroup);
+    tryCarveRoot(Render.scene?.getObjectByName('PulauRajawaliDetail'));
+
+    // Spawn lightweight shared 3D charred breach rim & twisted rebar + fallen masonry rubble
+    if (rootGroup) {
+      if (!sharedBreachBoxGeo) sharedBreachBoxGeo = new THREE.BoxGeometry(0.55, 0.40, 0.38);
+      if (!sharedBreachRodGeo) sharedBreachRodGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.72, 6);
+      const breachGrp = new THREE.Group();
+      breachGrp.position.copy(hitPos);
+      const n = (hitNormal && hitNormal.lengthSq() > 0.1) ? hitNormal.clone().normalize() : new THREE.Vector3(0, 1, 0);
+      const t1 = new THREE.Vector3().crossVectors(Math.abs(n.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0), n).normalize();
+      const t2 = new THREE.Vector3().crossVectors(n, t1).normalize();
+      const scorchMat = Assets.get('charredScorch') || Assets.get('concrete');
+      const brickMat = Assets.get('brick') || scorchMat;
+      const rustMat = Assets.get('rust') || scorchMat;
+      const ringChunks = 8;
+      for (let i = 0; i < ringChunks; i++) {
+        const a = (i / ringChunks) * Math.PI * 2 + (i % 2) * 0.18;
+        const rr = holeR * 1.05 + (i % 3) * 0.14;
+        const cx = t1.x * Math.cos(a) * rr + t2.x * Math.sin(a) * rr;
+        const cy = t1.y * Math.cos(a) * rr + t2.y * Math.sin(a) * rr;
+        const cz = t1.z * Math.cos(a) * rr + t2.z * Math.sin(a) * rr;
+        if (hitPos.y + cy < groundFloorY + 0.05) continue;
+        const chunk = new THREE.Mesh(sharedBreachBoxGeo, i % 3 === 0 ? brickMat : scorchMat);
+        chunk.scale.set(0.85 + (i % 3) * 0.25, 0.85 + (i % 2) * 0.3, 0.9);
+        chunk.position.set(cx, cy, cz);
+        chunk.rotation.set(a * 0.7, a * 1.1, i * 0.5);
+        chunk.userData.isBreachDebris = true;
+        chunk.castShadow = false;
+        breachGrp.add(chunk);
+        if (i % 2 === 0) {
+          const rod = new THREE.Mesh(sharedBreachRodGeo, rustMat);
+          rod.position.set(cx * 0.94, cy * 0.94, cz * 0.94);
+          rod.rotation.set(0.4 + a, a, 0.3);
+          rod.userData.isBreachDebris = true;
+          breachGrp.add(rod);
+        }
+      }
+      // Scatter charred blasted rocks around terrain crater rim or scorch disc on elevated structural floors
+      const postGh = World.getHeight(hitPos.x, hitPos.z);
+      if (craterCarved) {
+        for (let rb = 0; rb < 6; rb++) {
+          const ang = (rb / 6) * Math.PI * 2 + 0.3;
+          const distR = rb < 3 ? 2.0 + rb * 0.55 : 4.2 + (rb % 2) * 0.9;
+          const rx = Math.cos(ang) * distR, rz = Math.sin(ang) * distR;
+          const ry = World.getHeight(hitPos.x + rx, hitPos.z + rz) - hitPos.y;
+          const bld = new THREE.Mesh(sharedBreachBoxGeo, scorchMat);
+          bld.scale.set(1.0 + (rb % 2) * 0.35, 0.85, 1.1);
+          bld.position.set(rx, ry + 0.12, rz);
+          bld.rotation.set(rb * 0.4, ang, rb * 0.6);
+          bld.userData.isBreachDebris = true;
+          breachGrp.add(bld);
+        }
+      } else if (hitPos.y - postGh < 4.5) {
+        const crater = new THREE.Mesh(new THREE.CylinderGeometry(holeR * 0.85, holeR * 1.05, 0.12, 16), scorchMat);
+        crater.position.set(0, postGh - hitPos.y + 0.06, 0);
+        crater.userData.isBreachDebris = true;
+        breachGrp.add(crater);
+      }
+      rootGroup.add(breachGrp);
+      spawnRealisticExplosionFX(hitPos);
+    }
+
+    // Carve physical collision so player & bots can walk or shoot right through the hole
+    Physics.carveExplosionHole?.(hitPos, holeR * 0.95);
+    for (let i = 0; i < glassPanes.length; i++) {
+      const gp = glassPanes[i];
+      if (!gp.shattered && Math.hypot(gp.x - hitPos.x, gp.y - hitPos.y, gp.z - hitPos.z) < radius * 1.1) {
+        gp.shatter();
+      }
+    }
+    for (let i = 0; i < doors.length; i++) {
+      const dr = doors[i];
+      const dDoor = Math.hypot(dr.cx - hitPos.x, dr.cy - hitPos.y, dr.cz - hitPos.z);
+      if (dDoor < holeR * 1.15) {
+        dr.isOpen = true;
+        dr.animT = 1;
+        dr.pivot.visible = false;
+        dr.collider.disabled = true;
+      } else if (!dr.isOpen && dDoor < radius * 0.85) {
+        dr.toggle(false);
+      }
+    }
+
+    // Explosive thunder + Chidori lightning sound + debris particles (no redundant sphere flashes)
+    AudioSys.playExplosion?.(hitPos, false);
+    AudioSys.playChidori?.('burst', hitPos);
+    for (let p = 0; p < 36; p++) {
+      const a = Math.random() * Math.PI * 2;
+      const spd = 5 + Math.random() * 17;
+      const col = p < 18 ? 0xFF7A1A : p < 28 ? 0x80F5FF : p < 42 ? 0x6B3E26 : 0x26282B;
+      Ballistics.spawnParticle?.(
+        hitPos,
+        new THREE.Vector3(Math.cos(a) * spd, 3.0 + Math.random() * 13, Math.sin(a) * spd),
+        col,
+        3.0 + Math.random() * 2.8,
+        0.65 + Math.random() * 0.75,
+        p < 28 ? 3.5 : 15
+      );
+    }
+
+    // Splash damage to AI bots & range targets
+    if (Array.isArray(targets)) {
+      for (let i = 0; i < targets.length; i++) {
+        const t = targets[i];
+        if (!t || !t.alive) continue;
+        const d = Math.hypot(t.pos.x - hitPos.x, (t.pos.y + 1.0) - hitPos.y, t.pos.z - hitPos.z);
+        if (d < radius) {
+          const dmg = 280 * (1 - d / radius);
+          const dir = new THREE.Vector3(t.pos.x - hitPos.x, 0.5, t.pos.z - hitPos.z).normalize();
+          if (onHitTarget) onHitTarget(t, dmg, 'chest', d, hitPos, dir, owner);
+          else if (t.isBot) AI.applyBotDamage?.(t, dmg, 'chest', d, hitPos, dir, owner);
+        }
+      }
+    }
+
+    if (typeof UI !== 'undefined' && owner === 'player' && (holeCarved || craterCarved)) {
+      UI.showAlertBanner?.(
+        holeCarved
+          ? 'LEDAKAN BASOKA! Dinding Hancur Berlubang + Api & Petir!'
+          : 'TANAH HANCUR BERKUBANG! Ledakan Api & Petir Menggelegar!',
+        2.4
+      );
+    }
+    return { holeCarved, craterCarved };
+  }
+
   function findNearestDoor(pos, maxDist = 2.6) {
     let best = null, bestD = maxDist;
     for (let i = 0; i < doors.length; i++) {
@@ -2276,6 +3106,21 @@ const WorldBuildings = (() => {
     return best;
   }
 
+  function disposeExplosion(exp) {
+    if (!exp || !exp.group) return;
+    if (exp.group.parent) exp.group.parent.remove(exp.group);
+    exp.coreGeo?.dispose();
+    exp.haloGeo?.dispose();
+    exp.coreMat?.dispose();
+    exp.haloMat?.dispose();
+    exp.ringMat?.dispose();
+    exp.flashMat?.dispose();
+    if (exp.sharedUnitGeos) exp.sharedUnitGeos.forEach(g => g.dispose());
+    for (let i = 0; i < exp.fireLobes.length; i++) exp.fireLobes[i].mat.dispose();
+    for (let i = 0; i < exp.smokeLobes.length; i++) exp.smokeLobes[i].mat.dispose();
+    for (let i = 0; i < exp.lingeringFlames.length; i++) exp.lingeringFlames[i].mat.dispose();
+  }
+
   function update(dt, elapsed) {
     if (radarMesh) radarMesh.rotation.y += dt * 0.9;
     if (beaconMesh) beaconMesh.visible = Math.sin(elapsed * 4.2) > 0.1;
@@ -2287,16 +3132,126 @@ const WorldBuildings = (() => {
         d.pivot.rotation.y = d.baseYaw + d.animT * Math.PI * 0.54;
       }
     }
+
+    const adt = Math.min(0.05, Math.max(0.001, dt || 0.016));
+    for (let ei = activeExplosions.length - 1; ei >= 0; ei--) {
+      const exp = activeExplosions[ei];
+      exp.age += adt;
+      const age = exp.age;
+
+      // 0. Rapid Initial Plasma Flash (0..0.28s, capped scale 5.2 to limit overdraw)
+      if (exp.flashSprite && exp.flashMat) {
+        const flT = Util.clamp(age / 0.28, 0, 1);
+        exp.flashSprite.visible = flT < 1;
+        if (flT < 1) {
+          exp.flashSprite.scale.setScalar(1.6 + Math.sin(flT * Math.PI * 0.5) * 3.6);
+          exp.flashMat.opacity = (1 - flT) * (1 - flT);
+        }
+      }
+
+      // 1. Shockwave torus ring (0..0.44s)
+      const ringT = Util.clamp(age / 0.44, 0, 1);
+      exp.shockRing.visible = ringT < 1;
+      if (ringT < 1) {
+        const rs = 0.8 + ringT * 17.5;
+        exp.shockRing.scale.set(rs, rs, 1);
+        exp.ringMat.opacity = (1 - ringT) * 0.8;
+      }
+
+      // 2. Volumetric Turbulent Fireball Sprites (0..1.45s)
+      for (let i = 0; i < exp.fireLobes.length; i++) {
+        const fl = exp.fireLobes[i];
+        const fAge = Math.max(0, age - fl.delay);
+        const ft = Util.clamp(fAge / 1.45, 0, 1);
+        fl.mesh.visible = ft < 1;
+        if (ft < 1) {
+          const grow = Math.min(1, Math.pow(ft * 4.8, 0.48));
+          const fadeOut = ft > 0.32 ? 1 - Util.smoothstep(0.32, 1.0, ft) : 1.0;
+          const sc = fl.maxScale * grow * (0.90 + 0.12 * Math.sin(elapsed * 22 + i));
+          fl.mesh.scale.set(sc, sc * 1.12, 1);
+          fl.mesh.position.y += fl.riseSpeed * adt * (1 - ft * 0.45);
+          fl.mesh.position.x += fl.radialDrift.x * adt * (1 - ft * 0.65);
+          fl.mesh.position.z += fl.radialDrift.z * adt * (1 - ft * 0.65);
+          fl.mat.rotation += fl.rotSpeed * adt;
+          fl.mat.opacity = (fl.isAdditive ? 0.92 : 0.88) * fadeOut;
+        }
+      }
+
+      // 3. Billowing Mushroom Smoke Plume (0.04..4.0s)
+      for (let i = 0; i < exp.smokeLobes.length; i++) {
+        const sm = exp.smokeLobes[i];
+        const st = Util.clamp(age / 4.0, 0, 1);
+        sm.mesh.visible = st < 1;
+        if (st < 1) {
+          const expand = Util.clamp(0.2 + st * 1.65, 0.2, 1.4);
+          const sc = sm.maxScale * expand;
+          sm.mesh.scale.set(sc, sc * 0.92, 1);
+          const mushroomSpread = 0.8 + st * 1.45;
+          sm.mesh.position.set(
+            sm.baseX * mushroomSpread,
+            sm.startY + st * sm.riseSpeed * 3.4,
+            sm.baseZ * mushroomSpread
+          );
+          sm.mat.rotation += sm.rotSpeed * adt;
+          sm.mat.opacity = st < 0.14 ? (st / 0.14) * 0.82 : (1 - Util.smoothstep(0.45, 1.0, st)) * 0.82;
+        }
+      }
+
+      // 4. Razor-Sharp Branching Lightning Bolts / Petir (0..1.25s)
+      const ltT = Util.clamp(age / 1.25, 0, 1);
+      const showBolts = ltT < 1;
+      exp.coreMat.visible = showBolts;
+      exp.haloMat.visible = showBolts;
+      if (showBolts) {
+        exp.boltTimer += adt;
+        if (exp.boltTimer >= 0.04) {
+          exp.boltTimer = 0;
+          updateExplosionLightning(exp);
+        }
+        const flicker = 0.6 + 0.4 * Math.sin(age * 74.0);
+        const fade = 1 - Util.smoothstep(0.48, 1.0, ltT);
+        exp.coreMat.opacity = 0.98 * fade * flicker;
+        exp.haloMat.opacity = 0.38 * fade * flicker;
+      }
+
+      // 5. Lingering Turbulent Crater/Wall Flames (0..maxAge)
+      const flameFade = age > exp.maxAge - 1.1 ? Math.max(0, (exp.maxAge - age) / 1.1) : 1.0;
+      for (let i = 0; i < exp.lingeringFlames.length; i++) {
+        const lf = exp.lingeringFlames[i];
+        const flickerY = 0.78 + 0.38 * Math.sin(elapsed * 20 + lf.phase);
+        const flickerX = 0.86 + 0.2 * Math.cos(elapsed * 16 + lf.phase);
+        lf.mesh.scale.set(lf.baseScale * flickerX, lf.baseScale * flickerY * flameFade, 1);
+        lf.mat.rotation = Math.sin(elapsed * 8 + lf.phase) * 0.25;
+        lf.mat.opacity = 0.78 * flameFade;
+      }
+
+      if (age >= exp.maxAge) {
+        disposeExplosion(exp);
+        activeExplosions.splice(ei, 1);
+      }
+    }
   }
 
   function dispose(scene) {
+    for (let i = 0; i < activeExplosions.length; i++) {
+      disposeExplosion(activeExplosions[i]);
+    }
+    activeExplosions.length = 0;
+    if (cachedExpTex) {
+      cachedExpTex.fireTex?.dispose();
+      cachedExpTex.smokeTex?.dispose();
+      cachedExpTex.flashTex?.dispose();
+      cachedExpTex = null;
+    }
     if (rootGroup) {
-      rootGroup.traverse((o) => { if (o.geometry && o.geometry !== sharedDoorGeo && o.geometry !== sharedGlassGeo) o.geometry.dispose(); });
+      rootGroup.traverse((o) => { if (o.geometry && o.geometry !== sharedDoorGeo && o.geometry !== sharedGlassGeo && o.geometry !== sharedBreachBoxGeo && o.geometry !== sharedBreachRodGeo) o.geometry.dispose(); });
       scene.remove(rootGroup);
       rootGroup = null;
     }
     if (sharedDoorGeo) { sharedDoorGeo.dispose(); sharedDoorGeo = null; }
     if (sharedGlassGeo) { sharedGlassGeo.dispose(); sharedGlassGeo = null; }
+    if (sharedBreachBoxGeo) { sharedBreachBoxGeo.dispose(); sharedBreachBoxGeo = null; }
+    if (sharedBreachRodGeo) { sharedBreachRodGeo.dispose(); sharedBreachRodGeo = null; }
     radarMesh = null; beaconMesh = null;
   }
 
@@ -2322,12 +3277,13 @@ const WorldBuildings = (() => {
   }
 
   return {
-    build, update, dispose, findNearestDoor, setNightMode, setTimeOfDay,
+    build, update, dispose, findNearestDoor, setNightMode, setTimeOfDay, detonateRocket,
     get footprints() { return footprints; },
     get lootPads() { return lootPads; },
     get doors() { return doors; },
     get glassPanes() { return glassPanes; },
-    get bridges() { return bridges; }
+    get bridges() { return bridges; },
+    get activeExplosions() { return activeExplosions; }
   };
 })();
 
@@ -2914,7 +3870,14 @@ const WorldFlora = (() => {
       else if (VK.noise3(gx * 0.045, 1.7, gz * 0.045) < 0.26 + sl.k * 0.22) show = false;
       else if (World.isUrbanPlaza(gx, gz) || World.getRoadDistFast(gx, gz) < 4.5 || World.getRiverDistFast(gx, gz) < 18) show = false;
       else if (Math.abs(World.getHeight(gx + 1.4, gz) - gh) > 0.95) show = false;
-      else {
+      else if (World.craters.length) {
+        for (let ci = 0; ci < World.craters.length; ci++) {
+          const cr = World.craters[ci];
+          const cdx = gx - cr.x, cdz = gz - cr.z;
+          if (cdx * cdx + cdz * cdz < (cr.r * 1.18) * (cr.r * 1.18)) { show = false; break; }
+        }
+      }
+      if (show) {
         for (let bi = 0; bi < near.length; bi++) {
           const f = near[bi];
           if (gx >= f.minX - 0.25 && gx <= f.maxX + 0.25 && gz >= f.minZ - 0.25 && gz <= f.maxZ + 0.25) { show = false; break; }
@@ -2934,6 +3897,10 @@ const WorldFlora = (() => {
     grassMesh.instanceMatrix.needsUpdate = true;
   }
 
+  function refreshGrass() {
+    lastGrassCenter.set(99999, 0, 99999);
+  }
+
   function dispose(scene) {
     if (floraGroup) {
       floraGroup.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
@@ -2945,7 +3912,7 @@ const WorldFlora = (() => {
     grassMesh = null; grassMat = null; semakGeo = null; semakMat = null; grassSlots.length = 0;
   }
 
-  return { build, update, dispose, addBushes };
+  return { build, update, dispose, addBushes, refreshGrass };
 })();
 
 // ════════════════════════════════════════════════════════════════════════════

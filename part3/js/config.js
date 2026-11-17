@@ -34,7 +34,7 @@ const CONFIG = {
   },
   camera: { fov: 75, near: 0.05, far: 1500, viewmodelFov: 58, tppOffset: [0.45, 0.25, 2.2] },
   ballistics: { gravity: 9.81, maxLife: 3.0, maxDist: 1200, convergence: 80, ballisticDt: 1 / 120 },
-  ammoDrag: { '556': 0.0009, '762': 0.0007, '45': 0.0022, '9mm': 0.0020, '12ga': 0.0040 },
+  ammoDrag: { '556': 0.0009, '762': 0.0007, '45': 0.0022, '9mm': 0.0020, '12ga': 0.0040, 'rocket': 0.0001 },
   hitMult: { head: 2.35, neck: 1.60, chest: 1.00, abdomen: 0.95, arm: 0.90, leg: 0.80 },
   armor: {
     helm: [ { abs: 0.30, dur: 80 }, { abs: 0.40, dur: 150 }, { abs: 0.55, dur: 230 } ],

@@ -60,15 +60,15 @@ const Player = (() => {
     }
   };
 
-  const ammoReserve = { '556': 180, '762': 150, '45': 120, '9mm': 90, '12ga': 40, 'none': 0 };
+  const ammoReserve = { '556': 180, '762': 150, '45': 120, '9mm': 90, '12ga': 40, 'rocket': 30, 'none': 0 };
   const meds = { medkit: 1, firstaid: 2, bandage: 5, drink: 2, painkiller: 1, adrenaline: 1 };
   const throwables = { frag: 2, smoke: 1, flashbang: 1 };
   const looseAtts = [];
   let castState = { active: false, key: '', label: '', timer: 0, total: 0 };
 
   const slots = [
-    { id: 'm416', mag: 30, mode: 'auto', att: { optic: 'reddot', muzzle: 'comp', grip: 'vertgrip', mag: 'extmag', stock: 'tacstock' } },
-    { id: 'kar98k', mag: 5, mode: 'single', att: { optic: 'scope4x', muzzle: 'suppressor', stock: 'cheekpad' } },
+    { id: 'm416', mag: 50, mode: 'auto', att: { optic: 'reddot', muzzle: 'comp', grip: 'vertgrip', mag: 'extmag', stock: 'tacstock' } },
+    { id: 'bazooka', mag: 20, mode: 'auto', att: { optic: 'reddot' } },
     { id: 'p92', mag: 15, mode: 'single', att: { optic: null, muzzle: 'suppressor', mag: null } },
     { id: 'pan', mag: 0, mode: 'melee', att: {} }
   ];
@@ -90,12 +90,12 @@ const Player = (() => {
     const cx = -110, cz = 280;
     const baseH = World.getHeight(cx, cz);
 
-    // Concrete firing platform & shelter roof
-    const pad = new THREE.Mesh(new THREE.BoxGeometry(28, 0.4, 8), Assets.get('concrete'));
-    pad.position.set(cx, baseH + 0.15, cz + 35);
+    // Flush asphalt road firing line & weapon rack table
+    const pad = new THREE.Mesh(new THREE.BoxGeometry(28, 0.12, 8), Assets.get('asphalt'));
+    pad.position.set(cx, baseH + 0.02, cz + 35);
     pad.receiveShadow = true;
     rangeGroup.add(pad);
-    Physics.addCollider({ minX: cx - 14, maxX: cx + 14, minY: baseH - 1, maxY: baseH + 0.35, minZ: cz + 31, maxZ: cz + 39, mat: 'concrete', tag: 'range' });
+    Physics.addCollider({ minX: cx - 14, maxX: cx + 14, minY: baseH - 1, maxY: baseH + 0.08, minZ: cz + 31, maxZ: cz + 39, mat: 'asphalt', tag: 'range' });
 
     // Low concrete cover wall (vaultable height 1.05m for M3 Vault test!)
     const vaultWall = new THREE.Mesh(new THREE.BoxGeometry(8, 1.05, 0.5), Assets.get('brick'));
@@ -117,23 +117,23 @@ const Player = (() => {
     rangeGroup.add(steelPlate);
     Physics.addCollider({ minX: cx - 9.6, maxX: cx - 6.4, minY: baseH, maxY: baseH + 2.4, minZ: cz + 9.9, maxZ: cz + 10.1, mat: 'metal', tag: 'range' });
 
-    // Arsenal Weapon Rack along Firing Line (All 11 Weapons + Attachments)
+    // Arsenal Weapon Rack along Firing Line (All Weapons + Attachments)
     const table = new THREE.Mesh(new THREE.BoxGeometry(16, 0.9, 1.2), Assets.get('wood'));
-    table.position.set(cx + 4, baseH + 0.65, cz + 37.5);
+    table.position.set(cx + 4, baseH + 0.52, cz + 37.5);
     table.castShadow = true; table.receiveShadow = true;
     rangeGroup.add(table);
-    Physics.addCollider({ minX: cx - 4, maxX: cx + 12, minY: baseH, maxY: baseH + 1.1, minZ: cz + 36.9, maxZ: cz + 38.1, mat: 'wood', tag: 'range' });
+    Physics.addCollider({ minX: cx - 4, maxX: cx + 12, minY: baseH, maxY: baseH + 0.97, minZ: cz + 36.9, maxZ: cz + 38.1, mat: 'wood', tag: 'range' });
 
     const wKeys = Object.keys(WEAPONS_DB);
     wKeys.forEach((wk, i) => {
-      const rx = (cx - 3.2) + i * 1.4;
+      const rx = (cx - 3.6) + i * 1.25;
       const rz = cz + 37.5;
       const built = ModelBuilders.buildWeaponModel(wk, {});
-      built.root.position.set(rx, baseH + 1.25, rz);
+      built.root.position.set(rx, baseH + 1.12, rz);
       built.root.rotation.y = Math.PI * 0.5;
       built.root.scale.setScalar(1.3);
       rangeGroup.add(built.root);
-      rackPickups.push({ x: rx, y: baseH + 1.25, z: rz, weaponId: wk, label: `F — Ambil ${WEAPONS_DB[wk].name}` });
+      rackPickups.push({ x: rx, y: baseH + 1.12, z: rz, weaponId: wk, label: `F — Ambil ${WEAPONS_DB[wk].name}` });
     });
 
     function addDummyTarget(tx, tz, moving, label) {
@@ -206,7 +206,7 @@ const Player = (() => {
     rangeGroup.add(cityTable);
     Physics.addCollider({ minX: cityRx - 4.4, maxX: cityRx + 4.4, minY: cityH, maxY: cityH + 0.92, minZ: cityRz - 0.55, maxZ: cityRz + 0.55, mat: 'wood', tag: 'range' });
     wKeys.forEach((wk, i) => {
-      const wx = (cityRx - 3.8) + i * 0.76;
+      const wx = (cityRx - 3.8) + i * 0.68;
       const built = ModelBuilders.buildWeaponModel(wk, {});
       built.root.traverse(m => { if (m.isMesh) m.castShadow = false; });
       built.root.position.set(wx, cityH + 1.05, cityRz);
@@ -296,13 +296,26 @@ const Player = (() => {
     return magAtt?.extended ? def.magExt : def.mag;
   }
 
+  function selectSlot(slotIdx) {
+    const idx = Util.clamp(slotIdx | 0, 0, 3);
+    if (idx === 1 && (!slots[1] || slots[1].id !== 'bazooka')) {
+      slots[1] = { id: 'bazooka', mag: WEAPONS_DB.bazooka.mag, mode: 'auto', att: { optic: 'reddot' } };
+    }
+    activeSlot = idx;
+    fireCd = 0; reloadTimer = 0; boltTimer = 0; recoilIdx = 0;
+    vmBuildKey = '';
+    rebuildActiveWeaponMesh();
+    updateHUD(0.2);
+    AudioSys.playUiTone?.('click');
+  }
+
   function equipWeaponInSlot(weaponId, slotIdx = activeSlot) {
     const def = WEAPONS_DB[weaponId];
     if (!def) return;
     const targetSlot = def.class === 'Pistol' ? 2 : def.class === 'Melee' ? 3 : (slotIdx > 1 ? 0 : slotIdx);
     slots[targetSlot] = { id: weaponId, mag: def.mag, mode: def.modes[0], att: { ...slots[targetSlot].att } };
     activeSlot = targetSlot;
-    reloadTimer = 0; boltTimer = 0; recoilIdx = 0;
+    fireCd = 0; reloadTimer = 0; boltTimer = 0; recoilIdx = 0;
     vmBuildKey = '';
     rebuildActiveWeaponMesh();
     AudioSys.playMechanical('reload_mag');
@@ -332,26 +345,26 @@ const Player = (() => {
     castState.active = false;
     if (mode === 'practice') {
       helm = { level: 2, dur: 150 }; vest = { level: 2, dur: 220 }; bag = { level: 2, cap: 330 };
-      Object.assign(ammoReserve, { '556': 180, '762': 150, '45': 120, '9mm': 90, '12ga': 40, 'none': 0 });
+      Object.assign(ammoReserve, { '556': 180, '762': 150, '45': 120, '9mm': 90, '12ga': 40, 'rocket': 30, 'none': 0 });
       Object.assign(meds, { medkit: 1, firstaid: 2, bandage: 5, drink: 2, painkiller: 1, adrenaline: 1 });
       Object.assign(throwables, { frag: 2, smoke: 1, flashbang: 1 });
       looseAtts.length = 0;
-      slots[0] = { id: 'm416', mag: 30, mode: 'auto', att: { optic: 'reddot', muzzle: 'comp', grip: 'vertgrip', mag: 'extmag', stock: 'tacstock' } };
-      slots[1] = { id: 'kar98k', mag: 5, mode: 'single', att: { optic: 'scope4x', muzzle: 'suppressor', stock: 'cheekpad' } };
+      slots[0] = { id: 'm416', mag: 50, mode: 'auto', att: { optic: 'reddot', muzzle: 'comp', grip: 'vertgrip', mag: 'extmag', stock: 'tacstock' } };
+      slots[1] = { id: 'bazooka', mag: 20, mode: 'auto', att: { optic: 'reddot' } };
       slots[2] = { id: 'p92', mag: 15, mode: 'single', att: { optic: null, muzzle: 'suppressor', mag: null } };
       slots[3] = { id: 'pan', mag: 0, mode: 'melee', att: {} };
       activeSlot = 0;
     } else {
       helm = { level: 0, dur: 0 }; vest = { level: 0, dur: 0 }; bag = { level: 0, cap: 80 };
-      Object.assign(ammoReserve, { '556': 0, '762': 0, '45': 0, '9mm': 0, '12ga': 0, 'none': 0 });
+      Object.assign(ammoReserve, { '556': 120, '762': 0, '45': 0, '9mm': 30, '12ga': 0, 'rocket': 30, 'none': 0 });
       Object.assign(meds, { medkit: 0, firstaid: 0, bandage: 0, drink: 0, painkiller: 0, adrenaline: 0 });
       Object.assign(throwables, { frag: 0, smoke: 0, flashbang: 0 });
       looseAtts.length = 0;
-      slots[0] = { id: 'pan', mag: 0, mode: 'melee', att: {} };
-      slots[1] = { id: 'pan', mag: 0, mode: 'melee', att: {} };
-      slots[2] = { id: 'p92', mag: 0, mode: 'single', att: {} };
+      slots[0] = { id: 'm416', mag: 50, mode: 'auto', att: { optic: 'reddot', muzzle: 'comp', grip: 'vertgrip', mag: 'extmag', stock: 'tacstock' } };
+      slots[1] = { id: 'bazooka', mag: 20, mode: 'auto', att: { optic: 'reddot' } };
+      slots[2] = { id: 'p92', mag: 15, mode: 'single', att: {} };
       slots[3] = { id: 'pan', mag: 0, mode: 'melee', att: {} };
-      activeSlot = 3;
+      activeSlot = 0;
     }
     vmBuildKey = '';
     rebuildActiveWeaponMesh();
@@ -633,9 +646,14 @@ const Player = (() => {
       setTimeout(() => { if (vmFlashMesh) vmFlashMesh.visible = false; }, 45);
       Render.spawnMuzzleLight(spawnPos);
     }
-    const casingPos = Render.camera.position.clone().addScaledVector(forward, 0.45).addScaledVector(right, 0.12);
-    const casingVel = right.clone().multiplyScalar(2.2 + Math.random()).addScaledVector(up, 1.4 + Math.random() * 0.6);
-    Ballistics.spawnParticle(casingPos, casingVel, 0xD4AF37, 0.85, 0.85, 11);
+    if (!def.isRocket) {
+      const casingPos = Render.camera.position.clone().addScaledVector(forward, 0.45).addScaledVector(right, 0.12);
+      const casingVel = right.clone().multiplyScalar(2.2 + Math.random()).addScaledVector(up, 1.4 + Math.random() * 0.6);
+      Ballistics.spawnParticle(casingPos, casingVel, 0xD4AF37, 0.85, 0.85, 11);
+    } else {
+      const backPos = Render.camera.position.clone().addScaledVector(forward, 0.15).addScaledVector(right, 0.14);
+      Ballistics.spawnParticle(backPos, forward.clone().multiplyScalar(-5.0), 0xCCCCCC, 3.6, 0.45, 0.2);
+    }
 
     AudioSys.playGunshot(def.sound, null, suppressed, false, false);
   }
@@ -892,11 +910,15 @@ const Player = (() => {
       AudioSys.playUiTone('click');
     }
 
-    // Switch weapon slots 1..4
-    if (Input.wasCodePressed('Digit1')) { activeSlot = 0; vmBuildKey = ''; rebuildActiveWeaponMesh(); reloadTimer = 0; }
-    if (Input.wasCodePressed('Digit2')) { activeSlot = 1; vmBuildKey = ''; rebuildActiveWeaponMesh(); reloadTimer = 0; }
-    if (Input.wasCodePressed('Digit3')) { activeSlot = 2; vmBuildKey = ''; rebuildActiveWeaponMesh(); reloadTimer = 0; }
-    if (Input.wasCodePressed('Digit4') || Input.wasPressed('melee')) { activeSlot = 3; vmBuildKey = ''; rebuildActiveWeaponMesh(); reloadTimer = 0; }
+    // Switch weapon slots 1..4 (+ shortcut KeyB for instant Bazooka)
+    if (Input.wasCodePressed('Digit1')) { activeSlot = 0; vmBuildKey = ''; rebuildActiveWeaponMesh(); reloadTimer = 0; boltTimer = 0; fireCd = 0; }
+    if (Input.wasCodePressed('Digit2')) { activeSlot = 1; vmBuildKey = ''; rebuildActiveWeaponMesh(); reloadTimer = 0; boltTimer = 0; fireCd = 0; }
+    if (Input.wasCodePressed('KeyB')) {
+      slots[1] = { id: 'bazooka', mag: Math.max(slots[1]?.id === 'bazooka' ? slots[1].mag : 0, WEAPONS_DB.bazooka.mag), mode: 'auto', att: { optic: 'reddot' } };
+      activeSlot = 1; vmBuildKey = ''; rebuildActiveWeaponMesh(); reloadTimer = 0; boltTimer = 0; fireCd = 0;
+    }
+    if (Input.wasCodePressed('Digit3')) { activeSlot = 2; vmBuildKey = ''; rebuildActiveWeaponMesh(); reloadTimer = 0; boltTimer = 0; fireCd = 0; }
+    if (Input.wasCodePressed('Digit4') || Input.wasPressed('melee')) { activeSlot = 3; vmBuildKey = ''; rebuildActiveWeaponMesh(); reloadTimer = 0; boltTimer = 0; fireCd = 0; }
     if (Input.wasPressed('zeroUp')) zeroDist = Math.min(800, zeroDist + 100);
     if (Input.wasPressed('zeroDown')) zeroDist = Math.max(100, zeroDist - 100);
 
@@ -907,7 +929,7 @@ const Player = (() => {
         scopeMagOverride = Util.clamp((scopeMagOverride || opt.zoom) - inp.wheel * 0.5, opt.minZoom, opt.zoom);
       } else {
         activeSlot = (activeSlot + (inp.wheel > 0 ? 1 : 3)) % 4;
-        vmBuildKey = ''; rebuildActiveWeaponMesh(); reloadTimer = 0;
+        vmBuildKey = ''; rebuildActiveWeaponMesh(); reloadTimer = 0; boltTimer = 0; fireCd = 0;
       }
     }
 
@@ -1040,7 +1062,8 @@ const Player = (() => {
     recoilKickPitch = Util.damp(recoilKickPitch, 0, 12, dt);
     recoilKickYaw = Util.damp(recoilKickYaw, 0, 12, dt);
 
-    const mouseFire = Input.pointerLocked && (sl.mode === 'auto' ? Input.lmbDown : inp.lmbJust);
+    const canMouseShoot = Input.pointerLocked || (!cheatOpen && !UI.hasModalOpen && !(typeof MapUI !== 'undefined' && MapUI.isOpen));
+    const mouseFire = canMouseShoot && (sl.mode === 'auto' ? (Input.lmbDown || inp.lmbJust) : inp.lmbJust);
     const padFire = !cheatOpen && !!gp && (sl.mode === 'auto' ? gp.fire : gp.fireJust);
     if ((mouseFire || padFire) && fireCd <= 0) {
       if (castState.active) cancelCast();
@@ -1338,7 +1361,7 @@ const Player = (() => {
   }
 
   return {
-    spawnAt, buildRangeAndTargets, update, equipWeaponInSlot, setAttachment, triggerShot,
+    spawnAt, buildRangeAndTargets, update, selectSlot, equipWeaponInSlot, setAttachment, triggerShot,
     initLoadoutForMode, pickupItem, dropItem, useConsumable, equipLooseAttachment, detachAttachment, getBagWeight,
     showHitFeedback, takeDamage, playerTarget,
     setForceRigVisible(v) { forceRigVisible = v; },

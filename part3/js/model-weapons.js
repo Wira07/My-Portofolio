@@ -451,6 +451,51 @@ const GunKit = (() => {
     return { geos, sockets: { optic: [0, 0.071, 0.04], muzzle: [0, 0.050, 0.172], grip: [0, 0.0, 0.12], mag: [0, -0.07, -0.02], stock: null }, railTop: 0.066, boreY: 0.050, muzzleZ: 0.172, ironFrontZ: 0.158, ironRearZ: -0.030, magKind: 'pistol', pistol: true, hasMuzzle: true };
   }
 
+  // ── Shoulder-Fired Bazooka / RPG-7 Launcher ──
+  function buildBazooka(def) {
+    const c = collector();
+    const sk = def.sockets;
+    const boreY = 0.042;
+    const railTop = sk.optic[1] - 0.007;
+
+    // Main launch tube + Venturi flared rear nozzle + front blast collar
+    c.cyl('black', 0.030, 0.030, 0.80, 0, boreY, 0.02, 'z', 16);
+    c.cyl('steel', 0.048, 0.030, 0.14, 0, boreY, -0.45, 'z', 16); // Venturi rear exhaust cone
+    c.cyl('slot', 0.044, 0.044, 0.006, 0, boreY, -0.522, 'z', 14);
+    c.cyl('rail', 0.035, 0.035, 0.045, 0, boreY, -0.36, 'z', 14);
+    c.cyl('steel', 0.034, 0.034, 0.026, 0, boreY, 0.41, 'z', 16);  // Muzzle reinforcement ring
+
+    // Wooden heat shield wrap + steel clamping bands around shoulder section
+    c.cyl('wood', 0.036, 0.036, 0.26, 0, boreY, -0.06, 'z', 16);
+    c.cyl('steel', 0.0375, 0.0375, 0.014, 0, boreY, -0.17, 'z', 16);
+    c.cyl('steel', 0.0375, 0.0375, 0.014, 0, boreY,  0.05, 'z', 16);
+
+    // Dual ergonomic grips (front trigger grip + rear support grip) + trigger guard
+    c.box('poly', 0.030, 0.105, 0.036, 0, boreY - 0.072, 0.12, 0.24);
+    c.box('poly', 0.028, 0.095, 0.034, 0, boreY - 0.068, -0.12, 0.14);
+    c.box('rail', 0.010, 0.006, 0.068, 0, boreY - 0.060, 0.16);
+    c.box('steel', 0.004, 0.020, 0.006, 0, boreY - 0.046, 0.155, -0.2);
+
+    // Top Picatinny optic rail & ladder iron sight post
+    rail(c, -0.05, 0.15, railTop, 0.022, 'rail');
+    c.box('black', 0.016, 0.034, 0.012, 0, boreY + 0.046, 0.36);
+    c.box('steel', 0.003, 0.018, 0.004, 0, boreY + 0.064, 0.36);
+
+    // Protruding PG-7V high-explosive rocket warhead loaded in muzzle (z = 0.42..0.66)
+    c.cyl('fde', 0.020, 0.020, 0.07, 0, boreY, 0.44, 'z', 14);
+    c.cyl('fde', 0.054, 0.020, 0.07, 0, boreY, 0.505, 'z', 16);  // warhead rear cone
+    c.cyl('black', 0.056, 0.056, 0.012, 0, boreY, 0.542, 'z', 16); // rotating band
+    c.cyl('fde', 0.014, 0.054, 0.09, 0, boreY, 0.59, 'z', 16);   // warhead front cone
+    c.cyl('brass', 0.012, 0.014, 0.024, 0, boreY, 0.642, 'z', 12); // piezo fuze tip
+
+    const geos = c.finish();
+    return {
+      geos,
+      sockets: { optic: [0, railTop + 0.003, 0.04], muzzle: [0, boreY, 0.65], grip: null, mag: null, stock: null },
+      railTop, boreY, muzzleZ: 0.65, ironFrontZ: 0.36, ironRearZ: -0.05, magKind: 'none', hasMuzzle: true
+    };
+  }
+
   function getBody(def) {
     if (bodyCache.has(def.id)) return bodyCache.get(def.id);
     let b;
@@ -465,6 +510,7 @@ const GunKit = (() => {
       case 'bolt': b = buildLongWood(def, 'bolt'); break;
       case 'sr': b = buildLongWood(def, 'sr'); break;
       case 'pistol': b = buildPistol(def); break;
+      case 'bazooka': b = buildBazooka(def); break;
       default: b = buildAR(def, false);
     }
     bodyCache.set(def.id, b);

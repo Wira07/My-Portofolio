@@ -45,6 +45,45 @@ const Render = (() => {
     `
   };
 
+  // HLSL/ANGLE-clean 5-tap FXAA (avoids Three.js FXAAShader X3595/X4000 compiler warnings)
+  const FastFXAAShader = {
+    uniforms: {
+      tDiffuse: { value: null },
+      resolution: { value: new THREE.Vector2(1 / 1024, 1 / 512) }
+    },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `
+      uniform sampler2D tDiffuse;
+      uniform vec2 resolution;
+      varying vec2 vUv;
+      float fxLuma(vec3 c){ return dot(c, vec3(0.299, 0.587, 0.114)); }
+      void main(){
+        vec3 rgbM  = texture2D(tDiffuse, vUv).rgb;
+        vec3 rgbNW = texture2D(tDiffuse, vUv + vec2(-1.0, -1.0) * resolution).rgb;
+        vec3 rgbNE = texture2D(tDiffuse, vUv + vec2( 1.0, -1.0) * resolution).rgb;
+        vec3 rgbSW = texture2D(tDiffuse, vUv + vec2(-1.0,  1.0) * resolution).rgb;
+        vec3 rgbSE = texture2D(tDiffuse, vUv + vec2( 1.0,  1.0) * resolution).rgb;
+        float lM = fxLuma(rgbM), lNW = fxLuma(rgbNW), lNE = fxLuma(rgbNE), lSW = fxLuma(rgbSW), lSE = fxLuma(rgbSE);
+        float lMin = min(lM, min(min(lNW, lNE), min(lSW, lSE)));
+        float lMax = max(lM, max(max(lNW, lNE), max(lSW, lSE)));
+        vec2 dir = vec2(-((lNW + lNE) - (lSW + lSE)), ((lNW + lSW) - (lNE + lSE)));
+        float dirReduce = max((lNW + lNE + lSW + lSE) * 0.03125, 0.0078125);
+        float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
+        dir = clamp(dir * rcpDirMin, vec2(-8.0), vec2(8.0)) * resolution;
+        vec3 rgbA = 0.5 * (
+          texture2D(tDiffuse, vUv + dir * (1.0 / 3.0 - 0.5)).rgb +
+          texture2D(tDiffuse, vUv + dir * (2.0 / 3.0 - 0.5)).rgb
+        );
+        vec3 rgbB = rgbA * 0.5 + 0.25 * (
+          texture2D(tDiffuse, vUv + dir * -0.5).rgb +
+          texture2D(tDiffuse, vUv + dir *  0.5).rgb
+        );
+        float lB = fxLuma(rgbB);
+        gl_FragColor = vec4((lB < lMin || lB > lMax) ? rgbA : rgbB, 1.0);
+      }
+    `
+  };
+
   function init(canvas) {
     // Check WebGL2 availability
     const gl = canvas.getContext('webgl2', { antialias: false, powerPreference: 'high-performance' });
@@ -62,6 +101,7 @@ const Render = (() => {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.info.autoReset = false;
+    renderer.debug.checkShaderErrors = false;
 
     scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0xBED6E6, 0.00046);
@@ -82,7 +122,7 @@ const Render = (() => {
     // Pooled Muzzle Flash PointLights (6 max per Sec 16.2)
     for (let i = 0; i < 6; i++) {
       const pl = new THREE.PointLight(0xFFB347, 0, 18, 2);
-      pl.userData.ttl = 0;
+      pl.userData = { ttl: 0, maxTtl: 0.05, peakInt: 80 };
       scene.add(pl);
       muzzleLights.push(pl);
     }
@@ -244,7 +284,7 @@ const Render = (() => {
     colorPass = new ShaderPass(ColorGradeShader);
     composer.addPass(colorPass);
 
-    fxaaPass = new ShaderPass(FXAAShader);
+    fxaaPass = new ShaderPass(FastFXAAShader);
     composer.addPass(fxaaPass);
 
     outputPass = new OutputPass();
@@ -410,7 +450,8 @@ const Render = (() => {
       const pl = muzzleLights[i];
       if (pl.userData.ttl > 0) {
         pl.userData.ttl -= dt;
-        pl.intensity = Math.max(0, (pl.userData.ttl / 0.05) * 80);
+        const t = Math.max(0, pl.userData.ttl / (pl.userData.maxTtl || 0.05));
+        pl.intensity = t * (pl.userData.peakInt || 80);
       } else pl.intensity = 0;
     }
     if (csm) csm.update();
@@ -526,14 +567,34 @@ const Render = (() => {
       if (muzzleLights[i].userData.ttl <= best.userData.ttl) best = muzzleLights[i];
     }
     if (best) {
+      best.color.setHex(0xFFB347);
+      best.distance = 18;
       best.position.copy(pos);
       best.intensity = 80;
+      best.userData.peakInt = 80;
+      best.userData.maxTtl = 0.05;
       best.userData.ttl = 0.05;
     }
   }
 
+  function spawnBlastLight(pos, colorHex = 0xFF922E, peakInt = 32, distance = 48, dur = 1.4) {
+    let best = muzzleLights[0];
+    for (let i = 1; i < muzzleLights.length; i++) {
+      if (muzzleLights[i].userData.ttl <= best.userData.ttl) best = muzzleLights[i];
+    }
+    if (best) {
+      best.color.setHex(colorHex);
+      best.distance = distance;
+      best.position.set(pos.x, pos.y + 2.2, pos.z);
+      best.intensity = peakInt;
+      best.userData.peakInt = peakInt;
+      best.userData.maxTtl = dur;
+      best.userData.ttl = dur;
+    }
+  }
+
   return {
-    init, applyAtmosphere, applySettings, buildStudioShowcase, setStudioVisible, onResize, renderFrame, spawnMuzzleLight,
+    init, applyAtmosphere, applySettings, buildStudioShowcase, setStudioVisible, onResize, renderFrame, spawnMuzzleLight, spawnBlastLight,
     setViewmodelEnabled(v) { vmEnabled = !!v; },
     setFlashIntensity(v) { if (colorPass) colorPass.uniforms.uFlash.value = v; },
     toggleFlashlight() { if (init._flashlight) init._flashlight.enabled = !init._flashlight.enabled; },
@@ -631,6 +692,13 @@ const UI = (() => {
     document.getElementById('modal-backdrop').classList.add('hidden');
     activeModal = null;
     if (onCloseModalCallback) onCloseModalCallback();
+    if (typeof Game !== 'undefined' && (Game.state === 'PRACTICE' || Game.state === 'MATCH') &&
+        !(typeof CheatUI !== 'undefined' && CheatUI.isOpen) && !(typeof MapUI !== 'undefined' && MapUI.isOpen)) {
+      try {
+        const pr = document.getElementById('gl-canvas')?.requestPointerLock?.();
+        if (pr && typeof pr.catch === 'function') pr.catch(() => {});
+      } catch (_) {}
+    }
   }
 
   function showMatchSetupModal(mode = 'br', defaultArea = null) {
