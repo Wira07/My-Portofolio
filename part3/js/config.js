@@ -77,8 +77,8 @@ const CONFIG = {
   },
   audio: { master: 0.8, sfx: 1.0, ambient: 0.6, ui: 0.6, music: 0.4, speedOfSound: 343 },
   quality: {
-    low:    { label: 'Low',    viewDist: _isMobileDevice ? 360 : 350, cascades: 1, shadowSize: _isMobileDevice ? 512 : 1024, grassDist: 0,  trees: _isMobileDevice ? 4200 : 8000, bloom: false, fxaa: false, particles: _isMobileDevice ? 120 : 200, texRes: _isMobileDevice ? 256 : 512, dynRes: true, aniso: _isMobileDevice ? 1 : 2, maxDpr: _isMobileDevice ? 1.0 : 1.5 },
-    medium: { label: 'Medium', viewDist: 550, cascades: _isMobileDevice ? 1 : 2, shadowSize: _isMobileDevice ? 768 : 1536, grassDist: _isMobileDevice ? 18 : 40, trees: _isMobileDevice ? 9000 : 18000, bloom: !_isMobileDevice, fxaa: !_isMobileDevice, particles: _isMobileDevice ? 260 : 600, texRes: _isMobileDevice ? 256 : 512, dynRes: true, aniso: _isMobileDevice ? 2 : 4, maxDpr: _isMobileDevice ? 1.25 : 2.0 },
+    low:    { label: 'Low',    viewDist: _isMobileDevice ? 440 : 350, cascades: 1, shadowSize: _isMobileDevice ? 768 : 1024, grassDist: 0,  trees: _isMobileDevice ? 4200 : 8000, bloom: false, fxaa: false, particles: _isMobileDevice ? 120 : 200, texRes: 512, dynRes: true, aniso: 2, maxDpr: _isMobileDevice ? 1.5 : 1.5 },
+    medium: { label: 'Medium', viewDist: 550, cascades: _isMobileDevice ? 1 : 2, shadowSize: _isMobileDevice ? 768 : 1536, grassDist: _isMobileDevice ? 18 : 40, trees: _isMobileDevice ? 9000 : 18000, bloom: !_isMobileDevice, fxaa: !_isMobileDevice, particles: _isMobileDevice ? 260 : 600, texRes: 512, dynRes: true, aniso: 4, maxDpr: _isMobileDevice ? 1.75 : 2.0 },
     high:   { label: 'High',   viewDist: 800, cascades: 3, shadowSize: 2048, grassDist: 70,  trees: 28000, bloom: true,  fxaa: true,  particles: 1200, texRes: 1024, dynRes: false, aniso: 8,  maxDpr: 2.0 },
     ultra:  { label: 'Ultra',  viewDist: 1100, cascades: 4, shadowSize: 2048, grassDist: 100, trees: 38000, bloom: true,  fxaa: true,  particles: 2000, texRes: 1024, dynRes: false, aniso: 16, maxDpr: 2.0 }
   },
@@ -155,8 +155,8 @@ const CONFIG = {
   },
   mobileDefaults: {
     preset: 'low',
-    resScale: 0.72,
-    viewDist: 360,
+    resScale: 1.0,
+    viewDist: 440,
     shadowCascades: 1,
     grassDist: 0,
     bloom: false,

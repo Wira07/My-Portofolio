@@ -11,7 +11,7 @@ const Render = (() => {
   let currentQuality = CONFIG.isMobile ? CONFIG.quality.low : CONFIG.quality.medium;
   let currentTod = 'siang';
   let currentWeather = 'cerah';
-  let resScale = CONFIG.isMobile ? CONFIG.mobileDefaults.resScale : 1.0;
+  let resScale = 1.0;
   let dynScale = 1.0;
   let dynTimer = 0;
   let dynFrames = 0;
@@ -90,20 +90,20 @@ const Render = (() => {
 
   function init(canvas) {
     // Check WebGL2 availability
-    const gl = canvas.getContext('webgl2', { antialias: false, powerPreference: 'high-performance' });
+    const gl = canvas.getContext('webgl2', { antialias: CONFIG.isMobile, powerPreference: 'high-performance' });
     if (!gl) {
       showFatalError('WebGL2 Tidak Tersedia', 'Browser atau GPU Anda belum mengaktifkan WebGL2. Periksa pengaturan akselerasi perangkat keras browser Anda.');
       return false;
     }
 
-    renderer = new THREE.WebGLRenderer({ canvas, context: gl, antialias: false, powerPreference: 'high-performance' });
+    renderer = new THREE.WebGLRenderer({ canvas, context: gl, antialias: CONFIG.isMobile, powerPreference: 'high-performance' });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, currentQuality.maxDpr || 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = CONFIG.isMobile ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
     renderer.info.autoReset = false;
     renderer.debug.checkShaderErrors = false;
 
@@ -248,7 +248,7 @@ const Render = (() => {
 
     // Cascaded Shadow Maps (CSM)
     csm = new CSM({
-      maxFar: CONFIG.isMobile ? 180 : 320,
+      maxFar: CONFIG.isMobile ? 95 : 320,
       cascades: currentQuality.cascades || (CONFIG.isMobile ? 1 : 2),
       mode: 'practical',
       parent: scene,
@@ -257,6 +257,10 @@ const Render = (() => {
       camera
     });
     csm.fade = !CONFIG.isMobile && (currentQuality.cascades || 2) > 1;
+    for (let i = 0; i < csm.lights.length; i++) {
+      csm.lights[i].shadow.bias = CONFIG.isMobile ? -0.0012 : -0.0003;
+      csm.lights[i].shadow.normalBias = CONFIG.isMobile ? 0.055 : 0.02;
+    }
 
     // Post Processing Pipeline + Viewmodel Overlay Pass
     composer = new EffectComposer(renderer);
@@ -384,7 +388,8 @@ const Render = (() => {
     dynTimer = 0;
     dynFrames = 0;
     camera.fov = settings.fov || 75;
-    camera.far = Math.max(CONFIG.isMobile ? 1400 : 2200, (settings.viewDist || currentQuality.viewDist) + (CONFIG.isMobile ? 260 : 400));
+    // Always keep far plane beyond the 1800m sky dome so center sky never clips black
+    camera.far = Math.max(2200, (settings.viewDist || currentQuality.viewDist) + 400);
     camera.updateProjectionMatrix();
 
     bloomPass.enabled = !!settings.bloom && currentQuality.bloom;
@@ -435,7 +440,7 @@ const Render = (() => {
     const w = Math.max(1, window.innerWidth);
     const h = Math.max(1, window.innerHeight);
     const maxDpr = currentQuality.maxDpr || 2;
-    const effScale = Math.max(0.5, resScale * dynScale * Math.min(window.devicePixelRatio || 1, maxDpr));
+    const effScale = Math.max(CONFIG.isMobile ? 0.95 : 0.5, resScale * dynScale * Math.min(window.devicePixelRatio || 1, maxDpr));
     renderer.setPixelRatio(effScale);
     renderer.setSize(w, h);
     composer.setPixelRatio(effScale);
@@ -599,8 +604,9 @@ const Render = (() => {
         dynFrames++;
         if (dynTimer >= 3.0 && dynFrames >= 6) {
           const avgFps = dynFrames / dynTimer;
+          const minDyn = CONFIG.isMobile ? 0.85 : 0.72;
           let nextDyn = dynScale;
-          if (avgFps < 24 && dynScale > 0.72) nextDyn = 0.72;
+          if (avgFps < 24 && dynScale > minDyn) nextDyn = minDyn;
           else if (avgFps > 54 && dynScale < 1.0) nextDyn = Math.min(1.0, dynScale + 0.08);
           dynTimer = 0;
           dynFrames = 0;

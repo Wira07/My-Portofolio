@@ -702,6 +702,11 @@ const Input = (() => {
     document.addEventListener('pointerlockchange', () => {
       const wasLocked = pointerLocked;
       pointerLocked = document.pointerLockElement === canvasEl;
+      if (pointerLocked && !lockActiveState) {
+        pointerLocked = false;
+        try { document.exitPointerLock?.(); } catch {}
+        return;
+      }
       const overlayOpen = UI.hasModalOpen || (typeof CheatUI !== 'undefined' && CheatUI.isOpen) || (typeof MapUI !== 'undefined' && MapUI.isOpen);
       document.getElementById('pointer-banner')?.classList.toggle('hidden', isTouchUi() || !lockActiveState || pointerLocked || overlayOpen);
       if (wasLocked && !pointerLocked && lockActiveState && !overlayOpen && onLockLost) {
@@ -736,7 +741,8 @@ const Input = (() => {
     document.getElementById('pointer-banner')?.classList.toggle('hidden', isTouchUi() || !active || pointerLocked || UI.hasModalOpen);
     if (!active) {
       resetTouchInputs();
-      if (pointerLocked) document.exitPointerLock?.();
+      pointerLocked = false;
+      try { document.exitPointerLock?.(); } catch {}
     }
   }
 

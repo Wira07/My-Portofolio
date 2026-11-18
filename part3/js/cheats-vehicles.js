@@ -629,7 +629,8 @@ const CheatUI = (() => {
   function close() {
     open = false;
     document.getElementById('cheat-overlay')?.classList.add('hidden');
-    if (typeof Game !== 'undefined' && (Game.state === 'PRACTICE' || Game.state === 'MATCH') && !UI.hasModalOpen && !(typeof MapUI !== 'undefined' && MapUI.isOpen)) {
+    const isTouch = typeof UI !== 'undefined' && UI.isTouchUiEnabled?.();
+    if (!isTouch && typeof Game !== 'undefined' && (Game.state === 'PRACTICE' || Game.state === 'MATCH') && !UI.hasModalOpen && !(typeof MapUI !== 'undefined' && MapUI.isOpen)) {
       try {
         const pr = document.getElementById('gl-canvas')?.requestPointerLock?.();
         if (pr && typeof pr.catch === 'function') pr.catch(() => {});

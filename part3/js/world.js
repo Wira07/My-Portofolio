@@ -1012,8 +1012,38 @@ const World = (() => {
       terrainMat.userData.wetUniform.value = weatherState?.wet || 0;
     }
     if (camera) {
+      const cx = camera.position.x, cz = camera.position.z;
+      const cullDist = CONFIG.isMobile ? ((UI?.settings?.viewDist || 440) + 140) : 0;
+      const cullSq = cullDist * cullDist;
       for (let i = 0; i < terrainChunks.length; i++) {
-        terrainChunks[i].update(camera);
+        const ch = terrainChunks[i];
+        if (CONFIG.isMobile) {
+          const dx = ch.userData.centerX - cx;
+          const dz = ch.userData.centerZ - cz;
+          const vis = (dx * dx + dz * dz) <= cullSq;
+          ch.visible = vis;
+          if (!vis) continue;
+        }
+        ch.update(camera);
+      }
+      if (CONFIG.isMobile && (update._cullNext || 0) <= elapsedTime) {
+        update._cullNext = elapsedTime + 0.4;
+        const bDist = (UI?.settings?.viewDist || 440) + 130;
+        const cullGroup = (grpName) => {
+          const g = Render.scene?.getObjectByName(grpName);
+          if (!g) return;
+          for (let j = 0; j < g.children.length; j++) {
+            const o = g.children[j];
+            if (!o.isMesh || o.isInstancedMesh || !o.geometry?.boundingSphere) continue;
+            const bs = o.geometry.boundingSphere;
+            const wx = o.position.x + bs.center.x, wz = o.position.z + bs.center.z;
+            const dMax = bDist + bs.radius;
+            const dx = wx - cx, dz = wz - cz;
+            o.visible = (dx * dx + dz * dz) <= (dMax * dMax);
+          }
+        };
+        cullGroup('PulauRajawaliBuildings');
+        cullGroup('PulauRajawaliDetail');
       }
     }
     if (typeof WorldBuildings !== 'undefined') WorldBuildings.update(dt, elapsedTime);
@@ -4117,7 +4147,7 @@ const WorldDetail = (() => {
       if (!merged) continue;
       merged.computeBoundingSphere();
       const mesh = new THREE.Mesh(merged, mat);
-      mesh.castShadow = true; mesh.receiveShadow = true;
+      mesh.castShadow = !CONFIG.isMobile; mesh.receiveShadow = true;
       group.add(mesh);
       calls++;
     }
