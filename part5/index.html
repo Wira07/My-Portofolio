@@ -73,16 +73,22 @@ html, body {
   display: none !important;
 }
 
-/* Floating Music Control Pill */
-.music-pill {
+/* Floating Top Audio Controls (Music + Bunny Voice) */
+.top-controls {
   position: fixed;
   top: max(12px, env(safe-area-inset-top));
   right: max(12px, env(safe-area-inset-right));
   z-index: 60;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
+}
+
+.music-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 13px;
   border-radius: 999px;
   border: 1.5px solid var(--border-rose);
   background: rgba(255, 253, 249, 0.88);
@@ -405,7 +411,7 @@ html, body {
   45% { transform: scale(1.13); }
 }
 
-/* Mood Swaps for SVG Mascot */
+/* Mood Swaps & Animated Talking Mouth for SVG Mascot */
 #mascot-svg .face-happy,
 #mascot-svg .face-plead,
 #mascot-svg .face-shock,
@@ -416,6 +422,36 @@ html, body {
 #mascot-svg.mood-plead .face-plead { display: block; }
 #mascot-svg.mood-shock .face-shock { display: block; }
 #mascot-svg.mood-celebrate .face-celebrate { display: block; }
+
+#mascot-svg .mouth-talk {
+  display: none;
+  transform-origin: 66px 64px;
+}
+#mascot-svg.speaking .mouth-talk {
+  display: block;
+  animation: talkMouth 0.19s ease-in-out infinite;
+}
+#mascot-svg.speaking .mouth-static {
+  display: none;
+}
+#mascot-svg.speaking {
+  animation: mascotTalkBob 0.36s ease-in-out infinite alternate;
+}
+
+@keyframes talkMouth {
+  0%, 100% { transform: scaleY(0.32) scaleX(0.95); }
+  50% { transform: scaleY(1.18) scaleX(1.06); }
+}
+
+@keyframes mascotTalkBob {
+  0% { transform: translateY(0px) rotate(-1.4deg); }
+  100% { transform: translateY(-4px) rotate(1.4deg); }
+}
+
+.speech-bubble.talking {
+  border-color: var(--pink-1);
+  box-shadow: 0 8px 20px rgba(255, 93, 143, 0.24);
+}
 
 #mascot-svg.mood-shock {
   animation: mascotShake 0.36s ease;
@@ -609,6 +645,14 @@ html, body {
 }
 
 @media (max-width: 420px) {
+  .top-controls {
+    gap: 6px;
+  }
+  .music-pill {
+    font-size: 11.5px;
+    padding: 7px 10px;
+    gap: 6px;
+  }
   .card {
     padding: 22px 18px 20px;
     border-radius: 26px;
@@ -627,10 +671,16 @@ html, body {
 <body>
 <canvas id="bg-canvas" aria-hidden="true"></canvas>
 
-<button id="btn-music" class="music-pill" type="button" aria-label="Putar atau matikan lagu lucu">
-  <span class="eq-bars" aria-hidden="true"><span></span><span></span><span></span></span>
-  <span id="music-label">Lagu Lucu: OFF</span>
-</button>
+<div class="top-controls">
+  <button id="btn-voice" class="music-pill playing" type="button" aria-label="Nyalakan atau matikan suara kelinci">
+    <span aria-hidden="true">🗣️</span>
+    <span id="voice-label">Suara: ON</span>
+  </button>
+  <button id="btn-music" class="music-pill" type="button" aria-label="Putar atau matikan lagu lucu">
+    <span class="eq-bars" aria-hidden="true"><span></span><span></span><span></span></span>
+    <span id="music-label">Lagu Lucu: OFF</span>
+  </button>
+</div>
 
 <main class="app-shell">
   <section class="card" aria-live="polite">
@@ -661,7 +711,7 @@ html, body {
             <circle cx="80" cy="54" r="4.2" fill="#4A2538"/>
             <circle cx="81.5" cy="52.5" r="1.4" fill="#FFFFFF"/>
           </g>
-          <path d="M61 62 Q66 67 71 62" fill="none" stroke="#4A2538" stroke-width="2.4" stroke-linecap="round"/>
+          <path class="mouth-static" d="M61 62 Q66 67 71 62" fill="none" stroke="#4A2538" stroke-width="2.4" stroke-linecap="round"/>
         </g>
 
         <!-- Mood: Plead (Puppy Eyes when dodging!) -->
@@ -672,7 +722,7 @@ html, body {
           <circle cx="81" cy="54" r="5.4" fill="#4A2538"/>
           <circle cx="83" cy="52" r="2.1" fill="#FFFFFF"/>
           <circle cx="79.5" cy="55.5" r="1.1" fill="#FFFFFF"/>
-          <path d="M62 65 Q66 61 70 65" fill="none" stroke="#4A2538" stroke-width="2.4" stroke-linecap="round"/>
+          <path class="mouth-static" d="M62 65 Q66 61 70 65" fill="none" stroke="#4A2538" stroke-width="2.4" stroke-linecap="round"/>
           <circle cx="42" cy="60" r="2.4" fill="#82D8FF"/>
         </g>
 
@@ -680,16 +730,22 @@ html, body {
         <g class="face-shock">
           <polyline points="46,50 54,54 46,58" fill="none" stroke="#4A2538" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
           <polyline points="86,50 78,54 86,58" fill="none" stroke="#4A2538" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-          <ellipse cx="66" cy="65" rx="4.2" ry="5" fill="#FF759F"/>
+          <ellipse class="mouth-static" cx="66" cy="65" rx="4.2" ry="5" fill="#FF759F"/>
         </g>
 
         <!-- Mood: Celebrate (^^ happy arc eyes + sparkles) -->
         <g class="face-celebrate">
           <path d="M46 56 Q52 48 58 56" fill="none" stroke="#4A2538" stroke-width="2.8" stroke-linecap="round"/>
           <path d="M74 56 Q80 48 86 56" fill="none" stroke="#4A2538" stroke-width="2.8" stroke-linecap="round"/>
-          <path d="M60 61 Q66 69 72 61" fill="#FF759F" stroke="#4A2538" stroke-width="2" stroke-linecap="round"/>
+          <path class="mouth-static" d="M60 61 Q66 69 72 61" fill="#FF759F" stroke="#4A2538" stroke-width="2" stroke-linecap="round"/>
           <path d="M22 40 L25 46 L31 49 L25 52 L22 58 L19 52 L13 49 L19 46 Z" fill="#FFB347"/>
           <path d="M110 36 L112 41 L117 43 L112 45 L110 50 L108 45 L103 43 L108 41 Z" fill="#FF5D8F"/>
+        </g>
+
+        <!-- Animated Talking Mouth (visible whenever bunny speaks) -->
+        <g class="mouth-talk">
+          <ellipse cx="66" cy="64.5" rx="5.4" ry="4.5" fill="#4A2538"/>
+          <ellipse cx="66" cy="66.2" rx="3.4" ry="2.2" fill="#FF759F"/>
         </g>
 
         <!-- Tiny Nose -->
@@ -776,6 +832,8 @@ html, body {
     canvas: document.getElementById('bg-canvas'),
     btnMusic: document.getElementById('btn-music'),
     musicLabel: document.getElementById('music-label'),
+    btnVoice: document.getElementById('btn-voice'),
+    voiceLabel: document.getElementById('voice-label'),
     mascotArea: document.getElementById('mascot-area'),
     mascotSvg: document.getElementById('mascot-svg'),
     mascotBubble: document.getElementById('mascot-bubble'),
@@ -798,26 +856,31 @@ html, body {
   let accepted = false;
   let lastDodgeAt = 0;
 
-  const NO_LABELS = [
-    'Tidak 🙈',
-    'Eits gabisa! 😜',
-    'Yakin nih? 🥺',
-    'Jangan gitu dong~ 💔',
-    'Amelll pencet Mauuu aja! 💕',
-    'Tombolnya kabur wleee 🏃💨',
-    'Masa gak kangen sih? 😢',
-    'Kejar kalau bisaaa 😆',
-    'Klik yang pink donggg 🌸',
-    'Pokoknya harus mau! 🥰'
+  const OPENING_LINE = {
+    mood: 'mood-happy',
+    bubble: 'Halo Amelll! Aku pengen ngajak main kamu lagi yaa~ 💕',
+    speak: 'Halo Amel! Aku pengen ngajak main kamu lagi ya. Kangen banget ngobrol dan jalan bareng kamu. Mau ya?'
+  };
+
+  const IDLE_CHATTER = [
+    { mood: 'mood-happy', bubble: 'Amelll, ayo main bareng aku lagi dong~ 🥺✨', speak: 'Amel, ayo main bareng aku lagi dong!' },
+    { mood: 'mood-happy', bubble: 'Kangen banget ngobrol & ketawa bareng Amel 💕', speak: 'Kangen banget ngobrol dan ketawa bareng Amel tau!' },
+    { mood: 'mood-plead', bubble: 'Pilih aja mau ngopi, kulineran, atau jajan es krim 🍦', speak: 'Pilih aja mau ngopi, kulineran enak, atau jajan es krim, yang penting bareng Amel!' },
+    { mood: 'mood-happy', bubble: 'Klik tombol Mauuu yang warna pink yaa~ 💗', speak: 'Ayo dong Amel, klik tombol Mauuu yang warna pink ya!' },
+    { mood: 'mood-plead', bubble: 'Jangan klik Tidak yaa, tombolnya nanti kabur lhoo 😜', speak: 'Jangan klik tombol Tidak ya, tombolnya nanti kabur loh!' },
+    { mood: 'mood-happy', bubble: 'Aku udah siapin waktu spesial buat Amelll ✨', speak: 'Aku udah siapin waktu spesial buat Amel nih!' }
   ];
 
-  const BUBBLES = [
-    'Eh eh jangan pencet ituuu! 🙈',
-    'Yakin gamau main bareng aku? 🥺',
-    'Wleee tombolnya lari~ pencet Mauuu dong! 😜',
-    'Aku udah siapin waktu buat Amelll nih 💕',
-    'Gaboleh nolak pokonyaaa! 🥰✨',
-    'Udah ketangkap belum? Gak akan kena~ 😆'
+  const NO_RESPONSES = [
+    { btn: 'Eits gabisa! 😜', bubble: 'Eits, gak bisa nolak Amelll! 😜', speak: 'Eits, gak bisa nolak dong Amel!', mood: 'mood-shock' },
+    { btn: 'Yakin nih? 🥺', bubble: 'Yakin nih gak mau main bareng aku? 🥺', speak: 'Yakin nih Amel gak mau main bareng aku?', mood: 'mood-plead' },
+    { btn: 'Jangan gitu dong~ 💔', bubble: 'Jangan gitu dong Amel, nanti aku sedih~ 💔', speak: 'Jangan gitu dong Amel, nanti aku sedih loh!', mood: 'mood-plead' },
+    { btn: 'Pencet Mauuu aja! 💕', bubble: 'Amel pencet tombol Mauuu aja dong~ 💕', speak: 'Amel pencet tombol Mauuu aja dong!', mood: 'mood-happy' },
+    { btn: 'Tombolnya kabur wleee 🏃💨', bubble: 'Wleee tombolnya kabur lagi kan! 🏃💨', speak: 'Wleee, tombolnya kabur lagi kan!', mood: 'mood-shock' },
+    { btn: 'Masa gak kangen? 😢', bubble: 'Masa Amel gak kangen sama aku sih? 😢', speak: 'Masa Amel gak kangen sama aku sih?', mood: 'mood-plead' },
+    { btn: 'Kejar kalau bisaaa 😆', bubble: 'Kejar kalau bisa, gak akan kena wleee~ 😆', speak: 'Kejar kalau bisa, gak akan kena wleee!', mood: 'mood-shock' },
+    { btn: 'Klik yang pink donggg 🌸', bubble: 'Klik tombol yang warna pink dong Amelll~ 🌸', speak: 'Klik tombol yang warna pink dong Amel!', mood: 'mood-plead' },
+    { btn: 'Pokoknya harus mau! 🥰', bubble: 'Pokoknya Amel harus mau main bareng aku! 🥰', speak: 'Pokoknya Amel harus mau main bareng aku!', mood: 'mood-happy' }
   ];
 
   // ==========================================================================
@@ -1051,6 +1114,11 @@ html, body {
       });
     }
 
+    function setDucking(ducked) {
+      if (!ctx || !musicGain) return;
+      musicGain.gain.setTargetAtTime(ducked ? 0.25 : 0.72, ctx.currentTime, 0.08);
+    }
+
     document.addEventListener('visibilitychange', () => {
       if (!ctx) return;
       if (document.hidden) {
@@ -1062,7 +1130,7 @@ html, body {
     });
 
     return {
-      startMusic, stopMusic, toggleMusic,
+      startMusic, stopMusic, toggleMusic, setDucking,
       playOpenChime, playBoing, playPop, playCelebrationFanfare,
       get isPlaying() { return isPlaying; }
     };
@@ -1073,6 +1141,149 @@ html, body {
     DOM.btnMusic.classList.toggle('playing', on);
     DOM.musicLabel.textContent = on ? 'Lagu Lucu: ON ♪' : 'Lagu Lucu: OFF';
   }
+
+  // ==========================================================================
+  // 1B. BUNNY VOICE ENGINE (Indonesian Web Speech TTS + Animated Talking Loop)
+  // ==========================================================================
+  const BunnyVoice = (() => {
+    const synth = 'speechSynthesis' in window ? window.speechSynthesis : null;
+    let voiceEnabled = true;
+    let chatterActive = false;
+    let chatterIdx = 0;
+    let speaking = false;
+    let speakingTimer = null;
+    let nextChatterTimer = null;
+    let utteranceSeq = 0;
+    let chosenVoice = null;
+
+    function resolveIndonesianVoice() {
+      if (!synth || !synth.getVoices) return null;
+      const voices = synth.getVoices() || [];
+      const idVoices = voices.filter(v => /^id(-|_|$)/i.test(v.lang || ''));
+      if (idVoices.length === 0) return null;
+      return (
+        idVoices.find(v => /gadis|damayanti|female|google|natural|online/i.test(v.name || '')) ||
+        idVoices[0]
+      );
+    }
+
+    if (synth) {
+      chosenVoice = resolveIndonesianVoice();
+      if ('onvoiceschanged' in synth) {
+        synth.onvoiceschanged = () => { chosenVoice = resolveIndonesianVoice(); };
+      }
+    }
+
+    function syncVoiceBtn() {
+      DOM.btnVoice.classList.toggle('playing', voiceEnabled);
+      DOM.voiceLabel.textContent = voiceEnabled ? 'Suara: ON' : 'Suara: OFF';
+    }
+
+    function setSpeakingVisual(active) {
+      speaking = active;
+      DOM.mascotSvg.classList.toggle('speaking', active);
+      DOM.mascotBubble.classList.toggle('talking', active);
+      CuteAudio.setDucking(active);
+    }
+
+    function scheduleNextIdle() {
+      clearTimeout(nextChatterTimer);
+      if (!chatterActive || accepted || document.hidden) return;
+      nextChatterTimer = setTimeout(() => {
+        if (!chatterActive || accepted || document.hidden) return;
+        const line = IDLE_CHATTER[chatterIdx % IDLE_CHATTER.length];
+        chatterIdx++;
+        speak(line.speak, line.bubble, line.mood);
+      }, 1550);
+    }
+
+    function finishSpeaking(seq, keepSilentAfter = false) {
+      if (seq !== utteranceSeq) return;
+      clearTimeout(speakingTimer);
+      setSpeakingVisual(false);
+      if (!keepSilentAfter && chatterActive && !accepted) {
+        scheduleNextIdle();
+      }
+    }
+
+    function speak(speakText, bubbleText, mood = 'mood-happy', opts = {}) {
+      utteranceSeq++;
+      const seq = utteranceSeq;
+      clearTimeout(speakingTimer);
+      clearTimeout(nextChatterTimer);
+
+      setMascotMood(mood, bubbleText);
+      setSpeakingVisual(true);
+
+      let ttsStarted = false;
+      if (synth && voiceEnabled) {
+        try {
+          synth.cancel();
+          const u = new SpeechSynthesisUtterance(speakText);
+          u.lang = 'id-ID';
+          u.rate = 1.04;
+          u.pitch = 1.28;
+          u.volume = 1.0;
+          if (!chosenVoice) chosenVoice = resolveIndonesianVoice();
+          if (chosenVoice) u.voice = chosenVoice;
+          u.onend = () => finishSpeaking(seq, !!opts.keepSilentAfter);
+          u.onerror = () => finishSpeaking(seq, !!opts.keepSilentAfter);
+          synth.speak(u);
+          ttsStarted = true;
+        } catch {
+          ttsStarted = false;
+        }
+      }
+
+      // Safety fallback timeout in case browser drops onend or voice is muted
+      const fallbackMs = ttsStarted
+        ? Math.max(2100, speakText.length * 78 + 900)
+        : Math.max(1850, speakText.length * 56);
+      speakingTimer = setTimeout(() => finishSpeaking(seq, !!opts.keepSilentAfter), fallbackMs);
+    }
+
+    function startOpening() {
+      chatterActive = true;
+      chatterIdx = 0;
+      speak(OPENING_LINE.speak, OPENING_LINE.bubble, OPENING_LINE.mood, { syncStart: true });
+    }
+
+    function stopChatterLoop() {
+      chatterActive = false;
+      clearTimeout(nextChatterTimer);
+    }
+
+    function toggleVoice() {
+      voiceEnabled = !voiceEnabled;
+      syncVoiceBtn();
+      if (!voiceEnabled && synth) {
+        try { synth.cancel(); } catch {}
+      } else if (voiceEnabled && chatterActive && !accepted && !speaking) {
+        const line = IDLE_CHATTER[chatterIdx % IDLE_CHATTER.length];
+        chatterIdx++;
+        speak(line.speak, line.bubble, line.mood);
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        clearTimeout(speakingTimer);
+        clearTimeout(nextChatterTimer);
+        setSpeakingVisual(false);
+        if (synth) { try { synth.cancel(); } catch {} }
+      } else if (chatterActive && !accepted) {
+        scheduleNextIdle();
+      }
+    });
+
+    syncVoiceBtn();
+
+    return {
+      speak, startOpening, stopChatterLoop, toggleVoice,
+      get isSpeaking() { return speaking; },
+      get voiceEnabled() { return voiceEnabled; }
+    };
+  })();
 
   // ==========================================================================
   // 2. FLOATING PASTEL HEARTS & CONFETTI CANVAS
@@ -1234,6 +1445,8 @@ html, body {
     DOM.btnOpenEnv.classList.add('opening');
     CuteAudio.playOpenChime();
     CuteAudio.startMusic();
+    // Speak immediately inside the user click gesture so mobile/desktop browsers unlock TTS!
+    BunnyVoice.startOpening();
 
     setTimeout(() => {
       DOM.stageEnvelope.classList.add('hidden');
@@ -1301,8 +1514,8 @@ html, body {
     }
 
     dodgeCount++;
-    const labelText = NO_LABELS[dodgeCount % NO_LABELS.length];
-    DOM.btnNo.textContent = labelText;
+    const resp = NO_RESPONSES[(dodgeCount - 1) % NO_RESPONSES.length];
+    DOM.btnNo.textContent = resp.btn;
 
     const yesRect = DOM.btnYes.getBoundingClientRect();
     const curRect = DOM.btnNo.getBoundingClientRect();
@@ -1342,13 +1555,12 @@ html, body {
     DOM.btnNo.style.top = `${Math.round(safe.y)}px`;
     DOM.btnNo.style.transform = `rotate(${((Math.random() - 0.5) * 10).toFixed(1)}deg)`;
 
-    // Escalate Yes button gently & tease via Mascot
+    // Escalate Yes button gently & speak matching teasing line aloud!
     const yesScale = Math.min(1.18, 1 + dodgeCount * 0.025);
     DOM.btnYes.style.transform = `scale(${yesScale.toFixed(3)})`;
 
-    const mood = dodgeCount % 2 === 1 ? 'mood-plead' : 'mood-shock';
-    setMascotMood(mood, BUBBLES[(dodgeCount - 1) % BUBBLES.length]);
     DOM.dodgeHint.textContent = `Udah ${dodgeCount}x coba nolak, tapi tombolnya tetep kabur 😜`;
+    BunnyVoice.speak(resp.speak, resp.bubble, resp.mood);
 
     CuteAudio.playBoing(dodgeCount);
   }
@@ -1376,7 +1588,13 @@ html, body {
     DOM.waPreviewText.textContent = msg;
     DOM.waDirectLink.href = waUrl;
 
-    setMascotMood('mood-celebrate', 'Yeayyy Amelll mauuu! 🥰💕');
+    BunnyVoice.stopChatterLoop();
+    BunnyVoice.speak(
+      'Yeayy! Makasih banyak Amel! Asik kita bakal main bareng lagi!',
+      'Yeayyy Amelll mauuu! 🥰💕',
+      'mood-celebrate',
+      { keepSilentAfter: true }
+    );
     CuteAudio.startMusic();
     CuteAudio.playCelebrationFanfare();
     BgFx.spawnConfettiBurst();
@@ -1393,6 +1611,9 @@ html, body {
   // Event Bindings
   DOM.btnMusic.addEventListener('click', () => {
     CuteAudio.toggleMusic();
+  });
+  DOM.btnVoice.addEventListener('click', () => {
+    BunnyVoice.toggleVoice();
   });
 
   DOM.btnOpenEnv.addEventListener('click', openInvitation);
@@ -1412,7 +1633,7 @@ html, body {
   });
 
   DOM.btnYes.addEventListener('mouseenter', () => {
-    if (!accepted) setMascotMood('mood-happy', 'Iyaa pencet yang ituuu~ 🥰💕');
+    if (!accepted && !BunnyVoice.isSpeaking) setMascotMood('mood-happy', 'Iyaa pencet yang ituuu~ 🥰💕');
   });
   DOM.btnYes.addEventListener('click', handleAccept);
 
